@@ -6,6 +6,8 @@ import { connectDatabase } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import savedRoutes from "./routes/savedRoutes.js";
+import inquiryRoutes from "./routes/inquiryRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -52,6 +54,8 @@ app.use(express.json({ limit: "1mb" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/saved", savedRoutes);
+app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/users", userRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, name: "HydroSphere API" });

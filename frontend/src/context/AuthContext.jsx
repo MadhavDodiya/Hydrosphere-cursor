@@ -4,6 +4,7 @@ import {
   getStoredToken,
   getStoredUser,
   persistSession,
+  persistUser,
   login as loginRequest,
   register as registerRequest,
 } from "../services/authService.js";
@@ -56,6 +57,11 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = (nextUser) => {
+    setUser(nextUser);
+    if (nextUser) persistUser(nextUser);
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -64,6 +70,7 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(token && user),
       login,
       register,
+      updateUser,
       logout,
     }),
     [user, token, loading]

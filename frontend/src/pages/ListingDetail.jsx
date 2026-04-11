@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import InquiryModal from "../components/InquiryModal.jsx";
 import Loader, { Spinner } from "../components/Loader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
@@ -25,12 +26,13 @@ function formatDate(iso) {
 export default function ListingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saveBusy, setSaveBusy] = useState(false);
+  const [inquiryOpen, setInquiryOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -104,6 +106,24 @@ export default function ListingDetail() {
     ? `${seller.name} (${seller.email})`
     : seller?.email || "—";
 
+  const sellerCompanyName = seller?.companyName?.trim() || "";
+  const verified = Boolean(seller?.isVerified);
+
+  const contactDisabledReason = !isAuthenticated
+    ? "Log in as a buyer to contact sellers."
+    : user?.role !== "buyer"
+      ? "Only buyers can contact sellers."
+      : "";
+
+  const emailHref = seller?.email
+    ? `mailto:${seller.email}?subject=${encodeURIComponent(
+        `Inquiry about ${listing.companyName}`
+      )}`
+    : null;
+
+  const whatsappText = `Hi, I'm interested in your listing on HydroSphere: ${listing.companyName}.`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
       <Link
@@ -118,7 +138,16 @@ export default function ListingDetail() {
           <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
             {listing.companyName}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">Listed by {sellerLabel}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <span>Listed by {sellerLabel}</span>
+            {sellerCompanyName && <span className="text-slate-400">·</span>}
+            {sellerCompanyName && <span className="text-slate-700">{sellerCompanyName}</span>}
+            {verified && (
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                Verified Seller
+              </span>
+            )}
+          </div>
         </div>
 
         <dl className="grid gap-4 px-4 py-5 sm:grid-cols-2 sm:px-6">
@@ -160,8 +189,59 @@ export default function ListingDetail() {
             {saveBusy && <Spinner className="h-4 w-4" />}
             {listing.saved ? "Remove from saved" : "Save listing"}
           </button>
+
+          <button
+            type="button"
+            title={contactDisabledReason || "Send an inquiry to the seller"}
+            disabled={Boolean(contactDisabledReason)}
+            onClick={() => {
+              if (!isAuthenticated) {
+                showToast("Log in as a buyer to contact sellers.");
+                navigate("/login", { state: { from: { pathname: `/listings/${id}` } } });
+                return;
+              }
+              if (user?.role !== "buyer") {
+                showToast("Only buyers can contact sellers.");
+                return;
+              }
+              setInquiryOpen(true);
+            }}
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60"
+          >
+            Contact seller
+          </button>
+
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+          >
+            WhatsApp
+          </a>
+
+          <a
+            href={emailHref || undefined}
+            onClick={(e) => {
+              if (!emailHref) {
+                e.preventDefault();
+                showToast("Seller email not available.");
+              }
+            }}
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+          >
+            Email
+          </a>
         </div>
       </article>
+
+      <InquiryModal
+        open={inquiryOpen}
+        onClose={() => setInquiryOpen(false)}
+        listing={listing}
+        prefill={{ name: user?.name, email: user?.email }}
+        showToast={showToast}
+      />
     </div>
   );
 }

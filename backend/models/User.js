@@ -29,6 +29,16 @@ const userSchema = new mongoose.Schema(
       enum: ["buyer", "seller"],
       required: true,
     },
+    companyName: {
+      type: String,
+      trim: true,
+      maxlength: 160,
+      default: "",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
