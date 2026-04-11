@@ -1,0 +1,18 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\Madhav Dodiya\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.12.1
+2 info using node@v24.12.0
+3 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Madhav Dodiya\Hydrosphere-cursor\frontend\.npmrc
+5 silly config load:file:C:\Users\Madhav Dodiya\.npmrc
+6 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm run build
+8 verbose argv "run" "build"
+9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-05T06_33_54_607Z-
+10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-05T06_33_54_607Z-debug-0.log
+11 silly logfile done cleaning log files
+12 verbose cwd C:\Madhav Dodiya\Hydrosphere-cursor\frontend
+13 verbose os Windows_NT 10.0.26200
+14 verbose node v24.12.0
+15 verbose npm  v11.12.1
+16 verbose exit 0
+17 info ok
