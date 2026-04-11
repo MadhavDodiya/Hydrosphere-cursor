@@ -2,17 +2,17 @@
 1 info using npm@11.12.1
 2 info using node@v24.12.0
 3 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\node_modules\npm\npmrc
-4 silly config load:file:C:\Madhav Dodiya\Hydrosphere-cursor\backend\.npmrc
+4 silly config load:file:c:\Madhav Dodiya\Hydrosphere-cursor\.npmrc
 5 silly config load:file:C:\Users\Madhav Dodiya\.npmrc
 6 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\etc\npmrc
-7 verbose title npm run dev
-8 verbose argv "run" "dev" "--prefix" "backend"
-9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-11T18_04_34_463Z-
-10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-11T18_04_34_463Z-debug-0.log
+7 verbose title npm config get prefix
+8 verbose argv "config" "get" "prefix"
+9 verbose logfile logs-max:10 dir:c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-11T18_51_15_616Z-
+10 verbose logfile c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-11T18_51_15_616Z-debug-0.log
 11 silly logfile done cleaning log files
-12 verbose cwd C:\Madhav Dodiya\Hydrosphere-cursor
+12 verbose cwd c:\Madhav Dodiya\Hydrosphere-cursor
 13 verbose os Windows_NT 10.0.26200
 14 verbose node v24.12.0
 15 verbose npm  v11.12.1
-16 verbose exit -1073741510
-17 verbose code -1073741510
+16 verbose exit 0
+17 info ok
