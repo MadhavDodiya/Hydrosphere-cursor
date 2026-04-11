@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [inquiries, setInquiries] = useState([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
   const [companyName, setCompanyName] = useState(() => user?.companyName || "");
+  const [phone, setPhone] = useState(() => user?.phone || "");
   const [profileBusy, setProfileBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -55,6 +56,10 @@ export default function Dashboard() {
   useEffect(() => {
     setCompanyName(user?.companyName || "");
   }, [user?.companyName]);
+
+  useEffect(() => {
+    setPhone(user?.phone || "");
+  }, [user?.phone]);
 
   const loadInquiries = useCallback(async () => {
     if (user?.role !== "seller") return;
@@ -107,7 +112,7 @@ export default function Dashboard() {
     if (!isSeller) return;
     setProfileBusy(true);
     try {
-      const next = await updateMe({ companyName });
+      const next = await updateMe({ companyName, phone });
       updateUser(next);
       showToast("Profile updated.", "success");
     } catch (err) {
@@ -152,23 +157,37 @@ export default function Dashboard() {
           </div>
 
           <form onSubmit={saveProfile} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-800">Company name</span>
-              <input
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="min-h-[44px] rounded-md border border-slate-300 px-3 text-slate-900 outline-none focus:border-sky-500"
-                placeholder="Your company"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={profileBusy}
-              className="min-h-[44px] rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60 inline-flex items-center justify-center gap-2"
-            >
-              {profileBusy && <Spinner className="h-4 w-4" />}
-              Save
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium text-slate-800">Company name</span>
+                <input
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="min-h-[44px] rounded-md border border-slate-300 px-3 text-slate-900 outline-none focus:border-sky-500"
+                  placeholder="Your company"
+                />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium text-slate-800">Phone (for WhatsApp)</span>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="min-h-[44px] rounded-md border border-slate-300 px-3 text-slate-900 outline-none focus:border-sky-500"
+                  placeholder="91XXXXXXXXXX"
+                />
+              </label>
+            </div>
+
+            <div className="sm:col-span-2 sm:flex sm:justify-end">
+              <button
+                type="submit"
+                disabled={profileBusy}
+                className="min-h-[44px] w-full sm:w-auto rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+              >
+                {profileBusy && <Spinner className="h-4 w-4" />}
+                Save
+              </button>
+            </div>
           </form>
         </section>
       )}

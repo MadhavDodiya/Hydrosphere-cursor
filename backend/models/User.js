@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
       maxlength: 160,
       default: "",
     },
+    phone: {
+      type: String,
+      trim: true,
+      maxlength: 40,
+      default: "",
+    },
     isVerified: {
       type: Boolean,
       default: false,

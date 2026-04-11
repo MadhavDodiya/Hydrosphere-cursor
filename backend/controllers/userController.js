@@ -7,6 +7,7 @@ function publicUser(user) {
     email: user.email,
     role: user.role,
     companyName: user.companyName || "",
+    phone: user.phone || "",
     isVerified: Boolean(user.isVerified),
   };
 }
@@ -34,13 +35,20 @@ export async function updateMe(req, res) {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { companyName } = req.body || {};
+    const { companyName, phone } = req.body || {};
 
     if (companyName != null) {
       if (user.role !== "seller") {
         return res.status(403).json({ message: "Seller role required" });
       }
       user.companyName = String(companyName).trim();
+    }
+
+    if (phone != null) {
+      if (user.role !== "seller") {
+        return res.status(403).json({ message: "Seller role required" });
+      }
+      user.phone = String(phone).trim();
     }
 
     await user.save();
@@ -50,4 +58,3 @@ export async function updateMe(req, res) {
     return res.status(500).json({ message: "Failed to update profile" });
   }
 }
-

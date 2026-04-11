@@ -17,6 +17,7 @@ function publicUser(user) {
     email: user.email,
     role: user.role,
     companyName: user.companyName || "",
+    phone: user.phone || "",
     isVerified: Boolean(user.isVerified),
   };
 }

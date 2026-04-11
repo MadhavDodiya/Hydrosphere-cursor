@@ -54,7 +54,7 @@ function buildFilter(query) {
   return filter;
 }
 
-const sellerSelect = "name email role companyName isVerified";
+const sellerSelect = "name email role companyName phone isVerified";
 
 /** Map Mongoose validation errors to a 400 response. */
 function validationMessage(err) {

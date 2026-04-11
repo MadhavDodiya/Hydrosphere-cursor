@@ -122,7 +122,12 @@ export default function ListingDetail() {
     : null;
 
   const whatsappText = `Hi, I'm interested in your listing on HydroSphere: ${listing.companyName}.`;
-  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+  const whatsappNumberRaw = seller?.phone ? String(seller.phone) : "";
+  let whatsappNumber = whatsappNumberRaw.replace(/[^\d]/g, "");
+  if (whatsappNumber.length === 10) whatsappNumber = `91${whatsappNumber}`;
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}`
+    : `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
