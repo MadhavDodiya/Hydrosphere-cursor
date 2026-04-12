@@ -39,7 +39,7 @@ export default function Navbar() {
               </li>
               <li className="nav-item">
                 <NavLink to="/marketplace" className={navLinkClass} onClick={close}>
-                  Suppliers
+                  Marketplace
                 </NavLink>
               </li>
               <li className="nav-item">
@@ -66,19 +66,30 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <div className="small text-body-secondary text-center text-lg-start">
-                    {user?.name || user?.email}
+                  <NavLink to="/dashboard" className="btn btn-outline-primary fw-medium" onClick={close}>
+                    Dashboard
+                  </NavLink>
+                  <NavLink to="/add-listing" className="btn btn-primary px-3 fw-medium" onClick={close}>
+                    <i className="bi bi-plus-circle pe-2"></i> Add Listing
+                  </NavLink>
+                  <div className="dropdown ms-lg-2 mt-2 mt-lg-0">
+                    <button className="btn btn-light dropdown-toggle d-flex align-items-center gap-2 w-100" type="button" data-bs-toggle="dropdown">
+                       <span className="small fw-medium text-dark">{user?.name || user?.email}</span>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+                       <li>
+                         <button
+                           className="dropdown-item text-danger small"
+                           onClick={() => {
+                             close();
+                             logout();
+                           }}
+                         >
+                           Log out
+                         </button>
+                       </li>
+                    </ul>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => {
-                      close();
-                      logout();
-                    }}
-                  >
-                    Log out
-                  </button>
                 </>
               )}
             </div>

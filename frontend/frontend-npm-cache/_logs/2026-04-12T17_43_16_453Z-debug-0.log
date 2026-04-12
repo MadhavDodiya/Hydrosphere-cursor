@@ -7,12 +7,13 @@
 6 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\etc\npmrc
 7 verbose title npm run build
 8 verbose argv "run" "build"
-9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-05T06_20_59_253Z-
-10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-05T06_20_59_253Z-debug-0.log
-11 silly logfile done cleaning log files
-12 verbose cwd C:\Madhav Dodiya\Hydrosphere-cursor\frontend
-13 verbose os Windows_NT 10.0.26200
-14 verbose node v24.12.0
-15 verbose npm  v11.12.1
-16 verbose exit 0
-17 info ok
+9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-12T17_43_16_453Z-
+10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend\frontend-npm-cache\_logs\2026-04-12T17_43_16_453Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 verbose cwd C:\Madhav Dodiya\Hydrosphere-cursor\frontend
+14 verbose os Windows_NT 10.0.26200
+15 verbose node v24.12.0
+16 verbose npm  v11.12.1
+17 verbose exit 0
+18 info ok

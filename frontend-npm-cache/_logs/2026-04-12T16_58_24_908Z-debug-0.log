@@ -7,9 +7,9 @@
 6 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\etc\npmrc
 7 verbose title npm config get prefix
 8 verbose argv "config" "get" "prefix"
-9 verbose logfile logs-max:10 dir:c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_03_16_793Z-
-10 verbose logfile c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_03_16_793Z-debug-0.log
-11 silly logfile done cleaning log files
+9 verbose logfile logs-max:10 dir:c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_58_24_908Z-
+10 verbose logfile c:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_58_24_908Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
 12 verbose cwd c:\Madhav Dodiya\Hydrosphere-cursor
 13 verbose os Windows_NT 10.0.26200
 14 verbose node v24.12.0

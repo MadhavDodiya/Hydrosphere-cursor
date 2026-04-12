@@ -7,6 +7,7 @@
 6 silly config load:file:C:\Users\Madhav Dodiya\AppData\Roaming\npm\etc\npmrc
 7 verbose title npm run dev
 8 verbose argv "run" "dev"
-9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_04_03_965Z-
-10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T16_04_03_965Z-debug-0.log
-11 silly logfile done cleaning log files
+9 verbose logfile logs-max:10 dir:C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T17_20_51_515Z-
+10 verbose logfile C:\Madhav Dodiya\Hydrosphere-cursor\frontend-npm-cache\_logs\2026-04-12T17_20_51_515Z-debug-0.log
+11 silly logfile start cleaning logs, removing 2 files
+12 silly logfile done cleaning log files

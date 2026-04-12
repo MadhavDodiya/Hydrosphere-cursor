@@ -26,7 +26,7 @@ export default function Hero() {
               minutes.
             </p>
 
-            <div className="hs-search-card hs-shadow-soft mt-4 p-3 p-md-2">
+            <div className="hs-search-card mt-5 p-3 p-md-2">
               <form
                 className="hs-search-form"
                 onSubmit={(e) => {
@@ -62,7 +62,7 @@ export default function Hero() {
                 </div>
 
                 <div className="hs-search-action">
-                  <button type="submit" className="btn btn-primary w-100 px-4">
+                  <button type="submit" className="btn btn-primary w-100 px-4 py-2 fw-bold hs-shadow-hover">
                     Search Suppliers
                   </button>
                 </div>
@@ -70,8 +70,8 @@ export default function Hero() {
             </div>
           </div>
 
-          <div className="col-12 col-lg-6">
-            <div className="hs-hero-media hs-shadow-soft">
+          <div className="col-12 col-lg-6 mt-5 mt-lg-0">
+            <div className="hs-hero-media">
               <img src="/images/hero-plant.png" alt="Industrial hydrogen plant" />
               <div className="hs-hero-badge">
                 <div className="d-flex align-items-center gap-2">
