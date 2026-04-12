@@ -1,0 +1,30 @@
+.hs-footer {
+  color: #0f172a;
+}
+
+.hs-footer-link {
+  color: rgba(33, 37, 41, 0.72);
+  text-decoration: none;
+}
+
+.hs-footer-link:hover {
+  color: rgba(11, 94, 215, 1);
+}
+
+.hs-social {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(16, 24, 40, 0.1);
+  color: rgba(33, 37, 41, 0.7);
+  text-decoration: none;
+}
+
+.hs-social:hover {
+  color: rgba(11, 94, 215, 1);
+  border-color: rgba(11, 94, 215, 0.25);
+}
+

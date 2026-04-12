@@ -1,0 +1,90 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function Hero() {
+  const navigate = useNavigate();
+  const productOptions = useMemo(() => ["Hydrogen Gas", "Liquid Hydrogen", "Equipment", "Storage"], []);
+  const [location, setLocation] = useState("");
+  const [product, setProduct] = useState(productOptions[0]);
+
+  return (
+    <section className="hs-section">
+      <div className="container">
+        <div className="row align-items-center g-4 g-lg-5">
+          <div className="col-12 col-lg-6">
+            <div className="hs-hero-tag">
+              <span className="bi bi-stars" aria-hidden="true" />
+              <span>THE FUTURE OF ENERGY</span>
+            </div>
+
+            <h1 className="mt-3 display-5 fw-bold hs-hero-title">
+              Find Verified <span className="hs-accent">Hydrogen Suppliers</span> Near You
+            </h1>
+
+            <p className="mt-3 hs-muted">
+              Connect with trusted hydrogen providers for your business. Search, compare, and contact suppliers in
+              minutes.
+            </p>
+
+            <div className="hs-search-card hs-shadow-soft mt-4 p-3 p-md-2">
+              <form
+                className="hs-search-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  navigate("/marketplace");
+                }}
+              >
+                <div className="hs-search-field">
+                  <span className="bi bi-geo-alt hs-search-icon" aria-hidden="true" />
+                  <input
+                    className="form-control bg-transparent"
+                    placeholder="Location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    aria-label="Location"
+                  />
+                </div>
+
+                <div className="hs-search-field">
+                  <span className="bi bi-funnel hs-search-icon" aria-hidden="true" />
+                  <select
+                    className="form-select bg-transparent"
+                    value={product}
+                    onChange={(e) => setProduct(e.target.value)}
+                    aria-label="Product"
+                  >
+                    {productOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="hs-search-action">
+                  <button type="submit" className="btn btn-primary w-100 px-4">
+                    Search Suppliers
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div className="col-12 col-lg-6">
+            <div className="hs-hero-media hs-shadow-soft">
+              <img src="/images/hero-plant.png" alt="Industrial hydrogen plant" />
+              <div className="hs-hero-badge">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="hs-hero-badge-dot" aria-hidden="true" />
+                  <div className="lh-sm">
+                    <div className="fw-bold small">99.9% Purity</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

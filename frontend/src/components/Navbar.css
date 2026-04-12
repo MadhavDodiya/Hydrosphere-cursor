@@ -1,0 +1,29 @@
+.hs-nav {
+  backdrop-filter: blur(10px);
+}
+
+.hs-brand {
+  letter-spacing: -0.02em;
+}
+
+.hs-nav-link {
+  font-weight: 600;
+  color: rgba(33, 37, 41, 0.72);
+  border-radius: 12px;
+  padding: 0.5rem 0.75rem;
+}
+
+.hs-nav-link:hover {
+  color: rgba(33, 37, 41, 0.9);
+  background: rgba(13, 110, 253, 0.06);
+}
+
+.hs-nav-link.active {
+  color: #0b5ed7;
+  background: rgba(13, 110, 253, 0.12);
+}
+
+.hs-login {
+  color: rgba(33, 37, 41, 0.75);
+}
+
