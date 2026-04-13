@@ -51,6 +51,10 @@ const inquirySchema = new mongoose.Schema(
       minlength: 1,
       maxlength: 5000,
     },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

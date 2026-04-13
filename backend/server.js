@@ -8,6 +8,10 @@ import listingRoutes from "./routes/listingRoutes.js";
 import savedRoutes from "./routes/savedRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import sellerRoutes from "./routes/sellerRoutes.js";
+
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -56,6 +60,10 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/saved", savedRoutes);
 app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/contacts", contactRoutes);
+app.use("/api/seller", sellerRoutes);
+
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, name: "HydroSphere API" });

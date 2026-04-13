@@ -49,6 +49,9 @@ function buildFilter(query) {
 
   if (query.seller && String(query.seller).trim()) {
     filter.seller = String(query.seller).trim();
+  } else {
+    // Marketplace view only shows approved listings
+    filter.status = "approved";
   }
 
   return filter;

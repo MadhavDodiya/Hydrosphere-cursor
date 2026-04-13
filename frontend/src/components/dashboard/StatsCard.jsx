@@ -18,7 +18,8 @@ export default function StatsCard({ loading, title, value, trend, icon, colorCla
     );
   }
 
-  const isPositive = trend >= 0;
+  const rawTrend = typeof trend === "string" ? parseFloat(trend.replace(/[^0-9.-]/g, "")) : trend;
+  const isPositive = rawTrend >= 0;
   const c = colorMap[colorClass] || colorMap.primary;
 
   return (
@@ -37,7 +38,7 @@ export default function StatsCard({ loading, title, value, trend, icon, colorCla
         <span className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill fw-semibold"
           style={{ fontSize: "0.75rem", background: isPositive ? "#f0fdf4" : "#fef2f2", color: isPositive ? "#16a34a" : "#dc2626" }}>
           <i className={`bi ${isPositive ? "bi-arrow-up-right" : "bi-arrow-down-right"}`}></i>
-          {Math.abs(trend)}%
+          {trend}
         </span>
         <span className="text-muted" style={{ fontSize: "0.78rem" }}>vs last month</span>
       </div>

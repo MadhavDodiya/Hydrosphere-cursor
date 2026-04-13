@@ -26,7 +26,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["buyer", "seller"],
+      enum: ["buyer", "seller", "admin"],
+      default: "buyer",
       required: true,
     },
     companyName: {
@@ -42,6 +43,10 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isSuspended: {
       type: Boolean,
       default: false,
     },

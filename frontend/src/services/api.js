@@ -11,7 +11,7 @@ const api = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
   // Relative /api calls in dev always hit the Vite dev server first (proxy)
-  withCredentials: false,
+  withCredentials: true,
 });
 
 /** Attach JWT from localStorage for protected routes */

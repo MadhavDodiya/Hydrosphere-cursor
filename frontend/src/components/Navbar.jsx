@@ -71,7 +71,7 @@ export default function Navbar() {
           <NavLink to="/" end style={navLinkStyle}>Home</NavLink>
           <NavLink to="/marketplace" style={navLinkStyle}>Marketplace</NavLink>
           <NavLink to="/about" style={navLinkStyle}>About</NavLink>
-          <a href="/#contact" style={plainLinkStyle} onClick={close}>Contact</a>
+          <NavLink to="/contact" style={navLinkStyle}>Contact</NavLink>
         </nav>
 
         {/* ── Desktop Auth (hidden on mobile) ─────────────── */}
@@ -108,6 +108,11 @@ export default function Navbar() {
                     <NavLink to="/dashboard" className="hs-dropdown-item" onClick={close}>
                       <i className="bi bi-speedometer2" /> Dashboard
                     </NavLink>
+                    {user?.role === "admin" && (
+                      <NavLink to="/admin" className="hs-dropdown-item" onClick={close}>
+                        <i className="bi bi-shield-lock-fill text-danger" /> Admin Panel
+                      </NavLink>
+                    )}
                     {user?.role === "seller" && (
                       <NavLink to="/add-listing" className="hs-dropdown-item" onClick={close}>
                         <i className="bi bi-plus-circle" /> Add Listing
@@ -143,7 +148,7 @@ export default function Navbar() {
             <NavLink to="/" end style={navLinkStyle} onClick={close}>Home</NavLink>
             <NavLink to="/marketplace" style={navLinkStyle} onClick={close}>Marketplace</NavLink>
             <NavLink to="/about" style={navLinkStyle} onClick={close}>About</NavLink>
-            <a href="/#contact" style={plainLinkStyle} onClick={close}>Contact</a>
+            <NavLink to="/contact" style={navLinkStyle} onClick={close}>Contact</NavLink>
           </nav>
 
           <div className="hs-mobile-divider" />

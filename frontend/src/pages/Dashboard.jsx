@@ -7,19 +7,33 @@ import ActivityFeed from "../components/dashboard/ActivityFeed.jsx";
 import DashboardChart from "../components/dashboard/DashboardChart.jsx";
 import "./Dashboard.css";
 import { useAuth } from "../context/AuthContext.jsx";
+import api from "../services/api.js";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/api/seller/stats");
+      setStats(data);
+    } catch (err) {
+      console.error("Error fetching seller stats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate network latency for skeleton load
-    const timer = setTimeout(() => {
+    if (user?.role === "seller") {
+      fetchStats();
+    } else {
       setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [user]);
 
   const toggleSidebar = () => setMobileOpen(!mobileOpen);
   const closeSidebar = () => setMobileOpen(false);
@@ -46,16 +60,44 @@ export default function Dashboard() {
           {/* Stats Row */}
           <div className="row g-4 mb-4">
             <div className="col-12 col-sm-6 col-xl-3">
-              <StatsCard loading={loading} title="Total Leads" value="128" trend={12.5} icon="bi-people" colorClass="primary" />
+              <StatsCard 
+                loading={loading} 
+                title="Total Leads" 
+                value={stats?.totalLeads || "0"} 
+                trend="+10%" 
+                icon="bi-people" 
+                colorClass="primary" 
+              />
             </div>
             <div className="col-12 col-sm-6 col-xl-3">
-              <StatsCard loading={loading} title="Active Orders" value="45" trend={8.2} icon="bi-basket" colorClass="success" />
+              <StatsCard 
+                loading={loading} 
+                title="Active Listings" 
+                value={stats?.activeListings || "0"} 
+                trend="+5%" 
+                icon="bi-card-list" 
+                colorClass="success" 
+              />
             </div>
             <div className="col-12 col-sm-6 col-xl-3">
-              <StatsCard loading={loading} title="Messages" value="23" trend={-2.4} icon="bi-chat-dots" colorClass="warning" />
+              <StatsCard 
+                loading={loading} 
+                title="New Today" 
+                value={stats?.newLeadsToday || "0"} 
+                trend="+20%" 
+                icon="bi-chat-dots" 
+                colorClass="warning" 
+              />
             </div>
             <div className="col-12 col-sm-6 col-xl-3">
-              <StatsCard loading={loading} title="Total Revenue" value="$45,210" trend={24.5} icon="bi-currency-dollar" colorClass="info" />
+              <StatsCard 
+                loading={loading} 
+                title="Total Listings" 
+                value={stats?.totalListings || "0"} 
+                trend="+0%" 
+                icon="bi-box" 
+                colorClass="info" 
+              />
             </div>
           </div>
 

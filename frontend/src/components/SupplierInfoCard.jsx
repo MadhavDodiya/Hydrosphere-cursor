@@ -1,6 +1,45 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import InquiryModal from "./InquiryModal.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useToast } from "../context/ToastContext.jsx";
+import { saveListing, unsaveListing } from "../services/savedService.js";
 
-export default function SupplierInfoCard({ supplierName, location, rating, price }) {
+export default function SupplierInfoCard({ listing, supplierName, location, rating, price }) {
+  const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
+  const [showModal, setShowModal] = useState(false);
+  const [isSaved, setIsSaved] = useState(listing?.saved || false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setIsSaved(listing?.saved || false);
+  }, [listing]);
+
+  const toggleSave = async () => {
+    if (!isAuthenticated) {
+      showToast("Please sign in to save listings.");
+      return;
+    }
+    if (!listing?._id || saving) return;
+
+    setSaving(true);
+    const nextState = !isSaved;
+    try {
+      if (nextState) {
+        await saveListing(listing._id);
+        showToast("Listing saved to your collection.", "success");
+      } else {
+        await unsaveListing(listing._id);
+        showToast("Removed from saved.");
+      }
+      setIsSaved(nextState);
+    } catch (err) {
+      showToast("Failed to update saved status.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="supplier-sticky-card">
       <div className="card border-0 shadow-sm rounded-3">
@@ -10,14 +49,24 @@ export default function SupplierInfoCard({ supplierName, location, rating, price
               <h4 className="card-title fw-bold mb-1">{supplierName}</h4>
               <p className="text-muted small mb-0"><i className="bi bi-geo-alt pe-1"></i>{location}</p>
             </div>
-            <div className="trust-badge rounded-pill px-3 py-1 small">
-              <i className="bi bi-shield-check pe-1"></i> Verified
+            <div className="trust-badge rounded-pill px-3 py-1 small d-flex align-items-center gap-1">
+              <i className="bi bi-shield-check text-success"></i> Verified
             </div>
           </div>
           
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <span className="text-warning fs-5"><i className="bi bi-star-fill"></i></span>
-            <span className="fw-bold fs-5">{rating}</span>
+          <div className="d-flex align-items-center justify-content-between mb-4">
+            <div className="d-flex align-items-center gap-2">
+              <span className="text-warning fs-5"><i className="bi bi-star-fill"></i></span>
+              <span className="fw-bold fs-5">{rating}</span>
+            </div>
+            <button 
+              className={`btn btn-sm rounded-pill px-3 ${isSaved ? 'btn-danger' : 'btn-outline-danger'}`}
+              onClick={toggleSave}
+              disabled={saving}
+            >
+              <i className={`bi bi-heart${isSaved ? '-fill' : ''} me-1`}></i>
+              {isSaved ? 'Saved' : 'Save'}
+            </button>
           </div>
 
           <div className="price-section mb-4 p-3 bg-light rounded text-center">
@@ -28,10 +77,16 @@ export default function SupplierInfoCard({ supplierName, location, rating, price
           </div>
 
           <div className="d-flex flex-column gap-3 d-none d-lg-flex">
-            <button className="btn btn-primary btn-lg fw-medium shadow-sm w-100">
+            <button 
+              className="btn btn-primary btn-lg fw-medium shadow-sm w-100"
+              onClick={() => setShowModal(true)}
+            >
               Request Quote
             </button>
-            <button className="btn btn-outline-secondary btn-lg fw-medium w-100">
+            <button 
+              className="btn btn-outline-secondary btn-lg fw-medium w-100"
+              onClick={() => setShowModal(true)}
+            >
               Contact Supplier
             </button>
           </div>
@@ -48,9 +103,17 @@ export default function SupplierInfoCard({ supplierName, location, rating, price
       
       {/* Mobile Sticky Action Bar */}
       <div className="mobile-sticky-action d-lg-none">
-        <button className="btn btn-outline-secondary fw-medium w-50">Contact</button>
-        <button className="btn btn-primary fw-medium shadow-sm w-50">Request Quote</button>
+        <button className="btn btn-outline-secondary fw-medium w-50" onClick={() => setShowModal(true)}>Contact</button>
+        <button className="btn btn-primary fw-medium shadow-sm w-50" onClick={() => setShowModal(true)}>Request Quote</button>
       </div>
+
+      {listing && (
+        <InquiryModal 
+          listing={listing} 
+          show={showModal} 
+          onClose={() => setShowModal(false)} 
+        />
+      )}
     </div>
   );
 }

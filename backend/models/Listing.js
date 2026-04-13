@@ -29,6 +29,15 @@ const listingSchema = new mongoose.Schema(
       default: "",
       maxlength: 5000,
     },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

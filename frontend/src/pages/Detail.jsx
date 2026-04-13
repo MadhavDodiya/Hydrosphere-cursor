@@ -75,6 +75,7 @@ export default function Detail() {
           {/* Right section: Sticky Action Panel */}
           <div className="col-12 col-lg-4">
             <SupplierInfoCard 
+              listing={listing}
               supplierName={listing?.companyName || "HydroGen Pro"}
               location={listing?.location || "Houston, USA"}
               rating={4.8}
