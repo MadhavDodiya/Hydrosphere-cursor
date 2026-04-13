@@ -9,21 +9,24 @@ import Dashboard from "./pages/Dashboard.jsx";
 import AddListing from "./pages/AddListing.jsx";
 import Detail from "./pages/Detail.jsx";
 import Listing from "./pages/Listing.jsx";
+import About from "./pages/About.jsx";
 
 export default function App() {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard');
+  // Hide global Navbar on dashboard (it has its own sidebar + topbar)
+  const hideNav = location.pathname.startsWith("/dashboard");
 
   return (
     <div className="min-vh-100 d-flex flex-column">
-      {!isDashboard && <Navbar />}
-      <main className="flex-grow-1 pb-5">
+      {!hideNav && <Navbar />}
+      <main className="flex-grow-1">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/marketplace" element={<Listing />} />
-          <Route path="/listings/:id" element={<Detail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/"              element={<Home />} />
+          <Route path="/marketplace"   element={<Listing />} />
+          <Route path="/about"         element={<About />} />
+          <Route path="/listings/:id"  element={<Detail />} />
+          <Route path="/login"         element={<Login />} />
+          <Route path="/signup"        element={<Signup />} />
           <Route
             path="/dashboard"
             element={
