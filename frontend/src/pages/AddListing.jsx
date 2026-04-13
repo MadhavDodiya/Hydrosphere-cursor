@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Form, FormField, FormActions } from "../components/Form.jsx";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import Loader from "../components/Loader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
@@ -13,9 +12,12 @@ import { getApiErrorMessage } from "../utils/apiError.js";
 
 const TYPES = ["Green", "Blue", "Grey"];
 
-/**
- * Create or edit a listing (seller only — route guarded).
- */
+const typeColors = {
+  Green: { bg: "#f0fdf4", border: "#86efac", text: "#16a34a", dot: "#22c55e" },
+  Blue:  { bg: "#eff6ff", border: "#93c5fd", text: "#2563eb", dot: "#3b82f6" },
+  Grey:  { bg: "#f8fafc", border: "#cbd5e1", text: "#64748b", dot: "#94a3b8" },
+};
+
 export default function AddListing() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,11 +43,7 @@ export default function AddListing() {
         const mine = await fetchListings({ seller: user.id });
         const found = mine.find((l) => l._id === id);
         if (cancelled) return;
-        if (!found) {
-          setError("Listing not found or not yours.");
-          setLoading(false);
-          return;
-        }
+        if (!found) { setError("Listing not found or not yours."); setLoading(false); return; }
         setCompanyName(found.companyName);
         setHydrogenType(found.hydrogenType);
         setPrice(String(found.price));
@@ -53,167 +51,177 @@ export default function AddListing() {
         setLocation(found.location);
         setDescription(found.description ?? "");
       } catch (err) {
-        if (!cancelled) {
-          const msg = getApiErrorMessage(err, "Failed to load listing.");
-          setError(msg);
-          showToast(msg);
-        }
+        if (!cancelled) { const msg = getApiErrorMessage(err, "Failed to load listing."); setError(msg); showToast(msg); }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id, isEdit, user?.id, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const desc = description.trim();
-    if (desc.length < 10) {
-      setError("Description must be at least 10 characters.");
-      return;
-    }
+    if (desc.length < 10) { setError("Description must be at least 10 characters."); return; }
     const p = Number(price);
     const q = Number(quantity);
-    if (Number.isNaN(p) || p < 0) {
-      setError("Enter a valid price (0 or greater).");
-      return;
-    }
-    if (Number.isNaN(q) || q < 0 || !Number.isInteger(q)) {
-      setError("Enter a valid whole-number quantity (0 or greater).");
-      return;
-    }
-
+    if (Number.isNaN(p) || p < 0) { setError("Enter a valid price (0 or greater)."); return; }
+    if (Number.isNaN(q) || q < 0 || !Number.isInteger(q)) { setError("Enter a valid whole-number quantity."); return; }
     setSubmitting(true);
-    const body = {
-      companyName: companyName.trim(),
-      hydrogenType,
-      price: p,
-      quantity: q,
-      location: location.trim(),
-      description: desc,
-    };
+    const body = { companyName: companyName.trim(), hydrogenType, price: p, quantity: q, location: location.trim(), description: desc };
     try {
-      if (isEdit) {
-        await updateListing(id, body);
-      } else {
-        await createListing(body);
-      }
-      showToast(isEdit ? "Listing updated." : "Listing created.", "success");
+      if (isEdit) { await updateListing(id, body); } else { await createListing(body); }
+      showToast(isEdit ? "Listing updated." : "Listing created!", "success");
       navigate("/dashboard");
     } catch (err) {
       const msg = getApiErrorMessage(err, "Save failed");
-      setError(msg);
-      showToast(msg);
-    } finally {
-      setSubmitting(false);
-    }
+      setError(msg); showToast(msg);
+    } finally { setSubmitting(false); }
   };
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-10">
-        <Loader label="Loading listing" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+      <Loader label="Loading listing…" />
+    </div>
+  );
+
+  const inputStyle = { borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem", fontSize: "0.9rem", width: "100%", outline: "none", transition: "border-color 0.2s, box-shadow 0.2s", background: "white" };
+  const labelStyle = { fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginBottom: "0.4rem", display: "block" };
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-10">
-      <Form title={isEdit ? "Edit listing" : "Add listing"} onSubmit={handleSubmit}>
-        {error && (
-          <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-        )}
-        <FormField label="Company name" id="companyName">
-          <input
-            id="companyName"
-            required
-            minLength={2}
-            className="w-full min-h-[44px] rounded border border-slate-300 px-3 py-2 text-sm"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Hydrogen type" id="hydrogenType">
-          <select
-            id="hydrogenType"
-            className="w-full min-h-[44px] rounded border border-slate-300 px-3 py-2 text-sm"
-            value={hydrogenType}
-            onChange={(e) => setHydrogenType(e.target.value)}
-          >
-            {TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Price (USD)" id="price">
-          <input
-            id="price"
-            type="number"
-            min={0}
-            step="0.01"
-            required
-            className="w-full min-h-[44px] rounded border border-slate-300 px-3 py-2 text-sm"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Quantity (units)" id="quantity">
-          <input
-            id="quantity"
-            type="number"
-            min={0}
-            step={1}
-            required
-            className="w-full min-h-[44px] rounded border border-slate-300 px-3 py-2 text-sm"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Location" id="location">
-          <input
-            id="location"
-            required
-            minLength={2}
-            className="w-full min-h-[44px] rounded border border-slate-300 px-3 py-2 text-sm"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Description" id="description">
-          <textarea
-            id="description"
-            required
-            rows={5}
-            minLength={10}
-            maxLength={5000}
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Supply terms, certifications, delivery, etc."
-          />
-        </FormField>
-        <FormActions>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="min-h-[44px] rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-60"
-          >
-            {submitting ? "Saving…" : isEdit ? "Update listing" : "Publish listing"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="min-h-[44px] rounded border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-        </FormActions>
-      </Form>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8faff 0%, #f0f7ff 100%)" }} className="py-5">
+      <div className="container" style={{ maxWidth: "720px" }}>
+
+        {/* Header breadcrumb */}
+        <div className="mb-4">
+          <nav aria-label="breadcrumb">
+            <ol className="breadcrumb mb-2" style={{ fontSize: "0.85rem" }}>
+              <li className="breadcrumb-item"><Link to="/dashboard" className="text-decoration-none text-muted">Dashboard</Link></li>
+              <li className="breadcrumb-item active text-dark fw-medium">{isEdit ? "Edit Listing" : "New Listing"}</li>
+            </ol>
+          </nav>
+          <h1 className="fw-bold mb-1" style={{ fontSize: "1.8rem", color: "#0f172a" }}>
+            {isEdit ? "✏️ Edit Listing" : "🚀 Add New Listing"}
+          </h1>
+          <p className="text-muted" style={{ fontSize: "0.9rem" }}>Fill in the details to {isEdit ? "update your" : "publish a new"} hydrogen listing</p>
+        </div>
+
+        <div className="card border-0 shadow-sm" style={{ borderRadius: "20px", overflow: "hidden" }}>
+
+          {/* Card Header */}
+          <div className="px-4 px-md-5 py-3 border-bottom" style={{ background: "linear-gradient(135deg, #f8faff, #eff6ff)" }}>
+            <div className="d-flex align-items-center gap-2">
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563eb" }}></div>
+              <span className="fw-semibold text-dark" style={{ fontSize: "0.9rem" }}>Listing Information</span>
+            </div>
+          </div>
+
+          <div className="p-4 p-md-5">
+            {error && (
+              <div className="d-flex align-items-start gap-3 p-3 mb-4" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px" }}>
+                <i className="bi bi-exclamation-circle-fill text-danger flex-shrink-0 mt-1"></i>
+                <span style={{ fontSize: "0.875rem", color: "#dc2626" }}>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
+
+              {/* Company Name */}
+              <div>
+                <label htmlFor="companyName" style={labelStyle}>Company Name *</label>
+                <div className="position-relative">
+                  <i className="bi bi-building position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                  <input id="companyName" required minLength={2} style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                    placeholder="e.g. HydroGen Solutions Ltd." value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Hydrogen Type */}
+              <div>
+                <label style={labelStyle}>Hydrogen Type *</label>
+                <div className="d-flex gap-3 flex-wrap">
+                  {TYPES.map(t => {
+                    const c = typeColors[t];
+                    return (
+                      <button key={t} type="button" onClick={() => setHydrogenType(t)}
+                        style={{
+                          flex: "1 1 100px", padding: "0.8rem 1rem", border: `2px solid ${hydrogenType === t ? c.dot : "#e2e8f0"}`,
+                          borderRadius: "12px", background: hydrogenType === t ? c.bg : "white",
+                          cursor: "pointer", transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div className="d-flex align-items-center gap-2">
+                          <span style={{ width: 10, height: 10, borderRadius: "50%", background: c.dot, display: "inline-block", flexShrink: 0 }}></span>
+                          <span style={{ fontWeight: 600, fontSize: "0.875rem", color: hydrogenType === t ? c.text : "#64748b" }}>{t} Hydrogen</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Price & Quantity */}
+              <div className="row g-3">
+                <div className="col-12 col-sm-6">
+                  <label htmlFor="price" style={labelStyle}>Price (USD/kg) *</label>
+                  <div className="position-relative">
+                    <span className="position-absolute top-50 translate-middle-y ms-3 fw-semibold" style={{ color: "#94a3b8", fontSize: "0.9rem" }}>$</span>
+                    <input id="price" type="number" min={0} step="0.01" required style={{ ...inputStyle, paddingLeft: "2rem" }}
+                      placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
+                  </div>
+                </div>
+                <div className="col-12 col-sm-6">
+                  <label htmlFor="quantity" style={labelStyle}>Quantity (units) *</label>
+                  <div className="position-relative">
+                    <i className="bi bi-boxes position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                    <input id="quantity" type="number" min={0} step={1} required style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                      placeholder="e.g. 500" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label htmlFor="location" style={labelStyle}>Location *</label>
+                <div className="position-relative">
+                  <i className="bi bi-geo-alt position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                  <input id="location" required minLength={2} style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                    placeholder="e.g. Berlin, Germany" value={location} onChange={(e) => setLocation(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="description" style={labelStyle}>Description *
+                  <span className="fw-normal text-muted ms-1" style={{ fontSize: "0.8rem" }}>(min 10 chars, max 5000)</span>
+                </label>
+                <textarea id="description" required rows={5} minLength={10} maxLength={5000}
+                  style={{ ...inputStyle, resize: "vertical", minHeight: "130px" }}
+                  placeholder="Describe supply terms, certifications, delivery timelines, compliance details…"
+                  value={description} onChange={(e) => setDescription(e.target.value)}
+                />
+                <div className="text-end mt-1" style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{description.length} / 5000</div>
+              </div>
+
+              {/* Actions */}
+              <div className="d-flex flex-column flex-sm-row gap-3 pt-2">
+                <button type="submit" disabled={submitting}
+                  className="btn fw-semibold flex-fill"
+                  style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "white", borderRadius: "12px", padding: "0.8rem", fontSize: "0.95rem", border: "none", boxShadow: "0 4px 15px rgba(37,99,235,0.3)", opacity: submitting ? 0.8 : 1 }}>
+                  {submitting ? <span><span className="spinner-border spinner-border-sm me-2"></span>Saving…</span>
+                    : <span><i className={`bi ${isEdit ? "bi-pencil-square" : "bi-rocket-takeoff"} me-2`}></i>{isEdit ? "Update Listing" : "Publish Listing"}</span>}
+                </button>
+                <button type="button" onClick={() => navigate("/dashboard")}
+                  className="btn fw-medium"
+                  style={{ borderRadius: "12px", padding: "0.8rem 1.5rem", border: "1.5px solid #e2e8f0", color: "#64748b", background: "white" }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

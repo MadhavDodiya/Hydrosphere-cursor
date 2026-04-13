@@ -1,57 +1,126 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
+
+const menuItems = [
+  { name: "Overview",    icon: "bi-grid-1x2-fill",  link: "/dashboard",   section: "main" },
+  { name: "Marketplace", icon: "bi-shop",            link: "/marketplace", section: "main" },
+  { name: "Leads",       icon: "bi-inbox-fill",      link: "/dashboard",   section: "main" },
+  { name: "Add Listing", icon: "bi-plus-square-fill",link: "/add-listing", section: "main" },
+];
 
 export default function Sidebar({ mobileOpen, closeMobileSidebar }) {
   const location = useLocation();
-  const path = location.pathname;
-
-  const menuItems = [
-    { name: "Dashboard", icon: "bi-grid-1x2", link: "/dashboard" },
-    { name: "Marketplace", icon: "bi-box", link: "/marketplace" },
-    { name: "Orders / Leads", icon: "bi-basket", link: "/dashboard" }, // Can keep as dashboard for now
-    { name: "Add Listing", icon: "bi-plus-circle", link: "/add-listing" },
-    { name: "Profile", icon: "bi-person", link: "/dashboard" },
-  ];
+  const { user, logout } = useAuth();
 
   return (
     <>
-      <div className={`dashboard-sidebar ${mobileOpen ? "mobile-open" : ""} d-flex flex-column p-3`}>
-        <div className="d-flex align-items-center justify-content-between mb-4 px-2 mt-2">
-          <Link to="/" className="text-decoration-none text-dark d-flex align-items-center gap-2">
-            <div className="bg-primary text-white rounded d-flex align-items-center justify-content-center fw-bold" style={{width: 32, height: 32}}>
-               H
+      {/* Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={closeMobileSidebar}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 1039, backdropFilter: "blur(4px)" }}
+          className="d-lg-none"
+        />
+      )}
+
+      {/* Sidebar Panel */}
+      <aside
+        className={`dashboard-sidebar ${mobileOpen ? "mobile-open" : ""} d-flex flex-column`}
+        style={{
+          background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
+          borderRight: "none",
+          position: "fixed",
+          top: 0, left: 0, bottom: 0,
+          width: 260,
+          zIndex: 1040,
+          transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+          transform: mobileOpen ? "translateX(0)" : undefined,
+        }}
+      >
+        {/* Logo */}
+        <div className="d-flex align-items-center justify-content-between px-4 py-4 flex-shrink-0">
+          <Link to="/" className="d-flex align-items-center gap-2 text-decoration-none" onClick={closeMobileSidebar}>
+            <div style={{ width: 34, height: 34, borderRadius: "10px", background: "linear-gradient(135deg,#3b82f6,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "white", fontSize: "1rem", boxShadow: "0 4px 12px rgba(59,130,246,0.4)" }}>
+              H
             </div>
-            <span className="fs-5 fw-bold">HydroSphere</span>
+            <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "white", letterSpacing: "-0.02em" }}>HydroSphere</span>
           </Link>
-          <button className="btn-close d-lg-none" onClick={closeMobileSidebar}></button>
+          <button className="btn p-0 border-0 d-lg-none" onClick={closeMobileSidebar}>
+            <i className="bi bi-x-lg" style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}></i>
+          </button>
         </div>
-        
-        <div className="nav flex-column nav-pills flex-grow-1">
-          <div className="small text-muted fw-semibold mb-2 px-2 text-uppercase" style={{fontSize: "0.75rem"}}>Menu</div>
-          {menuItems.map((item, idx) => (
-            <Link 
-              key={idx} 
-              to={item.link} 
-              className={`nav-link d-flex align-items-center gap-3 ${path === item.link ? "active" : ""}`}
-            >
-              <i className={`bi ${item.icon}`}></i> {item.name}
-            </Link>
-          ))}
-        </div>
-        
-        <div className="mt-auto px-2 mb-3">
-          <div className="bg-light p-3 rounded text-center">
-            <h6 className="fw-bold text-dark fs-6 mb-1">Upgrade Plan</h6>
-            <p className="small text-muted mb-2">Get access to premium leads</p>
-            <button className="btn btn-primary btn-sm w-100 fw-medium">View Pricing</button>
+
+        {/* User Profile */}
+        <div className="mx-3 mb-4 p-3" style={{ background: "rgba(255,255,255,0.05)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="d-flex align-items-center gap-3">
+            <div style={{ width: 38, height: 38, borderRadius: "10px", background: "linear-gradient(135deg,#3b82f6,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "white", fontSize: "0.9rem", flexShrink: 0 }}>
+              {(user?.name || "U")[0].toUpperCase()}
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <div className="fw-semibold text-truncate" style={{ fontSize: "0.875rem", color: "white" }}>{user?.name || "User"}</div>
+              <div className="text-truncate" style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)" }}>{user?.email}</div>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: user?.role === "seller" ? "rgba(34,197,94,0.2)" : "rgba(59,130,246,0.2)", color: user?.role === "seller" ? "#86efac" : "#93c5fd", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              {user?.role || "buyer"}
+            </span>
           </div>
         </div>
-      </div>
-      
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark opacity-50 z-index-1030 d-lg-none" style={{zIndex: 1030}} onClick={closeMobileSidebar}></div>
-      )}
+
+        {/* Nav */}
+        <div className="flex-fill px-3 overflow-auto">
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", padding: "0 0.5rem", marginBottom: "0.5rem" }}>NAVIGATION</p>
+          <nav className="d-flex flex-column gap-1">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.link;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.link}
+                  onClick={closeMobileSidebar}
+                  className="d-flex align-items-center gap-3 text-decoration-none"
+                  style={{
+                    padding: "0.65rem 0.875rem",
+                    borderRadius: "10px",
+                    transition: "all 0.2s ease",
+                    background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
+                    color: isActive ? "white" : "rgba(255,255,255,0.55)",
+                    fontWeight: isActive ? 600 : 400,
+                    fontSize: "0.875rem",
+                    borderLeft: isActive ? "3px solid #3b82f6" : "3px solid transparent",
+                  }}
+                >
+                  <i className={`bi ${item.icon}`} style={{ fontSize: "1rem", flexShrink: 0 }}></i>
+                  {item.name}
+                  {item.name === "Leads" && (
+                    <span className="ms-auto" style={{ background: "#3b82f6", color: "white", fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "20px" }}>3</span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom */}
+        <div className="p-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="mb-3 p-3" style={{ background: "rgba(59,130,246,0.12)", borderRadius: "12px", border: "1px solid rgba(59,130,246,0.2)" }}>
+            <div className="fw-semibold mb-1" style={{ fontSize: "0.8rem", color: "white" }}>Upgrade to Pro</div>
+            <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.6rem" }}>Get unlimited leads & analytics</div>
+            <button className="btn btn-sm w-100 fw-semibold" style={{ borderRadius: "8px", background: "linear-gradient(135deg,#3b82f6,#06b6d4)", color: "white", border: "none", fontSize: "0.78rem" }}>
+              View Plans
+            </button>
+          </div>
+          <button
+            onClick={logout}
+            className="btn w-100 d-flex align-items-center gap-2 fw-medium"
+            style={{ borderRadius: "10px", background: "rgba(239,68,68,0.1)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.2)", fontSize: "0.85rem", padding: "0.55rem" }}
+          >
+            <i className="bi bi-box-arrow-left"></i> Log out
+          </button>
+        </div>
+      </aside>
     </>
   );
 }

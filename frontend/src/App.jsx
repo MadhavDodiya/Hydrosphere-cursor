@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import SellerRoute from "./components/SellerRoute.jsx";
@@ -11,10 +11,13 @@ import Detail from "./pages/Detail.jsx";
 import Listing from "./pages/Listing.jsx";
 
 export default function App() {
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
   return (
-    <div className="min-vh-100">
-      <Navbar />
-      <main className="pb-5">
+    <div className="min-vh-100 d-flex flex-column">
+      {!isDashboard && <Navbar />}
+      <main className="flex-grow-1 pb-5">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Listing />} />

@@ -11,7 +11,7 @@ export default function Footer() {
     <footer className="hs-footer border-top bg-white">
       <div className="container py-5">
         <div className="row g-4">
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-4 mb-4 mb-md-0">
             <div className="fw-bold h5 mb-2" id="about">
               HydroSphere
             </div>

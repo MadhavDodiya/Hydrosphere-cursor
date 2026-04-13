@@ -1,122 +1,61 @@
+/* ── Dashboard Layout ─────────────────────────────────── */
 .dashboard-bg {
-  background-color: #f8fafc;
+  display: flex;
   min-height: 100vh;
-  /* Add theme variables for easy dark mode scaling */
-  --dh-text: #1e293b;
-  --dh-muted: #64748b;
-  --dh-bg: #f8fafc;
-  --dh-card: #ffffff;
+  background: #f8fafc;
 }
 
-/* Sidebar Styling */
-.dashboard-sidebar {
-  width: 260px;
-  background-color: white;
-  border-right: 1px solid #e2e8f0;
-  transition: transform 0.3s ease;
-  z-index: 1040;
-}
-
-.dashboard-sidebar .nav-link {
-  color: #64748b;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 0.25rem;
-  transition: all 0.2s;
-}
-
-.dashboard-sidebar .nav-link:hover, .dashboard-sidebar .nav-link.active {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-.dashboard-sidebar .nav-link.active {
-  color: #0d6efd;
-  background-color: #eff6ff;
-}
-
-/* Make it responsive fixed sidebar */
+/* ── Sidebar on Desktop ─────────────────────────────── */
 @media (min-width: 992px) {
   .dashboard-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
+    transform: translateX(0) !important;
   }
   .dashboard-main {
     margin-left: 260px;
   }
 }
 
-@media (max-width: 991px) {
+/* ── Sidebar on Mobile: hidden by default ───────────── */
+@media (max-width: 991.98px) {
   .dashboard-sidebar {
-    position: fixed;
-    top: 0;
-    left: -260px;
-    bottom: 0;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transform: translateX(-100%);
   }
   .dashboard-sidebar.mobile-open {
-    transform: translateX(260px);
+    transform: translateX(0) !important;
+  }
+  .dashboard-main {
+    margin-left: 0;
   }
 }
 
-/* Layout Utilities */
+/* ── Main Content Wrapper ────────────────────────────── */
 .dashboard-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Cards & Shadows */
-.dash-card {
-  background-color: var(--dh-card);
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-}
+/* ── Status Badges ──────────────────────────────────── */
+.badge-soft-warning { background-color: #fffbeb; color: #d97706; }
+.badge-soft-success { background-color: #f0fdf4; color: #16a34a; }
+.badge-soft-danger  { background-color: #fef2f2; color: #dc2626; }
 
-/* Status Badges */
-.badge-soft-warning { background-color: #fef3c7; color: #d97706; }
-.badge-soft-success { background-color: #dcfce7; color: #16a34a; }
-.badge-soft-danger { background-color: #fee2e2; color: #dc2626; }
-
-/* CSS Chart Placeholder */
-.css-bar-chart {
-  display: flex;
-  align-items: flex-end;
-  height: 200px;
-  gap: 12px;
-  padding-top: 20px;
-}
-.css-bar {
-  flex: 1;
-  background-color: #3b82f6;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.5s ease;
-  position: relative;
-}
-.css-bar:hover {
-  background-color: #2563eb;
-}
-.css-bar span {
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.75rem;
-  color: #64748b;
-}
-
-/* Loading Skeletons */
-.dash-skeleton {
-  animation: dashPulse 1.5s infinite;
-  background-color: #e2e8f0;
-  border-radius: 4px;
-}
+/* ── Skeleton Pulse ─────────────────────────────────── */
 @keyframes dashPulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.9; }
-  100% { opacity: 0.6; }
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.5; }
+}
+
+/* ── Table Hover Row ───────────────────────────────────*/
+.table-hover tbody tr:hover {
+  background: #f8faff !important;
+  cursor: pointer;
+}
+
+/* ── Chart bar hover ──────────────────────────────── */
+.css-bar:hover {
+  filter: brightness(0.9);
 }

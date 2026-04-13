@@ -1,61 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import FilterSidebar from "../components/FilterSidebar.jsx";
 import SupplierCard from "../components/SupplierCard.jsx";
 import Footer from "../components/Footer.jsx";
 import "./Listing.css";
 import { fetchListings } from "../services/listingService.js";
 
-// Demo data
-const DEMO_SUPPLIERS = [
-  {
-    id: "1",
-    name: "HydroGen Pro",
-    location: "Houston, USA",
-    rating: 4.8,
-    description: "Premium green hydrogen gaseous products for industrial applications.",
-    price: "$4.20",
-    imageUrl: "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "2",
-    name: "Liquid H2 Solutions",
-    location: "Rotterdam, Netherlands",
-    rating: 4.9,
-    description: "Specializing in liquid hydrogen transport and bulk industrial delivery.",
-    price: "$5.10",
-    imageUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "3",
-    name: "EcoFuel Corp",
-    location: "Tokyo, Japan",
-    rating: 4.6,
-    description: "Affordable and reliable grey and blue hydrogen supply.",
-    price: "$3.50",
-    imageUrl: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "4",
-    name: "AeroHydrogen",
-    location: "Berlin, Germany",
-    rating: 4.7,
-    description: "Supporting aerospace and mobility sectors with ultra-pure hydrogen fuel.",
-    price: "$6.00",
-    imageUrl: "https://images.unsplash.com/photo-1549421287-dfeb40bcffc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  },
-];
-
 export default function Listing() {
   const [loading, setLoading] = useState(true);
-  const [suppliers, setSuppliers] = useState([]);
+  const [allSuppliers, setAllSuppliers] = useState([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  const [filters, setFilters] = useState({
+    location: "",
+    types: [],
+    minPrice: "",
+    maxPrice: "",
+    minRating: false
+  });
+  const [sort, setSort] = useState("Recommended");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
+
+  // Debounce search input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   useEffect(() => {
     const loadListings = async () => {
       try {
         setLoading(true);
-        const params = search.trim() ? { q: search.trim() } : {};
+        // Only fetch with query, apply local filters to remain robust
+        const params = debouncedSearch.trim() ? { q: debouncedSearch.trim() } : {};
         const data = await fetchListings(params);
+        
         const mappedSuppliers = data.map(item => ({
           id: item._id,
           name: item.companyName || "Unknown Supplier",
@@ -63,9 +45,12 @@ export default function Listing() {
           rating: 4.5, // Schema does not have rating
           description: item.description || `${item.hydrogenType} Hydrogen - ${item.quantity} kg available`,
           price: `$${item.price}`,
+          rawPrice: Number(item.price),
+          type: item.hydrogenType,
           imageUrl: "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
-        setSuppliers(mappedSuppliers);
+        setAllSuppliers(mappedSuppliers);
+        setCurrentPage(1);
       } catch (error) {
         console.error("Error fetching listings:", error);
       } finally {
@@ -73,14 +58,59 @@ export default function Listing() {
       }
     };
     
-    const timeoutId = setTimeout(() => {
-      loadListings();
-    }, 400); // Debounce search
-    return () => clearTimeout(timeoutId);
-  }, [search]);
+    loadListings();
+  }, [debouncedSearch]);
 
-  // We rely on backend filtering now
-  const filteredSuppliers = suppliers;
+  const filteredAndSortedSuppliers = useMemo(() => {
+    let result = [...allSuppliers];
+    
+    if (filters.location && filters.location.trim() !== "") {
+      const loc = filters.location.toLowerCase();
+      result = result.filter(s => s.location.toLowerCase().includes(loc));
+    }
+    if (filters.types && filters.types.length > 0) {
+      result = result.filter(s => filters.types.includes(s.type));
+    }
+    if (filters.minPrice !== "") {
+      const min = Number(filters.minPrice);
+      result = result.filter(s => s.rawPrice >= min);
+    }
+    if (filters.maxPrice !== "") {
+      const max = Number(filters.maxPrice);
+      result = result.filter(s => s.rawPrice <= max);
+    }
+    if (filters.minRating) {
+      result = result.filter(s => s.rating >= 4.0);
+    }
+
+    if (sort === "Price: Low to High") {
+      result.sort((a, b) => a.rawPrice - b.rawPrice);
+    } else if (sort === "Price: High to Low") {
+      result.sort((a, b) => b.rawPrice - a.rawPrice);
+    } else if (sort === "Highest Rated") {
+      result.sort((a, b) => b.rating - a.rating);
+    }
+
+    return result;
+  }, [allSuppliers, filters, sort]);
+
+  useEffect(() => {
+     setCurrentPage(1); // Reset page on filter or sort change
+  }, [filters, sort]);
+
+  const totalPages = Math.ceil(filteredAndSortedSuppliers.length / ITEMS_PER_PAGE);
+  const currentSuppliers = filteredAndSortedSuppliers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (e, page) => {
+    e.preventDefault();
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="listing-page-bg pb-0">
@@ -90,7 +120,7 @@ export default function Listing() {
           
           {/* Left: Filters Sidebar */}
           <div className="col-12 col-lg-3">
-            <FilterSidebar />
+            <FilterSidebar filters={filters} onFilterChange={setFilters} />
           </div>
           
           {/* Right: Top Section & Grid */}
@@ -102,15 +132,19 @@ export default function Listing() {
                 <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                 <input
                   type="text"
-                  className="form-control rounded-pill ps-5 bg-light"
-                  placeholder="Search by location or product..."
+                  className="form-control rounded-pill ps-5 bg-light form-control-focus shadow-none"
+                  placeholder="Search by company, location or description..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <div className="d-flex align-items-center gap-2">
                 <label className="text-nowrap small text-muted fw-medium mb-0">Sort by:</label>
-                <select className="form-select form-select-sm border-0 bg-light rounded-pill px-3 py-2 w-auto shadow-none cursor-pointer">
+                <select 
+                  className="form-select form-select-sm border-0 bg-light rounded-pill px-3 py-2 w-auto shadow-none cursor-pointer"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
                   <option>Recommended</option>
                   <option>Price: Low to High</option>
                   <option>Price: High to Low</option>
@@ -122,7 +156,7 @@ export default function Listing() {
             {/* Results Count */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold text-dark">
-                {loading ? "Discovering suppliers..." : `${filteredSuppliers.length} Results Found`}
+                {loading ? "Discovering suppliers..." : `${filteredAndSortedSuppliers.length} Results Found`}
               </h5>
             </div>
 
@@ -135,8 +169,8 @@ export default function Listing() {
                     <SupplierCard supplier={null} />
                   </div>
                 ))
-              ) : filteredSuppliers.length > 0 ? (
-                filteredSuppliers.map((supplier) => (
+              ) : currentSuppliers.length > 0 ? (
+                currentSuppliers.map((supplier) => (
                   <div key={supplier.id} className="col-12 col-md-6 col-lg-4">
                     <SupplierCard supplier={supplier} />
                   </div>
@@ -148,8 +182,11 @@ export default function Listing() {
                     <div className="display-1 text-muted mb-3"><i className="bi bi-search"></i></div>
                     <h4 className="fw-bold text-dark">No Suppliers Found</h4>
                     <p className="text-secondary">Try adjusting your search or filter criteria to find what you're looking for.</p>
-                    <button className="btn btn-primary mt-2 px-4 rounded-pill" onClick={() => setSearch("")}>
-                      Clear Search
+                    <button className="btn btn-primary mt-2 px-4 rounded-pill" onClick={() => {
+                      setSearch("");
+                      setFilters({location: "", types: [], minPrice: "", maxPrice: "", minRating: false});
+                    }}>
+                      Clear All Filters
                     </button>
                   </div>
                 </div>
@@ -157,18 +194,23 @@ export default function Listing() {
             </div>
 
             {/* Pagination */}
-            {!loading && filteredSuppliers.length > 0 && (
+            {!loading && totalPages > 1 && (
               <div className="d-flex justify-content-center mt-5">
                 <nav aria-label="Suppliers pagination">
                   <ul className="pagination pagination-sm shadow-sm gap-1">
-                    <li className="page-item disabled">
-                      <a className="page-link rounded" href="#" tabIndex="-1">Previous</a>
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <a className="page-link rounded cursor-pointer" onClick={(e) => handlePageChange(e, currentPage - 1)} tabIndex="-1">Previous</a>
                     </li>
-                    <li className="page-item active"><a className="page-link rounded" href="#">1</a></li>
-                    <li className="page-item"><a className="page-link rounded" href="#">2</a></li>
-                    <li className="page-item"><a className="page-link rounded" href="#">3</a></li>
-                    <li className="page-item">
-                      <a className="page-link rounded" href="#">Next</a>
+                    {Array.from({ length: totalPages }).map((_, idx) => {
+                      const page = idx + 1;
+                      return (
+                        <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                           <a className="page-link rounded cursor-pointer" onClick={(e) => handlePageChange(e, page)}>{page}</a>
+                        </li>
+                      )
+                    })}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <a className="page-link rounded cursor-pointer" onClick={(e) => handlePageChange(e, currentPage + 1)}>Next</a>
                     </li>
                   </ul>
                 </nav>

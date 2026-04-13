@@ -79,7 +79,7 @@ Hydrosphere uses MongoDB collections via Mongoose.
 
 ### Clone repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/MadhavDodiya/Hydrosphere-cursor.git
 cd Hydrosphere-cursor
 ```
 
@@ -315,9 +315,8 @@ curl -s http://localhost:5000/api/saved -H "Authorization: Bearer TOKEN"
 Hydrosphere provides a clean marketplace experience for hydrogen/industrial resources by combining listings, role-based access, and an inquiry (lead) system in a modern MERN stack.
 
 ## Author
-- Name: <Your Name>
-- GitHub: <your-github-profile>
-- Email: <your.email@example.com>
+- Name: Madhav Dodiya
+- GitHub: [MadhavDodiya](https://github.com/MadhavDodiya)
 
 ---
 
