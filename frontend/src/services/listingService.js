@@ -1,10 +1,12 @@
 import api from "./api.js";
 
 /**
- * Fetch listings with optional filters (all public).
+ * Fetch paginated listings with optional filters (public).
+ * Returns the full envelope: { data: [...], total, page, totalPages }
  */
 export async function fetchListings(params = {}) {
   const { data } = await api.get("/api/listings", { params });
+  // data is { data: [...], total, page, totalPages }
   return data;
 }
 

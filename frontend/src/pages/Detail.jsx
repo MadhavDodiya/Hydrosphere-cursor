@@ -52,6 +52,7 @@ export default function Detail() {
               rating={4.8}
               location={listing?.location || "Houston, USA"}
               description={listing?.description || "Premium grade gaseous product suitable for industrial scaling and commercial mobility fuel cells."}
+              imageUrl={listing?.images?.length ? listing.images[0] : null}
             />
             
             <SpecificationTable />

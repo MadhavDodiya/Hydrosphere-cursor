@@ -22,6 +22,10 @@ const listingSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
     location: { type: String, required: true, trim: true },
+    images: {
+      type: [String],
+      default: [],
+    },
     // Required on create via controller; optional in schema so older DB docs still load
     description: {
       type: String,

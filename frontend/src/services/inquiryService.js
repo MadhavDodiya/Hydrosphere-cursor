@@ -15,3 +15,7 @@ export async function fetchBuyerInquiries() {
   return data;
 }
 
+export async function addReply(id, message) {
+  const { data } = await api.post(`/api/inquiries/${id}/reply`, { message });
+  return data;
+}

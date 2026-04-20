@@ -95,7 +95,14 @@ export async function getListingById(req, res) {
 }
 
 /**
- * GET /api/listings — list with optional filters (public).
+ * GET /api/listings — paginated list with optional filters (public).
+ *
+ * Query params:
+ *   page      (default 1)
+ *   limit     (default 12, max 100)
+ *   q, location, hydrogenType, minPrice, maxPrice, seller
+ *
+ * Response: { data: [...], total, page, totalPages }
  */
 export async function getListings(req, res) {
   try {
@@ -104,13 +111,30 @@ export async function getListings(req, res) {
       return res.status(400).json({ message: "Invalid seller id in query" });
     }
 
-    const filter = buildFilter(req.query);
-    const listings = await Listing.find(filter)
-      .populate("seller", sellerSelect)
-      .sort({ createdAt: -1 })
-      .lean();
+    // --- Pagination params ---
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 12));
+    const skip = (page - 1) * limit;
 
-    return res.json(listings);
+    const filter = buildFilter(req.query);
+
+    // Run query + count in parallel for efficiency
+    const [listings, total] = await Promise.all([
+      Listing.find(filter)
+        .populate("seller", sellerSelect)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Listing.countDocuments(filter),
+    ]);
+
+    return res.json({
+      data: listings,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Failed to fetch listings" });
@@ -123,6 +147,7 @@ export async function getListings(req, res) {
 export async function createListing(req, res) {
   try {
     const { companyName, hydrogenType, price, quantity, location, description } = req.body;
+    const images = req.files ? req.files.map((file) => file.path) : [];
 
     if (
       !companyName ||
@@ -164,6 +189,7 @@ export async function createListing(req, res) {
       quantity: q,
       location: String(location).trim(),
       description: desc,
+      images,
     });
 
     const populated = await Listing.findById(listing._id).populate("seller", sellerSelect);
@@ -197,6 +223,11 @@ export async function updateListing(req, res) {
     }
 
     const { companyName, hydrogenType, price, quantity, location, description } = req.body;
+    const newImages = req.files ? req.files.map((file) => file.path) : [];
+
+    if (newImages.length > 0) {
+      listing.images = [...listing.images, ...newImages];
+    }
 
     if (companyName != null) listing.companyName = String(companyName).trim();
     if (hydrogenType != null) {

@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
+import SavedListing from "../models/SavedListing.js";
 import Contact from "../models/Contact.js";
 
 /**
@@ -69,8 +70,20 @@ export const getUsers = async (req, res) => {
  */
 export const updateUserRole = async (req, res) => {
   try {
+    const ALLOWED_ROLES = ["buyer", "seller", "admin"];
     const { role } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+
+    if (!role || !ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({
+        message: `role must be one of: ${ALLOWED_ROLES.join(", ")}`,
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.role = role;
+    await user.save();
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error updating user role" });
@@ -83,7 +96,15 @@ export const updateUserRole = async (req, res) => {
 export const suspendUser = async (req, res) => {
   try {
     const { suspend } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { isSuspended: suspend }, { new: true });
+    if (typeof suspend !== "boolean") {
+      return res.status(400).json({ message: "suspend must be a boolean" });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.isSuspended = suspend;
+    await user.save();
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error toggling user suspension" });
@@ -92,13 +113,43 @@ export const suspendUser = async (req, res) => {
 
 /**
  * DELETE /api/admin/users/:id
+ *
+ * Cascade deletes all data owned by or associated with the user:
+ *   - Listings they created (seller)
+ *   - Inquiries they sent (buyer) or received (seller)
+ *   - SavedListings they bookmarked (buyer) or others bookmarked of their listings (seller)
  */
 export const deleteUser = async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
-    // Optionally delete their listings/inquiries too
-    res.json({ message: "User deleted" });
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const userId = user._id;
+
+    // Collect this seller's listing IDs so we can purge dependent docs
+    const sellerListingIds = await Listing.find({ seller: userId })
+      .select("_id")
+      .lean()
+      .then((docs) => docs.map((d) => d._id));
+
+    // Run all dependent deletes in parallel
+    await Promise.all([
+      // User's own bookmarks (as buyer)
+      SavedListing.deleteMany({ user: userId }),
+      // Other users' bookmarks pointing at this seller's listings
+      SavedListing.deleteMany({ listing: { $in: sellerListingIds } }),
+      // Inquiries this user sent (as buyer)
+      Inquiry.deleteMany({ buyerId: userId }),
+      // Inquiries this user received (as seller)
+      Inquiry.deleteMany({ sellerId: userId }),
+      // All listings owned by this seller
+      Listing.deleteMany({ seller: userId }),
+    ]);
+
+    await User.deleteOne({ _id: userId });
+    res.json({ message: "User and all associated data deleted" });
   } catch (error) {
+    console.error("[deleteUser] cascade error:", error);
     res.status(500).json({ message: "Error deleting user" });
   }
 };
@@ -209,7 +260,15 @@ export const getContacts = async (req, res) => {
  */
 export const verifySupplier = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isVerified: true }, { new: true });
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.role !== "seller") {
+      return res.status(400).json({ message: "Only sellers can be verified" });
+    }
+
+    user.isVerified = true;
+    await user.save();
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error verifying supplier" });

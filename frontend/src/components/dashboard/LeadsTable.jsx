@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api.js";
+import InquiryThreadModal from "../InquiryThreadModal.jsx";
 
 const statusBadge = (s) => {
   const map = {
@@ -20,6 +21,7 @@ const statusBadge = (s) => {
 export default function LeadsTable({ loading: parentLoading }) {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
 
   useEffect(() => {
     const fetchInquiries = async () => {
@@ -94,7 +96,9 @@ export default function LeadsTable({ loading: parentLoading }) {
                   <td className="py-3" style={{ fontSize: "0.85rem", color: "#475569" }}><span className="badge bg-light text-dark border fw-normal">{l.listingId?.hydrogenType || "N/A"} H2</span></td>
                   <td className="py-3" style={{ fontSize: "0.8rem", color: "#94a3b8" }}>{new Date(l.createdAt).toLocaleDateString()}</td>
                   <td className="pe-4 py-3 text-end">
-                    <button className="btn btn-sm fw-medium shadow-sm"
+                    <button 
+                      className="btn btn-sm fw-medium shadow-sm"
+                      onClick={() => setSelectedInquiry(l)}
                       style={{ borderRadius: "8px", border: "none", color: "white", background: "linear-gradient(135deg,#2563eb,#1d4ed8)", fontSize: "0.78rem", padding: "0.3rem 0.75rem" }}>
                       View Message
                     </button>
@@ -105,6 +109,18 @@ export default function LeadsTable({ loading: parentLoading }) {
           </table>
         )}
       </div>
+
+      {selectedInquiry && (
+        <InquiryThreadModal 
+          show={!!selectedInquiry} 
+          inquiry={selectedInquiry} 
+          onClose={() => setSelectedInquiry(null)}
+          onReplyAdded={(updatedInquiry) => {
+            setInquiries(prev => prev.map(i => i._id === updatedInquiry._id ? { ...i, replies: updatedInquiry.replies } : i));
+            setSelectedInquiry(updatedInquiry);
+          }}
+        />
+      )}
     </div>
   );
 }

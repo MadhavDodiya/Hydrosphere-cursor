@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ProductInfo({ title, rating, location, description }) {
+export default function ProductInfo({ title, rating, location, description, imageUrl }) {
   return (
     <div className="product-info mb-4">
       <h1 className="fw-bold mb-2 text-dark">{title}</h1>
@@ -18,8 +18,8 @@ export default function ProductInfo({ title, rating, location, description }) {
       
       <div className="product-image-container mb-4">
         <img 
-          src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-          alt="Hydrogen Plant" 
+          src={imageUrl || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"} 
+          alt={title} 
         />
       </div>
 

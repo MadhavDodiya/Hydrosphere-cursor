@@ -55,6 +55,24 @@ const inquirySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    replies: [
+      {
+        senderRole: {
+          type: String,
+          enum: ["buyer", "seller"],
+          required: true,
+        },
+        message: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

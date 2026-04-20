@@ -34,14 +34,15 @@ export default function AddListing() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
 
   useEffect(() => {
     if (!isEdit || !user?.id) return;
     let cancelled = false;
     (async () => {
       try {
-        const mine = await fetchListings({ seller: user.id });
-        const found = mine.find((l) => l._id === id);
+        const response = await fetchListings({ seller: user.id, limit: 100 });
+        const found = (response.data || []).find((l) => l._id === id);
         if (cancelled) return;
         if (!found) { setError("Listing not found or not yours."); setLoading(false); return; }
         setCompanyName(found.companyName);
@@ -69,9 +70,18 @@ export default function AddListing() {
     if (Number.isNaN(p) || p < 0) { setError("Enter a valid price (0 or greater)."); return; }
     if (Number.isNaN(q) || q < 0 || !Number.isInteger(q)) { setError("Enter a valid whole-number quantity."); return; }
     setSubmitting(true);
-    const body = { companyName: companyName.trim(), hydrogenType, price: p, quantity: q, location: location.trim(), description: desc };
+
+    const formData = new FormData();
+    formData.append("companyName", companyName.trim());
+    formData.append("hydrogenType", hydrogenType);
+    formData.append("price", p);
+    formData.append("quantity", q);
+    formData.append("location", location.trim());
+    formData.append("description", desc);
+    Array.from(imageFiles).forEach((file) => formData.append("images", file));
+
     try {
-      if (isEdit) { await updateListing(id, body); } else { await createListing(body); }
+      if (isEdit) { await updateListing(id, formData); } else { await createListing(formData); }
       showToast(isEdit ? "Listing updated." : "Listing created!", "success");
       navigate("/dashboard");
     } catch (err) {
@@ -202,6 +212,16 @@ export default function AddListing() {
                   value={description} onChange={(e) => setDescription(e.target.value)}
                 />
                 <div className="text-end mt-1" style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{description.length} / 5000</div>
+              </div>
+
+              {/* Images */}
+              <div>
+                <label htmlFor="images" style={labelStyle}>Product Images (Optional)</label>
+                <div className="position-relative">
+                  <i className="bi bi-images position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                  <input id="images" type="file" multiple accept="image/*" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                    onChange={(e) => setImageFiles(e.target.files)} />
+                </div>
               </div>
 
               {/* Actions */}

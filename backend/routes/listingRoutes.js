@@ -8,6 +8,7 @@ import {
 } from "../controllers/listingController.js";
 import { authenticate, requireSeller } from "../middleware/auth.js";
 import { optionalAuthenticate } from "../middleware/optionalAuth.js";
+import { upload } from "../middleware/upload.js";
 
 const router = Router();
 
@@ -18,8 +19,8 @@ router.get("/", getListings);
 router.get("/:id", optionalAuthenticate, getListingById);
 
 // Protected: sellers only for mutations
-router.post("/", authenticate, requireSeller, createListing);
-router.put("/:id", authenticate, requireSeller, updateListing);
+router.post("/", authenticate, requireSeller, upload.array("images", 5), createListing);
+router.put("/:id", authenticate, requireSeller, upload.array("images", 5), updateListing);
 router.delete("/:id", authenticate, requireSeller, deleteListing);
 
 export default router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import FilterSidebar from "../components/FilterSidebar.jsx";
 import SupplierCard from "../components/SupplierCard.jsx";
 import Footer from "../components/Footer.jsx";
@@ -7,7 +7,9 @@ import { fetchListings } from "../services/listingService.js";
 
 export default function Listing() {
   const [loading, setLoading] = useState(true);
-  const [allSuppliers, setAllSuppliers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
@@ -20,7 +22,7 @@ export default function Listing() {
   });
   const [sort, setSort] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 12;
 
   // Debounce search input
   useEffect(() => {
@@ -34,23 +36,36 @@ export default function Listing() {
     const loadListings = async () => {
       try {
         setLoading(true);
-        // Only fetch with query, apply local filters to remain robust
-        const params = debouncedSearch.trim() ? { q: debouncedSearch.trim() } : {};
-        const data = await fetchListings(params);
+        const params = {
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          ...(debouncedSearch.trim() ? { q: debouncedSearch.trim() } : {}),
+          ...(filters.location.trim() ? { location: filters.location.trim() } : {}),
+          ...(filters.minPrice !== "" ? { minPrice: filters.minPrice } : {}),
+          ...(filters.maxPrice !== "" ? { maxPrice: filters.maxPrice } : {}),
+          ...(filters.types.length === 1 ? { hydrogenType: filters.types[0] } : {}),
+        };
+        const response = await fetchListings(params);
         
-        const mappedSuppliers = data.map(item => ({
+        let mapped = (response.data || []).map(item => ({
           id: item._id,
           name: item.companyName || "Unknown Supplier",
           location: item.location || 'Unknown Location',
-          rating: 4.5, // Schema does not have rating
+          rating: 4.5,
           description: item.description || `${item.hydrogenType} Hydrogen - ${item.quantity} kg available`,
           price: `$${item.price}`,
           rawPrice: Number(item.price),
           type: item.hydrogenType,
-          imageUrl: "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
-        setAllSuppliers(mappedSuppliers);
-        setCurrentPage(1);
+
+        // Client-side sort on current page data
+        if (sort === "Price: Low to High") mapped.sort((a, b) => a.rawPrice - b.rawPrice);
+        else if (sort === "Price: High to Low") mapped.sort((a, b) => b.rawPrice - a.rawPrice);
+
+        setSuppliers(mapped);
+        setTotalItems(response.total || 0);
+        setTotalPages(response.totalPages || 1);
       } catch (error) {
         console.error("Error fetching listings:", error);
       } finally {
@@ -59,50 +74,12 @@ export default function Listing() {
     };
     
     loadListings();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, currentPage, filters, sort]);
 
-  const filteredAndSortedSuppliers = useMemo(() => {
-    let result = [...allSuppliers];
-    
-    if (filters.location && filters.location.trim() !== "") {
-      const loc = filters.location.toLowerCase();
-      result = result.filter(s => s.location.toLowerCase().includes(loc));
-    }
-    if (filters.types && filters.types.length > 0) {
-      result = result.filter(s => filters.types.includes(s.type));
-    }
-    if (filters.minPrice !== "") {
-      const min = Number(filters.minPrice);
-      result = result.filter(s => s.rawPrice >= min);
-    }
-    if (filters.maxPrice !== "") {
-      const max = Number(filters.maxPrice);
-      result = result.filter(s => s.rawPrice <= max);
-    }
-    if (filters.minRating) {
-      result = result.filter(s => s.rating >= 4.0);
-    }
-
-    if (sort === "Price: Low to High") {
-      result.sort((a, b) => a.rawPrice - b.rawPrice);
-    } else if (sort === "Price: High to Low") {
-      result.sort((a, b) => b.rawPrice - a.rawPrice);
-    } else if (sort === "Highest Rated") {
-      result.sort((a, b) => b.rating - a.rating);
-    }
-
-    return result;
-  }, [allSuppliers, filters, sort]);
-
+  // Reset to page 1 when search/filter/sort changes
   useEffect(() => {
-     setCurrentPage(1); // Reset page on filter or sort change
-  }, [filters, sort]);
-
-  const totalPages = Math.ceil(filteredAndSortedSuppliers.length / ITEMS_PER_PAGE);
-  const currentSuppliers = filteredAndSortedSuppliers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    setCurrentPage(1);
+  }, [debouncedSearch, filters, sort]);
 
   const handlePageChange = (e, page) => {
     e.preventDefault();
@@ -156,8 +133,11 @@ export default function Listing() {
             {/* Results Count */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold text-dark">
-                {loading ? "Discovering suppliers..." : `${filteredAndSortedSuppliers.length} Results Found`}
+                {loading ? "Discovering suppliers..." : `${totalItems} Results Found`}
               </h5>
+              {!loading && totalPages > 1 && (
+                <span className="text-muted small">Page {currentPage} of {totalPages}</span>
+              )}
             </div>
 
             {/* Grid */}
@@ -169,8 +149,8 @@ export default function Listing() {
                     <SupplierCard supplier={null} />
                   </div>
                 ))
-              ) : currentSuppliers.length > 0 ? (
-                currentSuppliers.map((supplier) => (
+              ) : suppliers.length > 0 ? (
+                suppliers.map((supplier) => (
                   <div key={supplier.id} className="col-12 col-md-6 col-lg-4">
                     <SupplierCard supplier={supplier} />
                   </div>

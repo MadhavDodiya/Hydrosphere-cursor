@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+﻿import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
@@ -57,6 +57,12 @@ export async function register(req, res) {
       role,
     });
 
+    if (user.isSuspended) {
+      return res
+        .status(403)
+        .json({ message: "Your account has been suspended. Please contact support." });
+    }
+
     const token = signToken(user);
     return res.status(201).json({
       token,
@@ -92,6 +98,12 @@ export async function login(req, res) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (user.isSuspended) {
+      return res
+        .status(403)
+        .json({ message: "Your account has been suspended. Please contact support." });
+    }
+
     const token = signToken(user);
     return res.json({
       token,
@@ -102,3 +114,4 @@ export async function login(req, res) {
     return res.status(500).json({ message: "Server error during login" });
   }
 }
+
