@@ -23,6 +23,20 @@ export async function getSellerStats(req, res) {
       createdAt: { $gte: todayStart },
     });
 
+    const statusAgg = await Inquiry.aggregate([
+      { $match: { sellerId: new mongoose.Types.ObjectId(userId) } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    const leadStatusCounts = { new: 0, contacted: 0, closed: 0 };
+    for (const row of statusAgg) {
+      if (row?._id && leadStatusCounts[row._id] != null) {
+        leadStatusCounts[row._id] = row.count;
+      }
+    }
+
+    const conversionRate = totalLeads > 0 ? Math.round((leadStatusCounts.closed / totalLeads) * 1000) / 10 : 0;
+
     // 1. Activity Feed: 5 most recent inquiries
     const recentInquiries = await Inquiry.find({ sellerId: userId })
       .sort({ createdAt: -1 })
@@ -75,6 +89,8 @@ export async function getSellerStats(req, res) {
       activeListings,
       totalLeads,
       newLeadsToday,
+      leadStatusCounts,
+      conversionRate,
       activity,
       chartData,
       revenueEstimated: 0,

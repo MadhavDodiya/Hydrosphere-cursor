@@ -24,7 +24,7 @@ export async function authenticate(req, res, next) {
 
   try {
     const user = await User.findById(decoded.userId).select(
-      "role isSuspended plan subscriptionStatus"
+      "role isSuspended plan subscriptionStatus listingLimit leadLimit"
     );
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -38,6 +38,8 @@ export async function authenticate(req, res, next) {
     req.role = user.role; // Extract role from DB to be safe
     req.plan = user.plan || "free";
     req.subscriptionStatus = user.subscriptionStatus || "inactive";
+    req.listingLimit = typeof user.listingLimit === "number" ? user.listingLimit : null;
+    req.leadLimit = typeof user.leadLimit === "number" ? user.leadLimit : null;
     
     console.log(
       `[AUTH] Authenticated User: ${req.userId} (Role: ${req.role}, Plan: ${req.plan}, Sub: ${req.subscriptionStatus})`

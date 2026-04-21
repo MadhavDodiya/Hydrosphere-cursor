@@ -3,7 +3,7 @@ import Inquiry from "../models/Inquiry.js";
 import Listing from "../models/Listing.js";
 import User from "../models/User.js";
 import { sendEmail } from "../utils/email.js";
-import { getPlan } from "../utils/plans.js";
+import { getEffectiveLimits } from "../utils/plans.js";
 import { emitInquiryCreated, emitInquiryUpdated } from "../utils/realtime.js";
 
 /**
@@ -51,9 +51,14 @@ export async function createInquiry(req, res) {
     }
 
     // SaaS: lead monetization (limit leads for free sellers per month)
-    const seller = await User.findById(listing.seller).select("plan subscriptionStatus");
-    const plan = getPlan(seller?.plan);
-    if (plan.leadsLimitPerMonth != null) {
+    const seller = await User.findById(listing.seller).select("plan subscriptionStatus leadLimit");
+    const { leadsLimitPerMonth } = getEffectiveLimits({
+      planId: seller?.plan,
+      listingLimitOverride: null,
+      leadLimitOverride: typeof seller?.leadLimit === "number" ? seller.leadLimit : null,
+    });
+
+    if (leadsLimitPerMonth != null) {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
@@ -63,7 +68,7 @@ export async function createInquiry(req, res) {
         createdAt: { $gte: startOfMonth },
       });
 
-      if (leadsThisMonth >= plan.leadsLimitPerMonth) {
+      if (leadsThisMonth >= leadsLimitPerMonth) {
         return res.status(402).json({
           message: "Seller lead limit reached. Please try again later.",
         });
@@ -133,6 +138,32 @@ export async function getSellerInquiries(req, res) {
     }
 
     logContext(req.userId, "FETCH_SELLER");
+
+    // SaaS: monetization - block viewing leads for free plan once cap reached
+    const seller = await User.findById(req.userId).select("plan leadLimit");
+    const { plan, leadsLimitPerMonth } = getEffectiveLimits({
+      planId: seller?.plan,
+      listingLimitOverride: null,
+      leadLimitOverride: typeof seller?.leadLimit === "number" ? seller.leadLimit : null,
+    });
+
+    if (leadsLimitPerMonth != null) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const leadsThisMonth = await Inquiry.countDocuments({
+        sellerId: req.userId,
+        createdAt: { $gte: startOfMonth },
+      });
+
+      if (leadsThisMonth >= leadsLimitPerMonth) {
+        return res.status(402).json({
+          message: `Lead limit reached for plan: ${plan.name}. Upgrade to view new leads.`,
+          code: "LEAD_LIMIT_REACHED",
+        });
+      }
+    }
 
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));

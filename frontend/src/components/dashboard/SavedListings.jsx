@@ -14,9 +14,17 @@ export default function SavedListings() {
       // Fetch saved listings context (Task #2/5)
       const { data } = await api.get("/api/saved");
       console.log("SAVED_LISTINGS_DATA:", data);
-      
-      // Ensure we map listingId correctly and filter valid refs
-      setListings(data.map(item => item.listingId || item.listing).filter(Boolean));
+
+      const payload = data?.data ?? data;
+      const arr = Array.isArray(payload) ? payload : [];
+
+      // Backend may return full listing docs OR SavedListing rows with populated listing refs.
+      const mapped =
+        arr.length > 0 && (arr[0]?.listing || arr[0]?.listingId)
+          ? arr.map((item) => item.listingId || item.listing).filter(Boolean)
+          : arr.filter((x) => x && x._id);
+
+      setListings(mapped);
     } catch (err) {
       console.error("Error fetching saved listings:", err);
       showToast("Failed to load saved listings", "error");

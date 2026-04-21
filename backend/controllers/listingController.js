@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Listing, { HYDROGEN_TYPES } from "../models/Listing.js";
 import SavedListing from "../models/SavedListing.js";
-import { getPlan } from "../utils/plans.js";
+import { getEffectiveLimits } from "../utils/plans.js";
 
 /** Escape user input for safe use inside a Mongo regex. */
 function escapeRegex(str) {
@@ -54,6 +54,14 @@ function buildFilter(query) {
   }
 
   if (query.isFeatured === 'true') filter.isFeatured = true;
+
+  const minPurity = query.minPurity != null ? Number(query.minPurity) : NaN;
+  const maxPurity = query.maxPurity != null ? Number(query.maxPurity) : NaN;
+  if (!Number.isNaN(minPurity) || !Number.isNaN(maxPurity)) {
+    filter.purity = {};
+    if (!Number.isNaN(minPurity)) filter.purity.$gte = minPurity;
+    if (!Number.isNaN(maxPurity)) filter.purity.$lte = maxPurity;
+  }
 
   return filter;
 }
@@ -159,6 +167,14 @@ export async function getListingById(req, res) {
     const listing = await Listing.findById(id).populate("seller", sellerSelect).lean();
     if (!listing) return res.status(404).json({ message: "Listing not found" });
 
+    // Public access: only approved listings.
+    // Owners (seller) and admins can view pending/rejected for edit/ops workflows.
+    const isOwner = req.userId && String(listing.seller?._id || listing.seller) === String(req.userId);
+    const isAdmin = req.role === "admin";
+    if (listing.status !== "approved" && !isOwner && !isAdmin) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
     let saved = false;
     if (req.userId) {
       const exists = await SavedListing.exists({ user: req.userId, listing: id });
@@ -177,7 +193,7 @@ export async function getListingById(req, res) {
  */
 export async function createListing(req, res) {
   try {
-    const { companyName, hydrogenType, price, quantity, location, description } = req.body;
+    const { companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
     const images = req.files ? req.files.map((file) => file.path) : [];
 
     if (!companyName || !hydrogenType || price == null || quantity == null || !location || !description) {
@@ -185,10 +201,15 @@ export async function createListing(req, res) {
     }
 
     // SaaS: listing limit enforcement (seller plans)
-    const plan = getPlan(req.plan);
-    if (plan.listingsLimit != null) {
+    const { plan, listingsLimit } = getEffectiveLimits({
+      planId: req.plan,
+      listingLimitOverride: req.listingLimit,
+      leadLimitOverride: req.leadLimit,
+    });
+
+    if (listingsLimit != null) {
       const existingCount = await Listing.countDocuments({ seller: req.userId });
-      if (existingCount >= plan.listingsLimit) {
+      if (existingCount >= listingsLimit) {
         return res.status(402).json({
           message: `Listing limit reached for plan: ${plan.name}`,
         });
@@ -203,6 +224,7 @@ export async function createListing(req, res) {
       quantity: Number(quantity),
       location: String(location).trim(),
       description: String(description).trim(),
+      purity: purity != null && purity !== "" ? Number(purity) : null,
       images,
     });
 
@@ -219,6 +241,9 @@ export async function createListing(req, res) {
 export async function updateListing(req, res) {
   try {
     const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     const listing = await Listing.findById(id);
     if (!listing) return res.status(404).json({ message: "Listing not found" });
 
@@ -226,7 +251,7 @@ export async function updateListing(req, res) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const { companyName, hydrogenType, price, quantity, location, description } = req.body;
+    const { companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
     const newImages = req.files ? req.files.map((file) => file.path) : [];
 
     if (newImages.length > 0) listing.images = [...listing.images, ...newImages];
@@ -236,6 +261,7 @@ export async function updateListing(req, res) {
     if (quantity != null) listing.quantity = Number(quantity);
     if (location) listing.location = location;
     if (description) listing.description = description;
+    if (purity != null) listing.purity = purity === "" ? null : Number(purity);
 
     await listing.save();
     return res.json(listing);
@@ -251,6 +277,9 @@ export async function updateListing(req, res) {
 export async function deleteListing(req, res) {
   try {
     const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
     const listing = await Listing.findById(id);
     if (!listing) return res.status(404).json({ message: "Listing not found" });
 

@@ -30,6 +30,7 @@ export default function AddListing() {
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [location, setLocation] = useState("");
+  const [purity, setPurity] = useState("99.9");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(isEdit);
@@ -37,7 +38,7 @@ export default function AddListing() {
   const [imageFiles, setImageFiles] = useState([]);
 
   useEffect(() => {
-    if (!isEdit || !user?.id) return;
+    if (!isEdit || !user?._id) return;
     let cancelled = false;
     (async () => {
       try {
@@ -48,7 +49,7 @@ export default function AddListing() {
         
         // Security check: Ensure the listing belongs to the current user
         // The backend should also enforce this, but good to have here.
-        if (found.seller?._id !== user.id && found.seller !== user.id) {
+        if (found.seller?._id !== user._id && found.seller !== user._id) {
           setError("You do not have permission to edit this listing.");
           setLoading(false);
           return;
@@ -59,6 +60,7 @@ export default function AddListing() {
         setPrice(String(found.price));
         setQuantity(String(found.quantity));
         setLocation(found.location);
+        setPurity(found.purity != null ? String(found.purity) : "99.9");
         setDescription(found.description ?? "");
       } catch (err) {
         if (!cancelled) { const msg = getApiErrorMessage(err, "Failed to load listing."); setError(msg); showToast(msg); }
@@ -67,7 +69,7 @@ export default function AddListing() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, isEdit, user?.id, showToast]);
+  }, [id, isEdit, user, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,8 +78,10 @@ export default function AddListing() {
     if (desc.length < 10) { setError("Description must be at least 10 characters."); return; }
     const p = Number(price);
     const q = Number(quantity);
+    const pu = purity === "" || purity == null ? null : Number(purity);
     if (Number.isNaN(p) || p < 0) { setError("Enter a valid price (0 or greater)."); return; }
     if (Number.isNaN(q) || q < 0 || !Number.isInteger(q)) { setError("Enter a valid whole-number quantity."); return; }
+    if (pu != null && (Number.isNaN(pu) || pu < 0 || pu > 100)) { setError("Enter a valid purity between 0 and 100."); return; }
     setSubmitting(true);
 
     const formData = new FormData();
@@ -86,6 +90,7 @@ export default function AddListing() {
     formData.append("price", p);
     formData.append("quantity", q);
     formData.append("location", location.trim());
+    if (pu != null) formData.append("purity", pu);
     formData.append("description", desc);
     Array.from(imageFiles).forEach((file) => formData.append("images", file));
 
@@ -207,6 +212,30 @@ export default function AddListing() {
                   <i className="bi bi-geo-alt position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
                   <input id="location" required minLength={2} style={{ ...inputStyle, paddingLeft: "2.75rem" }}
                     placeholder="e.g. Berlin, Germany" value={location} onChange={(e) => setLocation(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Purity */}
+              <div className="row g-3">
+                <div className="col-12 col-sm-6">
+                  <label htmlFor="purity" style={labelStyle}>Hydrogen Purity (%)</label>
+                  <div className="position-relative">
+                    <i className="bi bi-shield-check position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                    <input
+                      id="purity"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="0.1"
+                      style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                      placeholder="e.g. 99.9"
+                      value={purity}
+                      onChange={(e) => setPurity(e.target.value)}
+                    />
+                  </div>
+                  <div className="text-muted mt-1" style={{ fontSize: "0.75rem" }}>
+                    Optional, used for marketplace filtering.
+                  </div>
                 </div>
               </div>
 

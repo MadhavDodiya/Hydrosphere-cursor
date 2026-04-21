@@ -23,6 +23,7 @@ export const listingCreateSchema = z.object({
   price: z.coerce.number().min(0),
   quantity: z.coerce.number().min(0),
   location: z.string().trim().min(1).max(200),
+  purity: z.coerce.number().min(0).max(100).optional(),
   description: z.string().trim().min(1).max(5000),
 });
 

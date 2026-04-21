@@ -22,6 +22,14 @@ const listingSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
     location: { type: String, required: true, trim: true },
+    // Hydrogen purity percentage (e.g. 99.9). Optional for legacy docs.
+    purity: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+      index: true,
+    },
     images: {
       type: [String],
       default: [],
@@ -45,6 +53,10 @@ const listingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+listingSchema.index({ status: 1, createdAt: -1 });
+listingSchema.index({ seller: 1, createdAt: -1 });
+listingSchema.index({ location: 1 });
 
 export { HYDROGEN_TYPES };
 export default mongoose.model("Listing", listingSchema);

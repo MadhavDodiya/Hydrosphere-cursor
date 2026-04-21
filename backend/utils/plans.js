@@ -23,3 +23,13 @@ export function getPlan(planId) {
   return PLANS[planId] || PLANS.free;
 }
 
+export function getEffectiveLimits({ planId, listingLimitOverride, leadLimitOverride }) {
+  const plan = getPlan(planId);
+  return {
+    plan,
+    listingsLimit:
+      typeof listingLimitOverride === "number" ? listingLimitOverride : plan.listingsLimit,
+    leadsLimitPerMonth:
+      typeof leadLimitOverride === "number" ? leadLimitOverride : plan.leadsLimitPerMonth,
+  };
+}

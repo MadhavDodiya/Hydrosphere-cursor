@@ -7,16 +7,32 @@ import Listing from "../models/Listing.js";
  */
 export async function getSavedListings(req, res) {
   try {
-    const rows = await SavedListing.find({ user: req.userId })
-      .populate({
-        path: "listing",
-        populate: { path: "seller", select: "name email role" },
-      })
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));
+    const skip = (page - 1) * limit;
+
+    const filter = { user: req.userId };
+
+    const [rows, total] = await Promise.all([
+      SavedListing.find(filter)
+        .populate({
+          path: "listing",
+          populate: { path: "seller", select: "name email role" },
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      SavedListing.countDocuments(filter),
+    ]);
 
     const listings = rows.map((r) => r.listing).filter(Boolean);
-    return res.json(listings);
+    return res.json({
+      data: listings,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Failed to load saved listings" });

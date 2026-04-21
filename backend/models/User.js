@@ -82,6 +82,19 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // Optional per-account overrides (used by plan enforcement if set).
+    // If null/undefined, limits come from plan defaults in utils/plans.js.
+    listingLimit: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    leadLimit: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

@@ -3,24 +3,33 @@ import api from "../../services/api.js";
 import InquiryThreadModal from "../InquiryThreadModal.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { socket } from "../../api/socket.js";
+import { Link } from "react-router-dom";
 
 export default function LeadsTable({ loading: parentLoading }) {
   const { showToast } = useToast();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [blockedMessage, setBlockedMessage] = useState("");
 
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
         setLoading(true);
+        setBlockedMessage("");
         // Fetched via dedicated seller inquiries endpoint (Task #2)
         const { data } = await api.get("/api/inquiries/seller");
         console.log("LEADS_RECEIVED_DATA:", data);
         setInquiries(data?.data || data || []);
       } catch (err) {
         console.error("Failed to fetch inquiries:", err);
-        showToast(err?.response?.data?.message || "Failed to fetch leads");
+        const status = err?.response?.status;
+        const msg = err?.response?.data?.message || "Failed to fetch leads";
+        if (status === 402) {
+          setBlockedMessage(msg);
+        } else {
+          showToast(msg);
+        }
       } finally {
         setLoading(false);
       }
@@ -82,7 +91,16 @@ export default function LeadsTable({ loading: parentLoading }) {
 
       {/* Table Area */}
       <div style={{ overflowX: "auto" }}>
-        {inquiries.length === 0 ? (
+        {blockedMessage ? (
+          <div className="text-center py-5 px-4">
+            <i className="bi bi-lock display-3 text-light-emphasis mb-3 d-block"></i>
+            <h6 className="fw-bold text-dark">Upgrade required</h6>
+            <p className="text-muted small mb-3">{blockedMessage}</p>
+            <Link to="/dashboard/billing" className="btn btn-primary btn-sm rounded-pill px-4 shadow-sm fw-medium">
+              View Plans
+            </Link>
+          </div>
+        ) : inquiries.length === 0 ? (
            <div className="text-center py-5">
               <i className="bi bi-inbox display-3 text-light-emphasis mb-3 d-block"></i>
               <h6 className="fw-bold text-dark">No Leads Yet</h6>
