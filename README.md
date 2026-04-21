@@ -1,175 +1,136 @@
-# Hydrosphere
+# HydroSphere
 
-## Overview / Abstract
-Hydrosphere is a professional B2B marketplace platform connecting buyers and sellers of hydrogen and industrial resources. It provides a cinematically designed, role-based experience for product discovery, listing management, and inquiry-driven lead generation.
+## Overview
+HydroSphere is a MERN B2B marketplace connecting buyers and sellers of hydrogen supply. It supports listings, saved/favorites, inquiry-based lead generation, supplier dashboards, admin moderation, and subscription monetization for suppliers.
 
-## Problem Statement
-Procurement and lead generation for hydrogen/industrial resources is often fragmented across unstructured directories, calls, and emails. This makes it difficult to discover suppliers, compare offerings, and track inquiries end-to-end.
-
-## Solution
-Hydrosphere centralizes listings and inquiries in a single platform with JWT authentication, three distinct roles (Admin, Buyer, Seller), safe listing management, and a robust lead (inquiry) system—plus premium dashboards for real-time monitoring.
-
-## Features
-
-### Core Features
-- **Secure Authentication**: JWT-based login and registration with bcrypt hashing.
-- **Role-Based Experience**: Tailored interfaces for Buyers, Sellers, and Platform Admins.
-- **Marketplace Discovery**: Advanced filtering by hydrogen type, price range, and location.
-- **Listings Management**: Full CRUD for sellers (create, read, update, delete) with admin moderation.
-
-### Advanced Features
-- **Admin Panel**: Comprehensive oversight with user management, listing verification, inquiry monitoring, and platform-wide analytics.
-- **Inquiry / Lead System**: Threaded messaging between buyers and sellers, with optional real-time updates via Socket.IO.
-- **Seller Dashboard**: Real-time sales stats (Total Leads, Active Listings, New Leads Today) and inquiry management.
-- **Persistent Bookmarks**: Buyers can save listings to their collection for later review.
-- **Contact Integration**: Public contact form with admin response tracking.
+## Key Features
+- Auth: JWT (Bearer) with role-based access control (buyer/seller/admin)
+- Marketplace: search + filters + sorting + pagination
+- Seller: listing CRUD, "My Listings", leads dashboard, lead status (new/contacted/closed)
+- Buyer: saved listings, inquiry threads, inquiry dashboard
+- SaaS: plan-based limits (listings + monthly leads) with Stripe subscriptions
+- Realtime (optional): Socket.IO updates for inquiry creation/replies
 
 ## Tech Stack
-- **Frontend:** React (Vite 6), Vanilla CSS (Modern UI/UX), Axios, React Router 7
-- **Backend:** Node.js, Express 4
-- **Database:** MongoDB Atlas (Mongoose ODM)
-- **Authentication:** JWT (JSON Web Tokens), bcryptjs
+- Frontend: React (Vite), Axios, React Router, Bootstrap + Tailwind utilities
+- Backend: Node.js, Express, Mongoose
+- Security: helmet, express-rate-limit, request validation (Zod), input sanitization (express-mongo-sanitize)
+- Billing: Stripe Subscriptions
+- Realtime: Socket.IO (optional)
 
-## System Architecture
-Hydrosphere follows a standard MERN flow:
-- **Frontend (React + Vite)** calls REST APIs under `/api` and renders role-based UI.
-- **Backend (Express)** validates JWT tokens (Bearer auth), enforces role rules, and applies business logic.
-- **Database (MongoDB Atlas)** stores users, listings, saved listings (bookmarks), inquiries (leads), and contact messages.
+## Project Structure
+backend/
+- middleware/ (auth, role, validate, upload)
+- controllers/
+- models/
+- routes/
+- utils/
 
-```
-Browser (React/Vite)
-  -> HTTP requests to /api (Axios)
-     -> Express routes + middleware (JWT + roles)
-        -> MongoDB Atlas (Mongoose models)
-```
+frontend/
+- api/ (axiosInstance, socket)
+- services/
+- components/
+- pages/
+- hooks/
 
-Local dev uses a **Vite proxy**: the frontend calls `/api/...` and Vite forwards requests to the Express server using `PORT` from `backend/.env`.
-
-## Database Design
-Hydrosphere uses MongoDB collections via Mongoose.
-
-### Users collection (`users`)
-- `name` (String, required)
-- `email` (String, required, unique)
-- `password` (String, required; stored as bcrypt hash)
-- `role` (String, required; `buyer` | `seller` | `admin`)
-- `companyName` (String, optional)
-- `phone` (String, optional)
-- `isVerified` (Boolean, default: `false`)
-- `isSuspended` (Boolean, default: `false`)
-- `plan` (String, `free` | `pro_supplier` | `enterprise`)
-- `subscriptionStatus` (String, `inactive` | `active` | `past_due` | `canceled`)
-
-### Listings collection (`listings`)
-- `seller` (ObjectId -> `users`, required)
-- `companyName` (String, required)
-- `hydrogenType` (String, enum: `Green` | `Blue` | `Grey`)
-- `price` (Number, required)
-- `quantity` (Number, required)
-- `location` (String, required)
-- `description` (String, required)
-- `status` (String, enum: `pending` | `approved` | `rejected`)
-- `isFeatured` (Boolean, default: `false`)
-
-### Inquiries collection (`inquiries`)
-- `buyerId` (ObjectId -> `users`, required)
-- `sellerId` (ObjectId -> `users`, required)
-- `listingId` (ObjectId -> `listings`, required)
-- `name`, `email`, `phone`, `message` (Strings)
-- `status` (String, `new` | `contacted` | `closed`)
-- `isFlagged` (Boolean, for admin monitoring)
-
-### Contacts collection (`contacts`)
-- `name`, `email`, `phone`, `subject`, `message` (Strings)
-- `isResponded` (Boolean, default: `false`)
-
-## Installation & Setup
-
-### Clone repository
-```bash
-git clone https://github.com/MadhavDodiya/Hydrosphere-cursor.git
-cd Hydrosphere-cursor
-```
-
-### Prerequisites
+## Local Setup
+Prereqs:
 - Node.js 18+
-- MongoDB running locally or MongoDB Atlas URI
+- MongoDB (local) or MongoDB Atlas
 
-### Quick Start
-1. Create **`backend/.env`** (copy from `backend/.env.example`).
-2. Install dependencies & Seed data:
-```bash
-npm run setup
-cd backend && npm run seed && cd ..
-```
-3. Create an Admin account (optional):
-```bash
-node backend/scripts/makeAdmin.js your-email@example.com
-```
-4. Start development:
-```bash
-npm run dev
-```
+1) Configure backend env
+`backend/.env` (copy `backend/.env.example`)
 
-## API Endpoints
+2) Install dependencies
+`npm run setup`
 
-### Auth & Users
-- `POST /api/auth/login`
+3) (Optional) Seed sample data
+`cd backend && npm run seed`
+
+4) Start dev
+`npm run dev`
+
+Local dev uses a Vite proxy: the frontend calls `/api/*` and Vite forwards to the Express server using `PORT` from `backend/.env`.
+
+## SaaS Plans (Supplier Monetization)
+Supplier accounts have plan-based limits enforced by the API:
+- `free`: limited listings + limited leads/month
+- `pro_supplier`: higher listings + unlimited leads
+- `enterprise`: unlimited listings + unlimited leads
+
+Enforcement points:
+- Listing creation blocks when the seller listing limit is reached.
+- Inquiry creation blocks when the target seller's monthly lead cap is reached.
+
+## Stripe Setup (Subscriptions)
+1) Create 2 recurring prices in Stripe:
+- Pro Supplier
+- Enterprise
+
+2) Set these in `backend/.env`:
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRICE_PRO_SUPPLIER`
+- `STRIPE_PRICE_ENTERPRISE`
+
+3) Configure Stripe webhook endpoint:
+- `POST /api/billing/webhook`
+
+4) In the app (seller):
+- Dashboard -> Billing -> Upgrade / Manage Billing
+
+## Realtime (Socket.IO)
+The API exposes Socket.IO on the same server port. Frontend connects using the stored JWT and receives:
+- `inquiry:created` (seller notifications)
+- `inquiry:updated` (replies/status changes)
+
+Frontend env (optional):
+- `frontend/.env`: `VITE_SOCKET_URL` (defaults to `VITE_API_URL`, then `http://localhost:5000`)
+
+## API Endpoints (Core)
+Auth:
 - `POST /api/auth/register`
+- `POST /api/auth/login`
+
+Users:
 - `GET /api/users/me` (JWT)
+- `PUT /api/users/me` (JWT)
 
-### Marketplace
-- `GET /api/listings` (Public, only Approved)
-- `GET /api/listings/:id` (Optional JWT for saved status)
-- `GET /api/listings/my-listings?page=1&limit=25` (Seller only)
-- `POST /api/listings` (Seller only)
-- `PUT /api/listings/:id` (Seller only, Owner)
-- `DELETE /api/listings/:id` (Seller only, Owner)
+Listings:
+- `GET /api/listings?page=1&limit=12` (public, approved only)
+- `GET /api/listings/:id` (optional JWT to enrich saved status)
+- `GET /api/listings/my-listings?page=1&limit=25` (seller only, all statuses)
+- `POST /api/listings` (seller only)
+- `PUT /api/listings/:id` (seller only, owner)
+- `DELETE /api/listings/:id` (seller only, owner)
 
-### Leads & Inquiries
-- `POST /api/inquiries` (Buyer only)
-- `GET /api/inquiries/received?page=1&limit=25` (Seller only)
-- `GET /api/inquiries/buyer?page=1&limit=25` (Buyer only)
-- `PUT /api/inquiries/:id/status` (Seller only)
+Saved (Favorites):
+- `GET /api/saved` (JWT)
+- `POST /api/saved` (JWT)
+- `DELETE /api/saved/:listingId` (JWT)
 
-### Billing (Stripe Subscriptions)
+Inquiries (Leads):
+- `POST /api/inquiries` (buyer only, duplicate-protected)
+- `GET /api/inquiries/received?page=1&limit=25` (seller only, populates `listingId` + `buyerId`)
+- `GET /api/inquiries/buyer?page=1&limit=25` (buyer only)
+- `POST /api/inquiries/:id/reply` (buyer/seller, ownership enforced)
+- `PUT /api/inquiries/:id/status` (seller only)
+
+Billing (Stripe):
 - `GET /api/billing/plans`
 - `GET /api/billing/me` (JWT)
-- `POST /api/billing/checkout` (Seller only)
-- `POST /api/billing/portal` (Seller only)
+- `POST /api/billing/checkout` (seller only)
+- `POST /api/billing/portal` (seller only)
 - `POST /api/billing/webhook` (Stripe)
 
-### Admin Panel
-- `GET /api/admin/stats` (Admin only)
-- `GET /api/admin/users?role=...&q=...` (Admin only)
-- `PUT /api/admin/users/:id/verify` (Verify seller)
-- `PUT /api/admin/listings/:id/approve` (Approve listing)
-- `GET /api/admin/contacts` (View platform messages)
+Admin:
+- `GET /api/admin/*` (admin only; users/listings/inquiries/contacts moderation)
 
-### Seller Features
-- `GET /api/seller/stats` (Seller only)
+Health:
+- `GET /api/health`
 
-## Usage / Workflow
-1. **Explore**: Browse listings with the "Cinematic" UI without logging in.
-2. **Engage**: Register as a **Buyer** to "Save" listings or send direct Inquiries ("Request Quote").
-3. **Sell**: Register as a **Seller**, create listings, and wait for Admin verification/approval.
-4. **Manage**: Use the **Admin Panel** to moderate content, verify sellers, and analyze growth.
+## Production Notes
+- Set `NODE_ENV=production` and `FRONTEND_URL` (comma-separated allowlist) in `backend/.env`.
+- Use HTTPS in production (Stripe + secure cookies/origins).
+- Run MongoDB with proper indexes (inquiries enforce unique `{ listingId, buyerId }`).
 
-## Advantages
-- **Security**: Strict role-based access control (RBAC).
-- **Design**: Premium "WOW" aesthetics with modern CSS (glassmorphism, animations).
-- **Control**: Admin oversight prevents spam and ensures quality listings.
-- **Insights**: Dashboard analytics for both Sellers and Admins.
-
-## Future Scope
-- **Instant Chat**: Extend inquiry threads into full conversations (typing indicators, attachments, read receipts).
-- **Escrow Integration**: Milestone-based payment processing for large industrial orders.
-- **Advanced Analytics**: Deeper conversion tracking and market share heatmaps.
-- **File Management**: S3 integration for certificates and technical specification docs.
-
-## Author
-- Name: Madhav Dodiya
-- GitHub: [MadhavDodiya](https://github.com/MadhavDodiya)
-
----
-*Developed with ❤️ as a modern B2B solution for the Green Hydrogen Economy.*
