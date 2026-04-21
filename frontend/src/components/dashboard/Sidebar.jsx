@@ -2,24 +2,24 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const sellerMenu = [
-  { name: "Supplier Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
-  { name: "My Listings",      icon: "bi-card-list",       link: "/dashboard/my-listings" },
-  { name: "Leads Received",   icon: "bi-inbox-fill",      link: "/dashboard/leads", badge: 3 },
-  { name: "Add Listing",      icon: "bi-plus-square-fill",link: "/add-listing" },
-  { name: "Marketplace",      icon: "bi-shop",            link: "/marketplace" },
-];
-
-const buyerMenu = [
-  { name: "Buyer Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
-  { name: "My Inquiries",    icon: "bi-chat-dots-fill",  link: "/dashboard/inquiries" },
-  { name: "Saved Listings",  icon: "bi-bookmark-heart-fill", link: "/dashboard/saved" },
-  { name: "Marketplace",     icon: "bi-shop",            link: "/marketplace" },
-];
-
-export default function Sidebar({ mobileOpen, closeMobileSidebar }) {
+export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const sellerMenu = [
+    { name: "Supplier Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
+    { name: "My Listings",      icon: "bi-card-list",       link: "/dashboard/my-listings" },
+    { name: "Leads Received",   icon: "bi-inbox-fill",      link: "/dashboard/leads", badge: stats?.newLeadsToday },
+    { name: "Add Listing",      icon: "bi-plus-square-fill",link: "/add-listing" },
+    { name: "Marketplace",      icon: "bi-shop",            link: "/marketplace" },
+  ];
+
+  const buyerMenu = [
+    { name: "Buyer Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
+    { name: "My Inquiries",    icon: "bi-chat-dots-fill",  link: "/dashboard/inquiries" },
+    { name: "Saved Listings",  icon: "bi-bookmark-heart-fill", link: "/dashboard/saved", badge: stats?.totalSaved },
+    { name: "Marketplace",     icon: "bi-shop",            link: "/marketplace" },
+  ];
 
   const menuItems = user?.role === "seller" ? sellerMenu : buyerMenu;
 
@@ -106,7 +106,7 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar }) {
                 >
                   <i className={`bi ${item.icon}`} style={{ fontSize: "1rem", flexShrink: 0 }}></i>
                   {item.name}
-                  {item.badge && (
+                  {item.badge != null && (
                     <span className="ms-auto" style={{ background: "#3b82f6", color: "white", fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "20px" }}>{item.badge}</span>
                   )}
                 </Link>

@@ -55,7 +55,7 @@ export default function Detail() {
               imageUrl={listing?.images?.length ? listing.images[0] : null}
             />
             
-            <SpecificationTable />
+            <SpecificationTable listing={listing} />
 
             {/* Optional Reviews Section */}
             <div className="bg-white p-4 rounded shadow-sm mt-4">
@@ -86,7 +86,7 @@ export default function Detail() {
         </div>
 
         {/* Bottom Section: Related Suppliers */}
-        <RelatedSuppliers />
+        <RelatedSuppliers type={listing?.hydrogenType} excludeId={listing?._id} />
       </div>
       
       <div className="mt-5">

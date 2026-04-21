@@ -34,8 +34,16 @@ function buildFilter(query) {
     }
   }
 
-  if (query.hydrogenType && HYDROGEN_TYPES.includes(query.hydrogenType)) {
-    filter.hydrogenType = query.hydrogenType;
+  // Improved: Support multiple types via comma-separated string (Bug 4)
+  if (query.hydrogenType) {
+    const types = String(query.hydrogenType)
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => HYDROGEN_TYPES.includes(t));
+    
+    if (types.length > 0) {
+      filter.hydrogenType = { $in: types };
+    }
   }
 
   const minPrice = query.minPrice != null ? Number(query.minPrice) : NaN;
@@ -52,6 +60,11 @@ function buildFilter(query) {
   } else {
     // Marketplace view only shows approved listings
     filter.status = "approved";
+  }
+
+  // Support fetching featured listings (Bug 6)
+  if (query.isFeatured === 'true') {
+    filter.isFeatured = true;
   }
 
   return filter;
@@ -100,9 +113,8 @@ export async function getListingById(req, res) {
  * Query params:
  *   page      (default 1)
  *   limit     (default 12, max 100)
- *   q, location, hydrogenType, minPrice, maxPrice, seller
- *
- * Response: { data: [...], total, page, totalPages }
+ *   sort      (Recommended, Price: Low to High, Price: High to Low)
+ *   q, location, hydrogenType, minPrice, maxPrice, seller, isFeatured
  */
 export async function getListings(req, res) {
   try {
@@ -116,13 +128,18 @@ export async function getListings(req, res) {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 12));
     const skip = (page - 1) * limit;
 
+    // --- Sorting (Bug 7) ---
+    let sortObj = { createdAt: -1 };
+    if (req.query.sort === "Price: Low to High") sortObj = { price: 1 };
+    else if (req.query.sort === "Price: High to Low") sortObj = { price: -1 };
+
     const filter = buildFilter(req.query);
 
     // Run query + count in parallel for efficiency
     const [listings, total] = await Promise.all([
       Listing.find(filter)
         .populate("seller", sellerSelect)
-        .sort({ createdAt: -1 })
+        .sort(sortObj)
         .skip(skip)
         .limit(limit)
         .lean(),

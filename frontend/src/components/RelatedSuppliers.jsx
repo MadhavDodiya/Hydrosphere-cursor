@@ -1,46 +1,65 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import SupplierCard from "./SupplierCard.jsx";
+import { fetchListings } from "../services/listingService.js";
 
-export default function RelatedSuppliers() {
-  const similarSuppliers = [
-    {
-      id: "related1",
-      name: "Global Energy Sol.",
-      location: "Frankfurt, Germany",
-      rating: 4.6,
-      description: "Providing high quality hydrogen solutions for manufacturing and chemical plants.",
-      price: "$4.10",
-      imageUrl: "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    },
-    {
-      id: "related2",
-      name: "NextGen H2",
-      location: "Oslo, Norway",
-      rating: 4.9,
-      description: "100% offshore wind powered green hydrogen production.",
-      price: "$4.75",
-      imageUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    },
-    {
-      id: "related3",
-      name: "Apex Gases",
-      location: "Texas, USA",
-      rating: 4.5,
-      description: "Reliable bulk transport of compressed hydrogen.",
-      price: "$3.90",
-      imageUrl: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    }
-  ];
+export default function RelatedSuppliers({ type, excludeId }) {
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadRelated = async () => {
+      try {
+        setLoading(true);
+        // Fetch listings of the same type
+        const res = await fetchListings({ 
+          hydrogenType: type, 
+          limit: 4 
+        });
+        
+        const filtered = (res.data || [])
+          .filter(l => l._id !== excludeId)
+          .slice(0, 3)
+          .map(item => ({
+            id: item._id,
+            name: item.companyName,
+            location: item.location,
+            rating: 4.5 + (Math.random() * 0.5),
+            description: item.description,
+            price: `$${item.price}`,
+            imageUrl: item.images?.[0] || null
+          }));
+          
+        setSuppliers(filtered);
+      } catch (err) {
+        console.error("Error loading related suppliers:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (type) loadRelated();
+  }, [type, excludeId]);
+
+  if (loading && !type) return null;
+  if (!loading && suppliers.length === 0) return null;
 
   return (
     <div className="related-suppliers mt-5 pt-4 border-top">
-      <h3 className="fw-bold mb-4">Similar Suppliers</h3>
+      <h3 className="fw-bold mb-4"><i className="bi bi-grid-3x3-gap me-2 text-primary"></i>Similar Suppliers</h3>
       <div className="row g-4">
-        {similarSuppliers.map((sup) => (
-          <div key={sup.id} className="col-12 col-md-4">
-            <SupplierCard supplier={sup} />
-          </div>
-        ))}
+        {loading ? (
+           Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="col-12 col-md-4">
+              <SupplierCard supplier={null} />
+            </div>
+          ))
+        ) : (
+          suppliers.map((sup) => (
+            <div key={sup.id} className="col-12 col-md-4">
+              <SupplierCard supplier={sup} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

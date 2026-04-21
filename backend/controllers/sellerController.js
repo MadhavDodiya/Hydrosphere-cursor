@@ -1,8 +1,10 @@
+import mongoose from "mongoose";
 import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
 
 /**
  * GET /api/seller/stats
+ * Enhanced to provide activity and chart data.
  */
 export async function getSellerStats(req, res) {
   try {
@@ -14,20 +16,68 @@ export async function getSellerStats(req, res) {
       Inquiry.countDocuments({ sellerId: userId }),
     ]);
 
-    // Simple today calculation
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
     const newLeadsToday = await Inquiry.countDocuments({
       sellerId: userId,
-      createdAt: { $gte: today },
+      createdAt: { $gte: todayStart },
     });
+
+    // 1. Activity Feed: 5 most recent inquiries
+    const recentInquiries = await Inquiry.find({ sellerId: userId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('listingId', 'companyName')
+      .lean();
+
+    const activity = recentInquiries.map(iq => ({
+      id: iq._id,
+      type: 'inquiry',
+      desc: `New inquiry from ${iq.name} for ${iq.listingId?.companyName || 'Listing'}`,
+      time: iq.createdAt,
+    }));
+
+    // 2. Chart data: Leads over last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const dailyStats = await Inquiry.aggregate([
+      {
+        $match: {
+          sellerId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      const found = dailyStats.find(s => s._id === ds);
+      chartData.push({
+        label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        leads: found ? found.count : 0
+      });
+    }
 
     res.json({
       totalListings,
       activeListings,
       totalLeads,
       newLeadsToday,
-      revenueEstimated: 0, // Placeholder
+      activity,
+      chartData,
+      revenueEstimated: 0,
     });
   } catch (error) {
     console.error("Seller Stats Error:", error);

@@ -44,7 +44,39 @@ export default function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Dashboard section="overview" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/my-listings"
+            element={
+              <ProtectedRoute>
+                <Dashboard section="my-listings" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/leads"
+            element={
+              <ProtectedRoute>
+                <Dashboard section="leads" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/inquiries"
+            element={
+              <ProtectedRoute>
+                <Dashboard section="inquiries" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/saved"
+            element={
+              <ProtectedRoute>
+                <Dashboard section="saved" />
               </ProtectedRoute>
             }
           />

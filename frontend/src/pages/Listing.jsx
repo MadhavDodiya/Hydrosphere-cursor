@@ -28,7 +28,7 @@ export default function Listing() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400); // 400ms debounce
+    }, 400); 
     return () => clearTimeout(timeoutId);
   }, [search]);
 
@@ -39,29 +39,27 @@ export default function Listing() {
         const params = {
           page: currentPage,
           limit: ITEMS_PER_PAGE,
+          sort: sort, // Server-side sort (Bug 7)
           ...(debouncedSearch.trim() ? { q: debouncedSearch.trim() } : {}),
           ...(filters.location.trim() ? { location: filters.location.trim() } : {}),
           ...(filters.minPrice !== "" ? { minPrice: filters.minPrice } : {}),
           ...(filters.maxPrice !== "" ? { maxPrice: filters.maxPrice } : {}),
-          ...(filters.types.length === 1 ? { hydrogenType: filters.types[0] } : {}),
+          // Support multiple types (Bug 4)
+          ...(filters.types.length > 0 ? { hydrogenType: filters.types.join(",") } : {}),
         };
         const response = await fetchListings(params);
         
-        let mapped = (response.data || []).map(item => ({
+        const mapped = (response.data || []).map(item => ({
           id: item._id,
           name: item.companyName || "Unknown Supplier",
           location: item.location || 'Unknown Location',
-          rating: 4.5,
+          rating: 4.5, // Logic for rating can be added if backend supports it
           description: item.description || `${item.hydrogenType} Hydrogen - ${item.quantity} kg available`,
           price: `$${item.price}`,
           rawPrice: Number(item.price),
           type: item.hydrogenType,
           imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
-
-        // Client-side sort on current page data
-        if (sort === "Price: Low to High") mapped.sort((a, b) => a.rawPrice - b.rawPrice);
-        else if (sort === "Price: High to Low") mapped.sort((a, b) => b.rawPrice - a.rawPrice);
 
         setSuppliers(mapped);
         setTotalItems(response.total || 0);
@@ -92,7 +90,6 @@ export default function Listing() {
   return (
     <div className="listing-page-bg pb-0">
       <div className="container py-4">
-        {/* Main 2-Column Layout */}
         <div className="row g-4">
           
           {/* Left: Filters Sidebar */}
@@ -125,7 +122,6 @@ export default function Listing() {
                   <option>Recommended</option>
                   <option>Price: Low to High</option>
                   <option>Price: High to Low</option>
-                  <option>Highest Rated</option>
                 </select>
               </div>
             </div>
@@ -143,7 +139,6 @@ export default function Listing() {
             {/* Grid */}
             <div className="row g-4">
               {loading ? (
-                // Skeleton Loader Array
                 Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="col-12 col-md-6 col-lg-4">
                     <SupplierCard supplier={null} />
@@ -156,7 +151,6 @@ export default function Listing() {
                   </div>
                 ))
               ) : (
-                // Empty State
                 <div className="col-12">
                   <div className="bg-white p-5 rounded shadow-sm text-center">
                     <div className="display-1 text-muted mb-3"><i className="bi bi-search"></i></div>
