@@ -72,7 +72,7 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
             <div>
               <h5 className="modal-title fw-bold mb-0">Inquiry Thread</h5>
               <p className="small mb-0 opacity-75">
-                {inquiry.listingId?.companyName} • {inquiry.listingId?.hydrogenType} Hydrogen
+                {inquiry.listingId?.title || inquiry.listingId?.companyName} • {inquiry.listingId?.hydrogenType} Hydrogen
               </p>
             </div>
             {user?.role === "seller" && (

@@ -162,7 +162,12 @@ export const getListings = async (req, res) => {
     const { status, q, page = 1, limit = 10 } = req.query;
     const query = {};
     if (status && status !== "All") query.status = status.toLowerCase();
-    if (q) query.companyName = { $regex: q, $options: "i" };
+    if (q) {
+      query.$or = [
+        { title: { $regex: q, $options: "i" } },
+        { companyName: { $regex: q, $options: "i" } },
+      ];
+    }
 
     const listings = await Listing.find(query)
       .populate("seller", "name email isVerified")

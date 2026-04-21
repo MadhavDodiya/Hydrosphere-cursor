@@ -82,7 +82,7 @@ export default function InquiryModal({ listing, show, onClose }) {
                       <span className="small text-muted" style={{ fontSize: "0.6rem" }}>H2 GAS</span>
                    </div>
                    <div>
-                      <div className="fw-bold small">{listing?.companyName}</div>
+                      <div className="fw-bold small">{listing?.title || listing?.companyName}</div>
                       <div className="text-muted" style={{ fontSize: "0.75rem" }}>{listing?.location} • ${listing?.price}/kg</div>
                    </div>
                 </div>

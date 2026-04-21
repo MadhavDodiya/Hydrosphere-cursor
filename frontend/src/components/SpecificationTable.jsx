@@ -4,7 +4,7 @@ export default function SpecificationTable({ listing }) {
   if (!listing) return null;
 
   const specs = [
-    { label: "Producer", value: listing.companyName },
+    { label: "Title", value: listing.title || listing.companyName },
     { label: "Hydrogen Type", value: `${listing.hydrogenType} Hydrogen` },
     { label: "Price per kg", value: `$${listing.price}` },
     { label: "Current Inventory", value: `${listing.quantity} kg` },

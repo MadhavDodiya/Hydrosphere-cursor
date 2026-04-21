@@ -77,7 +77,7 @@ export default function Detail() {
           <div className="col-12 col-lg-4">
             <SupplierInfoCard 
               listing={listing}
-              supplierName={listing?.companyName || "HydroGen Pro"}
+              supplierName={listing?.title || listing?.companyName || "HydroGen Pro"}
               location={listing?.location || "Houston, USA"}
               rating={4.8}
               price={listing ? `$${listing.price}` : "$4.50"}

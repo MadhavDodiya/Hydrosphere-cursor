@@ -12,6 +12,7 @@ import { optionalAuthenticate } from "../middleware/optionalAuth.js";
 import { upload } from "../middleware/upload.js";
 import { validate } from "../middleware/validate.js";
 import { listingCreateSchema, listingUpdateSchema, paginationQuerySchema } from "../utils/validationSchemas.js";
+import { requireVerifiedSeller } from "../middleware/requireVerifiedSeller.js";
 
 const router = Router();
 
@@ -25,8 +26,24 @@ router.get("/my-listings", authenticate, requireSeller, validate({ query: pagina
 router.get("/:id", optionalAuthenticate, getListingById);
 
 // Protected routes (Mutations)
-router.post("/", authenticate, requireSeller, upload.array("images", 5), validate({ body: listingCreateSchema }), createListing);
-router.put("/:id", authenticate, requireSeller, upload.array("images", 5), validate({ body: listingUpdateSchema }), updateListing);
+router.post(
+  "/",
+  authenticate,
+  requireSeller,
+  requireVerifiedSeller,
+  upload.array("images", 5),
+  validate({ body: listingCreateSchema }),
+  createListing
+);
+router.put(
+  "/:id",
+  authenticate,
+  requireSeller,
+  requireVerifiedSeller,
+  upload.array("images", 5),
+  validate({ body: listingUpdateSchema }),
+  updateListing
+);
 router.delete("/:id", authenticate, requireSeller, deleteListing);
 
 export default router;

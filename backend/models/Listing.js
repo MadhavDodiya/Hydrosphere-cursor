@@ -13,6 +13,9 @@ const listingSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // Canonical listing title (UI-facing). Kept optional for legacy documents.
+    title: { type: String, trim: true, default: "", maxlength: 200, index: true },
+    // Legacy field used across the MVP UI and admin search. New code should treat it as an alias of `title`.
     companyName: { type: String, required: true, trim: true },
     hydrogenType: {
       type: String,

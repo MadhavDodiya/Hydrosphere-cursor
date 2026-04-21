@@ -7,7 +7,7 @@ export const PLANS = {
   },
   pro_supplier: {
     id: "pro_supplier",
-    name: "Pro Supplier",
+    name: "Pro",
     listingsLimit: 50,
     leadsLimitPerMonth: null, // unlimited
   },

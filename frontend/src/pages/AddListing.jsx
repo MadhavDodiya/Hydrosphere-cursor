@@ -25,7 +25,7 @@ export default function AddListing() {
   const { showToast } = useToast();
   const isEdit = Boolean(id);
 
-  const [companyName, setCompanyName] = useState("");
+  const [title, setTitle] = useState("");
   const [hydrogenType, setHydrogenType] = useState("Green");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -55,7 +55,7 @@ export default function AddListing() {
           return;
         }
 
-        setCompanyName(found.companyName);
+        setTitle(found.title || found.companyName || "");
         setHydrogenType(found.hydrogenType);
         setPrice(String(found.price));
         setQuantity(String(found.quantity));
@@ -85,7 +85,10 @@ export default function AddListing() {
     setSubmitting(true);
 
     const formData = new FormData();
-    formData.append("companyName", companyName.trim());
+    const trimmedTitle = title.trim();
+    formData.append("title", trimmedTitle);
+    // Keep legacy field for older endpoints/admin searches.
+    formData.append("companyName", trimmedTitle);
     formData.append("hydrogenType", hydrogenType);
     formData.append("price", p);
     formData.append("quantity", q);
@@ -153,11 +156,18 @@ export default function AddListing() {
 
               {/* Company Name */}
               <div>
-                <label htmlFor="companyName" style={labelStyle}>Company Name *</label>
+                <label htmlFor="title" style={labelStyle}>Title *</label>
                 <div className="position-relative">
-                  <i className="bi bi-building position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                  <input id="companyName" required minLength={2} style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                    placeholder="e.g. HydroGen Solutions Ltd." value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                  <i className="bi bi-tag position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                  <input
+                    id="title"
+                    required
+                    minLength={2}
+                    style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                    placeholder="e.g. Nordic Green Hydrogen Supply"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
                 </div>
               </div>
 

@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 
 function planLabel(planId) {
-  if (planId === "pro_supplier") return "Pro Supplier";
+  if (planId === "pro_supplier") return "Pro";
   if (planId === "enterprise") return "Enterprise";
   return "Free";
 }
@@ -111,6 +111,8 @@ export default function Billing() {
         <div className="row g-3">
           {plans
             .filter((p) => p.id !== "free")
+            // Keep Enterprise hidden unless it is configured server-side.
+            .filter((p) => p.id !== "enterprise" || Boolean(p.stripePriceId))
             .map((p) => (
               <div key={p.id} className="col-12 col-lg-6">
                 <div className="border rounded-4 p-4 h-100">
@@ -148,4 +150,3 @@ export default function Billing() {
     </div>
   );
 }
-

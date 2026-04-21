@@ -29,6 +29,7 @@ async function seed() {
     email: "buyer@hydrosphere.demo",
     password: passwordHash,
     role: "buyer",
+    emailVerified: true,
   });
 
   const seller = await User.create({
@@ -36,36 +37,45 @@ async function seed() {
     email: "seller@hydrosphere.demo",
     password: passwordHash,
     role: "seller",
+    emailVerified: true,
+    isVerified: true,
+    plan: "free",
   });
 
   const listings = await Listing.insertMany([
     {
       seller: seller._id,
+      title: "Nordic Green H2 AS",
       companyName: "Nordic Green H2 AS",
       hydrogenType: "Green",
       price: 4.25,
       quantity: 1200,
       location: "Oslo, Norway",
+      purity: 99.9,
       description:
         "Electrolysis-based green hydrogen from wind. ISO-certified, weekly delivery slots available for industrial buyers.",
     },
     {
       seller: seller._id,
+      title: "Gulf Coast Hydrogen Co.",
       companyName: "Gulf Coast Hydrogen Co.",
       hydrogenType: "Blue",
       price: 3.1,
       quantity: 5000,
       location: "Houston, TX, USA",
+      purity: 99.5,
       description:
         "Blue hydrogen with carbon capture. Suitable for refineries and ammonia plants. FOB pricing.",
     },
     {
       seller: seller._id,
+      title: "EuroChem Supply",
       companyName: "EuroChem Supply",
       hydrogenType: "Grey",
       price: 2.4,
       quantity: 800,
       location: "Rotterdam, Netherlands",
+      purity: 98.0,
       description:
         "Steam methane reforming supply for short-term contracts. Transition pathway to lower-carbon options.",
     },

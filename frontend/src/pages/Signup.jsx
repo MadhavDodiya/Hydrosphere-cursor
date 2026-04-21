@@ -64,8 +64,8 @@ export default function Signup() {
             <label className="form-label fw-semibold mb-2" style={{ fontSize: "0.875rem", color: "#374151" }}>I want to</label>
             <div className="d-flex gap-3">
               {[
-                { value: "buyer", label: "Buy Hydrogen", icon: "bi-cart3", desc: "Find & contact suppliers" },
-                { value: "seller", label: "Sell Hydrogen", icon: "bi-shop", desc: "List & manage products" },
+                { value: "buyer", label: "Buyer", icon: "bi-cart3", desc: "Search listings & send inquiries" },
+                { value: "seller", label: "Supplier", icon: "bi-shop", desc: "Add & manage hydrogen listings" },
               ].map(r => (
                 <button
                   key={r.value}

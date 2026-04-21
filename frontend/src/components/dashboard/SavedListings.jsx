@@ -104,7 +104,7 @@ export default function SavedListings() {
                     <div className="mb-2">
                        <span className="badge bg-primary-subtle text-primary border-primary-subtle rounded-pill px-3 py-2" style={{ fontSize: '0.65rem', fontWeight: 600 }}>{String(l.hydrogenType).toUpperCase()} H2</span>
                     </div>
-                    <h6 className="fw-bold text-dark text-truncate mb-1">{l.companyName}</h6>
+                    <h6 className="fw-bold text-dark text-truncate mb-1">{l.title || l.companyName}</h6>
                     <p className="text-muted small mb-4">
                       <i className="bi bi-geo-alt me-1 text-primary"></i>{l.location}
                     </p>

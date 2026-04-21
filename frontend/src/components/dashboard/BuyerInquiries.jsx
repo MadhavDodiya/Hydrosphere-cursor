@@ -83,7 +83,7 @@ export default function BuyerInquiries() {
               inquiries.map(l => (
                 <tr key={l._id}>
                   <td className="px-4 py-3">
-                    <div className="fw-bold text-dark mb-0">{l.listingId?.companyName || "Producer"}</div>
+                    <div className="fw-bold text-dark mb-0">{l.listingId?.title || l.listingId?.companyName || "Listing"}</div>
                     <div className="text-muted small"><i className="bi bi-geo-alt me-1"></i>{l.listingId?.location || "N/A"}</div>
                   </td>
                   <td className="py-3">

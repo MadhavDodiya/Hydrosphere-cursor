@@ -132,7 +132,7 @@ export default function LeadsTable({ loading: parentLoading }) {
                     </div>
                   </td>
                   <td className="py-3">
-                    <div className="fw-medium text-dark" style={{ fontSize: "0.875rem" }}>{l.listingId?.companyName || "Listing Removed"}</div>
+                    <div className="fw-medium text-dark" style={{ fontSize: "0.875rem" }}>{l.listingId?.title || l.listingId?.companyName || "Listing Removed"}</div>
                     <div className="text-secondary small">{l.listingId?.hydrogenType || "N/A"} Hydrogen Gas</div>
                   </td>
                   <td className="py-3">

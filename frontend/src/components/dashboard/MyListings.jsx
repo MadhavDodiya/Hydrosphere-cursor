@@ -97,7 +97,7 @@ export default function MyListings() {
                         />
                       </div>
                       <div>
-                        <div className="fw-bold text-dark mb-0">{l.companyName}</div>
+                        <div className="fw-bold text-dark mb-0">{l.title || l.companyName}</div>
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>
                           <span className="badge bg-primary-subtle text-primary border-primary-subtle fw-medium me-2">{l.hydrogenType} H2</span>
                           <i className="bi bi-geo-alt me-1"></i>{l.location}

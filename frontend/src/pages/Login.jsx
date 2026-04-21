@@ -108,6 +108,15 @@ export default function Login() {
             </button>
           </form>
 
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <Link to="/forgot-password" className="text-decoration-none" style={{ fontSize: "0.85rem", color: "#2563eb" }}>
+              Forgot password?
+            </Link>
+            <Link to="/verify-email" className="text-decoration-none" style={{ fontSize: "0.85rem", color: "#2563eb" }}>
+              Verify email
+            </Link>
+          </div>
+
           <div className="text-center mt-4">
             <span className="text-muted" style={{ fontSize: "0.875rem" }}>Don't have an account? </span>
             <Link to="/signup" className="fw-semibold text-decoration-none" style={{ color: "#2563eb", fontSize: "0.875rem" }}>Create one free</Link>

@@ -14,6 +14,9 @@ import Contact from "./pages/Contact.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import BillingSuccess from "./pages/BillingSuccess.jsx";
 import BillingCancel from "./pages/BillingCancel.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 import { Navigate } from "react-router-dom";
 
@@ -42,6 +45,9 @@ export default function App() {
           <Route path="/listings/:id"  element={<Detail />} />
           <Route path="/login"         element={<Login />} />
           <Route path="/signup"        element={<Signup />} />
+          <Route path="/verify-email"  element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/dashboard"
             element={

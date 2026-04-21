@@ -46,6 +46,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Email verification (separate from supplier verification).
+    emailVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    emailVerificationToken: {
+      type: String,
+      default: "",
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
     isSuspended: {
       type: Boolean,
       default: false,
@@ -94,6 +108,15 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: null,
       min: 0,
+    },
+
+    passwordResetToken: {
+      type: String,
+      default: "",
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

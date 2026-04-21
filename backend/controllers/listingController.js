@@ -18,6 +18,7 @@ function buildFilter(query) {
   if (q) {
     const safe = escapeRegex(q);
     filter.$or = [
+      { title: { $regex: safe, $options: "i" } },
       { companyName: { $regex: safe, $options: "i" } },
       { location: { $regex: safe, $options: "i" } },
       { description: { $regex: safe, $options: "i" } },
@@ -108,8 +109,14 @@ export async function getListings(req, res) {
       Listing.countDocuments(filter),
     ]);
 
+    const normalized = listings.map((l) => ({
+      ...l,
+      title: l.title || l.companyName,
+      companyName: l.companyName || l.title,
+    }));
+
     return res.json({
-      data: listings,
+      data: normalized,
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -143,7 +150,7 @@ export async function getMyListings(req, res) {
     console.log(`[MY LISTINGS] Found ${listings.length} items (page=${page}, limit=${limit})`);
 
     return res.json({
-      data: listings,
+      data: listings.map((l) => ({ ...l, title: l.title || l.companyName, companyName: l.companyName || l.title })),
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -181,7 +188,12 @@ export async function getListingById(req, res) {
       saved = Boolean(exists);
     }
 
-    return res.json({ ...listing, saved });
+    return res.json({
+      ...listing,
+      title: listing.title || listing.companyName,
+      companyName: listing.companyName || listing.title,
+      saved,
+    });
   } catch (err) {
     console.error("[GET BY ID Error]:", err);
     return res.status(500).json({ message: "Failed to fetch listing" });
@@ -193,10 +205,11 @@ export async function getListingById(req, res) {
  */
 export async function createListing(req, res) {
   try {
-    const { companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
+    const { title, companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
     const images = req.files ? req.files.map((file) => file.path) : [];
 
-    if (!companyName || !hydrogenType || price == null || quantity == null || !location || !description) {
+    const effectiveTitle = String(title || companyName || "").trim();
+    if (!effectiveTitle || !hydrogenType || price == null || quantity == null || !location || !description) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -218,7 +231,8 @@ export async function createListing(req, res) {
 
     const listing = await Listing.create({
       seller: req.userId,
-      companyName: String(companyName).trim(),
+      title: effectiveTitle,
+      companyName: effectiveTitle, // keep legacy field populated for older UI/admin search
       hydrogenType,
       price: Number(price),
       quantity: Number(quantity),
@@ -251,11 +265,15 @@ export async function updateListing(req, res) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const { companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
+    const { title, companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
     const newImages = req.files ? req.files.map((file) => file.path) : [];
 
     if (newImages.length > 0) listing.images = [...listing.images, ...newImages];
-    if (companyName) listing.companyName = companyName;
+    if (title || companyName) {
+      const nextTitle = String(title || companyName).trim();
+      listing.title = nextTitle;
+      listing.companyName = nextTitle; // keep legacy alias in sync
+    }
     if (hydrogenType) listing.hydrogenType = hydrogenType;
     if (price != null) listing.price = Number(price);
     if (quantity != null) listing.quantity = Number(quantity);
