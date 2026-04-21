@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 /**
- * Verifies JWT from Authorization: Bearer <token>, checks the user is not
- * suspended in the DB, then attaches req.userId and req.userRole.
+ * Verifies JWT from Authorization: Bearer <token>.
+ * Attaches req.userId and req.role for downstream use.
  */
 export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
@@ -16,23 +16,28 @@ export async function authenticate(req, res, next) {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch {
+  } catch (err) {
+    console.error("JWT Error:", err.message);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 
   try {
-    const user = await User.findById(decoded.userId).select("isSuspended role");
+    const user = await User.findById(decoded.userId).select("role isSuspended");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
+    
     if (user.isSuspended) {
-      return res.status(403).json({ message: "Your account has been suspended. Please contact support." });
+      return res.status(403).json({ message: "Your account has been suspended." });
     }
+
     req.userId = decoded.userId;
-    req.userRole = decoded.role;
+    req.role = user.role; // Extract role from DB to be safe
+    
+    console.log(`[AUTH] Authenticated User: ${req.userId} (Role: ${req.role})`);
     next();
   } catch (err) {
-    console.error("[auth] DB error during suspension check:", err);
+    console.error("[auth] error during authentication:", err);
     return res.status(500).json({ message: "Server error during authentication" });
   }
 }
@@ -41,7 +46,7 @@ export async function authenticate(req, res, next) {
  * Ensures the authenticated user is a seller.
  */
 export function requireSeller(req, res, next) {
-  if (req.userRole !== "seller") {
+  if (req.role !== "seller") {
     return res.status(403).json({ message: "Seller role required" });
   }
   next();

@@ -1,7 +1,10 @@
-﻿import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
+/**
+ * Sign JWT for user
+ */
 function signToken(user) {
   return jwt.sign(
     { userId: user._id.toString(), role: user.role },
@@ -10,9 +13,12 @@ function signToken(user) {
   );
 }
 
+/**
+ * Common public user object mapping (Task #5: use _id consistently)
+ */
 function publicUser(user) {
   return {
-    id: user._id,
+    _id: user._id, 
     name: user.name,
     email: user.email,
     role: user.role,
@@ -30,18 +36,12 @@ export async function register(req, res) {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-      return res
-        .status(400)
-        .json({ message: "name, email, password, and role are required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     const trimmedName = String(name).trim();
-    if (trimmedName.length < 1) {
-      return res.status(400).json({ message: "name is required" });
-    }
-
     if (!["buyer", "seller"].includes(role)) {
-      return res.status(400).json({ message: "role must be buyer or seller" });
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
@@ -57,11 +57,7 @@ export async function register(req, res) {
       role,
     });
 
-    if (user.isSuspended) {
-      return res
-        .status(403)
-        .json({ message: "Your account has been suspended. Please contact support." });
-    }
+    console.log("[REGISTER] New User:", user._id);
 
     const token = signToken(user);
     return res.status(201).json({
@@ -69,11 +65,8 @@ export async function register(req, res) {
       user: publicUser(user),
     });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ message: "Email already registered" });
-    }
-    console.error(err);
-    return res.status(500).json({ message: "Server error during registration" });
+    console.error("[REGISTER Error]:", err);
+    return res.status(500).json({ message: "Registration failed" });
   }
 }
 
@@ -83,26 +76,21 @@ export async function register(req, res) {
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
-      return res.status(400).json({ message: "email and password are required" });
+      return res.status(400).json({ message: "Email and password required" });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
     if (user.isSuspended) {
-      return res
-        .status(403)
-        .json({ message: "Your account has been suspended. Please contact support." });
+      return res.status(403).json({ message: "Account suspended" });
     }
+
+    console.log("[LOGIN] User:", user._id);
 
     const token = signToken(user);
     return res.json({
@@ -110,8 +98,7 @@ export async function login(req, res) {
       user: publicUser(user),
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error during login" });
+    console.error("[LOGIN Error]:", err);
+    return res.status(500).json({ message: "Login failed" });
   }
 }
-

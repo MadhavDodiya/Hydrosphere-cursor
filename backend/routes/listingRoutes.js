@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getListings,
   getListingById,
+  getMyListings,
   createListing,
   updateListing,
   deleteListing,
@@ -12,13 +13,16 @@ import { upload } from "../middleware/upload.js";
 
 const router = Router();
 
-// Public: browse with filters
+// Public browsable routes
 router.get("/", getListings);
 
-// Single listing (optional JWT adds `saved` flag) — register before /:id mutations
+// Specific routes MUST come before generic :id
+router.get("/my-listings", authenticate, requireSeller, getMyListings);
+
+// Single listing (with optional auth details)
 router.get("/:id", optionalAuthenticate, getListingById);
 
-// Protected: sellers only for mutations
+// Protected routes (Mutations)
 router.post("/", authenticate, requireSeller, upload.array("images", 5), createListing);
 router.put("/:id", authenticate, requireSeller, upload.array("images", 5), updateListing);
 router.delete("/:id", authenticate, requireSeller, deleteListing);

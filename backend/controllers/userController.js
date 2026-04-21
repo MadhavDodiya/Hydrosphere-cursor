@@ -4,9 +4,12 @@ import Inquiry from "../models/Inquiry.js";
 import SavedListing from "../models/SavedListing.js";
 import Listing from "../models/Listing.js";
 
+/**
+ * Common public user object mapping (Task #5)
+ */
 function publicUser(user) {
   return {
-    id: user._id,
+    _id: user._id, 
     name: user.name,
     email: user.email,
     role: user.role,
@@ -25,7 +28,7 @@ export async function getMe(req, res) {
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.json(publicUser(user));
   } catch (err) {
-    console.error(err);
+    console.error("[GET_ME Error]:", err);
     return res.status(500).json({ message: "Failed to fetch profile" });
   }
 }
@@ -36,16 +39,18 @@ export async function getMe(req, res) {
 export async function getBuyerStats(req, res) {
   try {
     const userId = req.userId;
+    console.log("[BUYER STATS] User:", userId);
+
     const [totalInquiries, totalSaved, totalListings] = await Promise.all([
       Inquiry.countDocuments({ buyerId: userId }),
       SavedListing.countDocuments({ user: userId }),
       Listing.countDocuments({}), 
     ]);
 
-    // 1. Activity Feed: Recent inquiries sent + recent saved
+    // Fetch Activity feed
     const [recentInquiries, recentSaved] = await Promise.all([
-      Inquiry.find({ buyerId: userId }).sort({ createdAt: -1 }).limit(3).populate('listingId', 'companyName').lean(),
-      SavedListing.find({ user: userId }).sort({ createdAt: -1 }).limit(3).populate('listing', 'companyName').lean()
+      Inquiry.find({ buyerId: userId }).sort({ createdAt: -1 }).limit(3).populate('listingId').lean(),
+      SavedListing.find({ user: userId }).sort({ createdAt: -1 }).limit(3).populate('listing').lean()
     ]);
 
     const activity = [
@@ -58,12 +63,12 @@ export async function getBuyerStats(req, res) {
       ...recentSaved.map(s => ({
         id: s._id,
         type: 'save',
-        desc: `You saved ${s.listing?.companyName || 'a listing'} to your bookmarks`,
+        desc: `You saved ${s.listing?.companyName || 'a listing'}`,
         time: s.createdAt
       }))
     ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
 
-    // 2. Chart data: Inquiries sent over last 7 days
+    // Chart data aggregation
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -96,16 +101,13 @@ export async function getBuyerStats(req, res) {
       });
     }
 
-    return res.json({
-      totalInquiries,
-      totalSaved,
-      marketListings: totalListings,
-      activity,
-      chartData
-    });
+    const stats = { totalInquiries, totalSaved, marketListings: totalListings, activity, chartData };
+    console.log("[BUYER STATS] Result:", stats);
+
+    return res.json(stats);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Failed to fetch buyer stats" });
+    console.error("[GET_BUYER_STATS Error]:", err);
+    return res.status(500).json({ message: "Failed to fetch stats" });
   }
 }
 
@@ -117,22 +119,14 @@ export async function updateMe(req, res) {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { companyName, phone } = req.body || {};
-
-    if (companyName != null) {
-      if (user.role !== "seller") return res.status(403).json({ message: "Seller role required" });
-      user.companyName = String(companyName).trim();
-    }
-
-    if (phone != null) {
-      if (user.role !== "seller") return res.status(403).json({ message: "Seller role required" });
-      user.phone = String(phone).trim();
-    }
+    const { companyName, phone } = req.body;
+    if (companyName != null) user.companyName = companyName;
+    if (phone != null) user.phone = phone;
 
     await user.save();
     return res.json(publicUser(user));
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Failed to update profile" });
+    console.error("[UPDATE_ME Error]:", err);
+    return res.status(500).json({ message: "Update failed" });
   }
 }

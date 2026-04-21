@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchListings, deleteListing } from "../../services/listingService.js";
+import { fetchMyListings, deleteListing } from "../../services/listingService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 
@@ -13,8 +13,10 @@ export default function MyListings() {
   const loadListings = async () => {
     try {
       setLoading(true);
-      const res = await fetchListings({ seller: user.id });
-      setListings(res.data || []);
+      // Fetched using dedicated /api/listings/my-listings endpoint (Task #1)
+      const data = await fetchMyListings();
+      console.log("MY_LISTINGS_DATA:", data);
+      setListings(data || []);
     } catch (err) {
       console.error("Error loading my listings:", err);
       showToast("Failed to load listings", "error");
@@ -24,8 +26,11 @@ export default function MyListings() {
   };
 
   useEffect(() => {
-    loadListings();
-  }, [user.id]);
+    // Check for user._id specifically (Task #7)
+    if (user?._id || user?.id) {
+       loadListings();
+    }
+  }, [user?._id, user?.id]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;
@@ -38,62 +43,83 @@ export default function MyListings() {
     }
   };
 
-  if (loading) return <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>;
+  if (loading) {
+    return (
+      <div className="d-flex flex-column align-items-center justify-content-center py-5 bg-white rounded-4 border">
+        <div className="spinner-border text-primary mb-3"></div>
+        <p className="text-secondary small">Fetching your marketplace listings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-4 shadow-sm border overflow-hidden">
-      <div className="px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 className="mb-0 fw-bold">My Listings</h5>
-        <Link to="/add-listing" className="btn btn-primary btn-sm px-3">
-          <i className="bi bi-plus-lg me-1"></i> Add New
+      <div className="px-4 py-3 border-bottom d-flex justify-content-between align-items-center bg-light-subtle">
+        <h5 className="mb-0 fw-bold text-dark">Inventory Management</h5>
+        <Link to="/add-listing" className="btn btn-primary btn-sm px-4 rounded-pill shadow-sm">
+          <i className="bi bi-plus-lg me-2"></i>New Listing
         </Link>
       </div>
       
       <div className="table-responsive">
         <table className="table table-hover align-middle mb-0">
-          <thead className="bg-light">
+          <thead>
             <tr>
-              <th className="px-4 py-3 border-0 text-muted small fw-bold text-uppercase">Listing</th>
-              <th className="py-3 border-0 text-muted small fw-bold text-uppercase">Price/Qty</th>
-              <th className="py-3 border-0 text-muted small fw-bold text-uppercase">Status</th>
-              <th className="px-4 py-3 border-0 text-muted small fw-bold text-uppercase text-end">Actions</th>
+              <th className="px-4 py-3 border-0 text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>Product Details</th>
+              <th className="py-3 border-0 text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>Pricing & Stock</th>
+              <th className="py-3 border-0 text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>Visibility</th>
+              <th className="px-4 py-3 border-0 text-muted small fw-bold text-uppercase text-end" style={{ letterSpacing: '0.05em' }}>Management</th>
             </tr>
           </thead>
           <tbody>
             {listings.length === 0 ? (
-              <tr><td colSpan="4" className="text-center py-5 text-muted">No listings found.</td></tr>
+              <tr>
+                <td colSpan="4" className="text-center py-5">
+                  <div className="py-4">
+                    <i className="bi bi-box-seam display-4 text-light mb-3 d-block"></i>
+                    <h6 className="fw-bold text-dark">No Listings Found</h6>
+                    <p className="text-muted small px-5">You haven't added any products to the marketplace yet. Start by creating your first listing!</p>
+                    <Link to="/add-listing" className="btn btn-outline-primary btn-sm px-4 mt-2 rounded-pill">Create My First Listing</Link>
+                  </div>
+                </td>
+              </tr>
             ) : (
               listings.map(l => (
                 <tr key={l._id}>
                   <td className="px-4 py-3">
                     <div className="d-flex align-items-center gap-3">
-                      <div style={{ width: 48, height: 48, borderRadius: "10px", background: "#f1f5f9", overflow: "hidden" }}>
+                      <div className="shadow-sm border" style={{ width: 52, height: 52, borderRadius: "12px", background: "#f8fafc", overflow: "hidden" }}>
                         <img 
-                          src={l.images?.[0] || "https://placehold.co/100x100?text=H2"} 
+                          src={l.images?.[0] || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&auto=format&fit=crop"} 
                           alt="" 
                           className="w-100 h-100 object-fit-cover"
                         />
                       </div>
                       <div>
-                        <div className="fw-bold text-dark">{l.companyName}</div>
-                        <div className="text-muted small">{l.hydrogenType} Hydrogen • {l.location}</div>
+                        <div className="fw-bold text-dark mb-0">{l.companyName}</div>
+                        <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                          <span className="badge bg-primary-subtle text-primary border-primary-subtle fw-medium me-2">{l.hydrogenType} H2</span>
+                          <i className="bi bi-geo-alt me-1"></i>{l.location}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 text-dark fw-medium">
-                    ${l.price}/kg <br/>
-                    <span className="text-muted small fw-normal">{l.quantity} units</span>
+                  <td className="py-3">
+                    <div className="fw-bold text-dark">${l.price}<span className="text-muted small fw-normal">/kg</span></div>
+                    <div className="text-secondary" style={{ fontSize: '0.8rem' }}>Stock: <span className="fw-medium">{l.quantity} units</span></div>
                   </td>
                   <td className="py-3">
-                    <span className="badge rounded-pill bg-success-subtle text-success px-3 py-2 fw-semibold" style={{ fontSize: '0.7rem' }}>Active</span>
+                    <span className={`badge rounded-pill px-3 py-2 fw-semibold ${l.status === 'approved' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}`} style={{ fontSize: '0.65rem', letterSpacing: '0.02em' }}>
+                      {String(l.status || 'active').toUpperCase()}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-end">
                     <div className="d-flex justify-content-end gap-2">
-                      <Link to={`/add-listing/${l._id}`} className="btn btn-outline-secondary btn-sm rounded-3">
-                        <i className="bi bi-pencil"></i>
+                      <Link to={`/add-listing/${l._id}`} className="btn btn-light btn-sm rounded-circle border p-0 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 32, height: 32 }} title="Edit">
+                        <i className="bi bi-pencil-fill text-secondary" style={{ fontSize: '0.75rem' }}></i>
                       </Link>
-                      <button onClick={() => handleDelete(l._id)} className="btn btn-outline-danger btn-sm rounded-3">
-                        <i className="bi bi-trash"></i>
+                      <button onClick={() => handleDelete(l._id)} className="btn btn-light btn-sm rounded-circle border p-0 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 32, height: 32 }} title="Delete">
+                        <i className="bi bi-trash3-fill text-danger" style={{ fontSize: '0.75rem' }}></i>
                       </button>
                     </div>
                   </td>
