@@ -5,7 +5,7 @@ import User from "../models/User.js";
 import { sendEmail } from "../utils/email.js";
 
 /**
- * Helper to log context (Requested Task #6)
+ * Helper to log context (Requested Task #6 & #13)
  */
 function logContext(userId, action, data) {
   console.log(`[INQUIRY] USER: ${userId} | ACTION: ${action}`);
@@ -13,10 +13,21 @@ function logContext(userId, action, data) {
 }
 
 /**
+ * Validates ObjectId.
+ */
+function isValidId(id) {
+  return mongoose.isValidObjectId(id);
+}
+
+/**
  * POST /api/inquiries
  */
 export async function createInquiry(req, res) {
   try {
+    if (!req.userId || !isValidId(req.userId)) {
+      return res.status(401).json({ message: "Invalid user ID" });
+    }
+
     logContext(req.userId, "CREATE", req.body);
     
     if (req.role !== "buyer") {
@@ -24,12 +35,23 @@ export async function createInquiry(req, res) {
     }
 
     const { listingId, name, email, phone, message } = req.body;
-    if (!listingId || !mongoose.isValidObjectId(listingId)) {
+    if (!listingId || !isValidId(listingId)) {
       return res.status(400).json({ message: "Valid Listing ID is required" });
     }
 
     const listing = await Listing.findById(listingId);
     if (!listing) return res.status(404).json({ message: "Listing not found" });
+
+    // Task #8: Validate listing.seller before creating inquiry
+    if (!listing.seller || !isValidId(listing.seller)) {
+       return res.status(500).json({ message: "Listing is missing valid seller information" });
+    }
+
+    // Task #9: Prevent duplicate inquiries (same buyer + listing)
+    const existingInquiry = await Inquiry.findOne({ buyerId: req.userId, listingId: listing._id });
+    if (existingInquiry) {
+       return res.status(409).json({ message: "You have already sent an inquiry for this listing. Please check your dashboard to continue the conversation." });
+    }
 
     const inquiry = await Inquiry.create({
       buyerId: req.userId,
@@ -41,7 +63,7 @@ export async function createInquiry(req, res) {
       message,
     });
 
-    // Notify seller (email logic preserved)
+    // Notify seller
     try {
       const seller = await User.findById(listing.seller);
       if (seller?.email) {
@@ -65,6 +87,10 @@ export async function createInquiry(req, res) {
  */
 export async function getSellerInquiries(req, res) {
   try {
+    if (!req.userId || !isValidId(req.userId)) {
+      return res.status(401).json({ message: "Invalid user ID" });
+    }
+
     logContext(req.userId, "FETCH_SELLER");
     
     if (req.role !== "seller") {
@@ -80,7 +106,7 @@ export async function getSellerInquiries(req, res) {
     return res.json(inquiries);
   } catch (err) {
     console.error("[GET SELLER INQUIRIES Error]:", err);
-    return res.status(500).json({ message: "Failed to fetch leads" });
+    return res.status(500).json({ message: "Failed to fetch leads. Please try again." });
   }
 }
 
@@ -89,6 +115,10 @@ export async function getSellerInquiries(req, res) {
  */
 export async function getBuyerInquiries(req, res) {
   try {
+    if (!req.userId || !isValidId(req.userId)) {
+      return res.status(401).json({ message: "Invalid user ID" });
+    }
+
     logContext(req.userId, "FETCH_BUYER");
     
     const inquiries = await Inquiry.find({ buyerId: req.userId })
@@ -100,7 +130,7 @@ export async function getBuyerInquiries(req, res) {
     return res.json(inquiries);
   } catch (err) {
     console.error("[GET BUYER INQUIRIES Error]:", err);
-    return res.status(500).json({ message: "Failed to fetch inquiries" });
+    return res.status(500).json({ message: "Failed to fetch inquiries. Please try again." });
   }
 }
 
@@ -112,7 +142,22 @@ export async function replyToInquiry(req, res) {
     const { id } = req.params;
     const { message } = req.body;
 
-    if (!message) return res.status(400).json({ message: "Message required" });
+    if (!req.userId || !isValidId(req.userId)) {
+      return res.status(401).json({ message: "Invalid user ID" });
+    }
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: "Invalid inquiry ID format" });
+    }
+
+    // Task #12: Improve inquiry reply validation
+    if (!message || String(message).trim() === "") {
+      return res.status(400).json({ message: "Reply message cannot be empty" });
+    }
+    
+    if (String(message).trim().length > 2000) {
+      return res.status(400).json({ message: "Reply message exceeds 2000 characters limit" });
+    }
 
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
@@ -121,7 +166,7 @@ export async function replyToInquiry(req, res) {
     if (inquiry.buyerId.toString() === req.userId) senderRole = "buyer";
     if (inquiry.sellerId.toString() === req.userId) senderRole = "seller";
 
-    if (!senderRole) return res.status(403).json({ message: "Unauthorized" });
+    if (!senderRole) return res.status(403).json({ message: "You are not authorized to reply to this inquiry" });
 
     inquiry.replies.push({
       senderRole,
@@ -132,6 +177,6 @@ export async function replyToInquiry(req, res) {
     return res.status(201).json(inquiry);
   } catch (err) {
     console.error("[REPLY Error]:", err);
-    return res.status(500).json({ message: "Failed to send reply" });
+    return res.status(500).json({ message: "Failed to send reply. Please try again." });
   }
 }

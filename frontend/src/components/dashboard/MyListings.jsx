@@ -14,9 +14,10 @@ export default function MyListings() {
     try {
       setLoading(true);
       // Fetched using dedicated /api/listings/my-listings endpoint (Task #1)
-      const data = await fetchMyListings();
-      console.log("MY_LISTINGS_DATA:", data);
-      setListings(data || []);
+      const res = await fetchMyListings();
+      console.log("MY_LISTINGS_DATA:", res);
+      // Support paginated object shape ({ data, total }) or raw array
+      setListings(res?.data || res || []);
     } catch (err) {
       console.error("Error loading my listings:", err);
       showToast("Failed to load listings", "error");
@@ -28,7 +29,7 @@ export default function MyListings() {
   useEffect(() => {
     // Check for user._id specifically (Task #7)
     if (user?._id || user?.id) {
-       loadListings();
+      loadListings();
     }
   }, [user?._id, user?.id]);
 
@@ -60,7 +61,7 @@ export default function MyListings() {
           <i className="bi bi-plus-lg me-2"></i>New Listing
         </Link>
       </div>
-      
+
       <div className="table-responsive">
         <table className="table table-hover align-middle mb-0">
           <thead>
@@ -89,9 +90,9 @@ export default function MyListings() {
                   <td className="px-4 py-3">
                     <div className="d-flex align-items-center gap-3">
                       <div className="shadow-sm border" style={{ width: 52, height: 52, borderRadius: "12px", background: "#f8fafc", overflow: "hidden" }}>
-                        <img 
-                          src={l.images?.[0] || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&auto=format&fit=crop"} 
-                          alt="" 
+                        <img
+                          src={l.images?.[0] || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&auto=format&fit=crop"}
+                          alt=""
                           className="w-100 h-100 object-fit-cover"
                         />
                       </div>
