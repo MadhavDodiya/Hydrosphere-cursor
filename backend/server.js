@@ -1,6 +1,8 @@
 import "./config/env.js";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import mongoose from "mongoose";
 import { connectDatabase } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -16,6 +18,19 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Security: Set security HTTP headers
+app.use(helmet());
+
+// Global Rate Limiting: 15min / 100 requests per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "Too many requests from this IP, please try again after 15 minutes" },
+});
+app.use("/api", limiter);
 
 /**
  * CORS: production uses FRONTEND_URL (comma-separated). Dev allows localhost,
@@ -63,7 +78,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/seller", sellerRoutes);
-
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, name: "HydroSphere API" });

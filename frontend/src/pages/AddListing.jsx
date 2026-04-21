@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import {
   createListing,
   updateListing,
-  fetchListings,
+  fetchListingById,
 } from "../services/listingService.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
@@ -41,10 +41,19 @@ export default function AddListing() {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetchListings({ seller: user.id, limit: 100 });
-        const found = (response.data || []).find((l) => l._id === id);
+        const response = await fetchListingById(id);
+        const found = response; // fetchListingById returns the listing object directly
         if (cancelled) return;
-        if (!found) { setError("Listing not found or not yours."); setLoading(false); return; }
+        if (!found) { setError("Listing not found."); setLoading(false); return; }
+        
+        // Security check: Ensure the listing belongs to the current user
+        // The backend should also enforce this, but good to have here.
+        if (found.seller?._id !== user.id && found.seller !== user.id) {
+          setError("You do not have permission to edit this listing.");
+          setLoading(false);
+          return;
+        }
+
         setCompanyName(found.companyName);
         setHydrogenType(found.hydrogenType);
         setPrice(String(found.price));
