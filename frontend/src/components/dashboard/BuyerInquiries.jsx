@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api.js";
 import InquiryThreadModal from "../InquiryThreadModal.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import { socket } from "../../api/socket.js";
 
 export default function BuyerInquiries() {
+  const { showToast } = useToast();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
@@ -14,14 +17,24 @@ export default function BuyerInquiries() {
         // Correct endpoint should be /api/inquiries/buyer (Task #2)
         const { data } = await api.get("/api/inquiries/buyer");
         console.log("BUYER_INQUIRIES_DATA:", data);
-        setInquiries(data || []);
+        setInquiries(data?.data || data || []);
       } catch (err) {
         console.error("Failed to fetch inquiries:", err);
+        showToast(err?.response?.data?.message || "Failed to fetch inquiries");
       } finally {
         setLoading(false);
       }
     };
     fetchInquiries();
+  }, []);
+
+  useEffect(() => {
+    const onUpdated = (payload) => {
+      if (!payload?._id) return;
+      setInquiries((prev) => prev.map((x) => (String(x._id) === String(payload._id) ? payload : x)));
+    };
+    socket.on("inquiry:updated", onUpdated);
+    return () => socket.off("inquiry:updated", onUpdated);
   }, []);
 
   if (loading) {

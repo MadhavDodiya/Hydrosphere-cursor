@@ -1,14 +1,36 @@
-import React, { useState } from "react";
-import { addReply } from "../services/inquiryService.js";
+import React, { useEffect, useState } from "react";
+import { addReply, updateInquiryStatus } from "../services/inquiryService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { socket } from "../api/socket.js";
 
 export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdded }) {
   const { user } = useAuth();
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   if (!show || !inquiry) return null;
+
+  useEffect(() => {
+    const inquiryId = inquiry?._id;
+    if (!inquiryId) return;
+
+    socket.emit("inquiry:join", inquiryId);
+
+    const onUpdated = (payload) => {
+      if (payload?._id && String(payload._id) === String(inquiryId)) {
+        if (onReplyAdded) onReplyAdded(payload);
+      }
+    };
+
+    socket.on("inquiry:updated", onUpdated);
+
+    return () => {
+      socket.emit("inquiry:leave", inquiryId);
+      socket.off("inquiry:updated", onUpdated);
+    };
+  }, [inquiry?._id, onReplyAdded]);
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -27,6 +49,20 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
     }
   };
 
+  const handleStatusChange = async (e) => {
+    const nextStatus = e.target.value;
+    setError("");
+    try {
+      setStatusUpdating(true);
+      const updated = await updateInquiryStatus(inquiry._id, nextStatus);
+      if (onReplyAdded) onReplyAdded({ ...inquiry, status: updated.status });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update status");
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   return (
     <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
@@ -39,6 +75,18 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
                 {inquiry.listingId?.companyName} • {inquiry.listingId?.hydrogenType} Hydrogen
               </p>
             </div>
+            {user?.role === "seller" && (
+              <select
+                className="form-select form-select-sm w-auto me-3"
+                value={inquiry.status || "new"}
+                onChange={handleStatusChange}
+                disabled={statusUpdating}
+              >
+                <option value="new">new</option>
+                <option value="contacted">contacted</option>
+                <option value="closed">closed</option>
+              </select>
+            )}
             <button type="button" className="btn-close btn-close-white shadow-none" onClick={onClose}></button>
           </div>
 

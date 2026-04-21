@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { authorizeRoles } from "./role.js";
 
 /**
  * Verifies JWT from Authorization: Bearer <token>.
@@ -22,7 +23,9 @@ export async function authenticate(req, res, next) {
   }
 
   try {
-    const user = await User.findById(decoded.userId).select("role isSuspended");
+    const user = await User.findById(decoded.userId).select(
+      "role isSuspended plan subscriptionStatus"
+    );
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -33,8 +36,12 @@ export async function authenticate(req, res, next) {
 
     req.userId = decoded.userId;
     req.role = user.role; // Extract role from DB to be safe
+    req.plan = user.plan || "free";
+    req.subscriptionStatus = user.subscriptionStatus || "inactive";
     
-    console.log(`[AUTH] Authenticated User: ${req.userId} (Role: ${req.role})`);
+    console.log(
+      `[AUTH] Authenticated User: ${req.userId} (Role: ${req.role}, Plan: ${req.plan}, Sub: ${req.subscriptionStatus})`
+    );
     next();
   } catch (err) {
     console.error("[auth] error during authentication:", err);
@@ -46,8 +53,5 @@ export async function authenticate(req, res, next) {
  * Ensures the authenticated user is a seller.
  */
 export function requireSeller(req, res, next) {
-  if (req.role !== "seller") {
-    return res.status(403).json({ message: "Seller role required" });
-  }
-  next();
+  return authorizeRoles("seller")(req, res, next);
 }

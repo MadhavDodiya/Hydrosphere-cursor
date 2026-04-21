@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Listing, { HYDROGEN_TYPES } from "../models/Listing.js";
 import SavedListing from "../models/SavedListing.js";
+import { getPlan } from "../utils/plans.js";
 
 /** Escape user input for safe use inside a Mongo regex. */
 function escapeRegex(str) {
@@ -52,11 +53,6 @@ function buildFilter(query) {
     if (!Number.isNaN(maxPrice)) filter.price.$lte = maxPrice;
   }
 
-  // Common public filters
-  if (!query.seller && !query.isMyView) {
-    filter.status = "approved";
-  }
-
   if (query.isFeatured === 'true') filter.isFeatured = true;
 
   return filter;
@@ -80,6 +76,25 @@ export async function getListings(req, res) {
 
     const filter = buildFilter(req.query);
 
+    // Filter logic:
+    // - Public browsing (no auth): only approved listings
+    // - Authenticated users: still only approved, unless seller is explicitly asking for their own listings
+    const mineFlag = String(req.query.mine || "").toLowerCase() === "true";
+    const requestedSeller = req.query.seller ? String(req.query.seller) : null;
+
+    if (mineFlag && req.userId && req.role === "seller") {
+      filter.seller = req.userId;
+      // Seller can see all their own listings (pending/approved/rejected)
+    } else if (requestedSeller) {
+      // If a seller id is provided, enforce approved unless the requester is that seller
+      filter.seller = requestedSeller;
+      if (!req.userId || String(req.userId) !== requestedSeller) {
+        filter.status = "approved";
+      }
+    } else {
+      filter.status = "approved";
+    }
+
     const [listings, total] = await Promise.all([
       Listing.find(filter).populate("seller", sellerSelect).sort(sortObj).skip(skip).limit(limit).lean(),
       Listing.countDocuments(filter),
@@ -102,10 +117,29 @@ export async function getListings(req, res) {
  */
 export async function getMyListings(req, res) {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     console.log("[MY LISTINGS] User ID:", req.userId);
-    const listings = await Listing.find({ seller: req.userId }).sort({ createdAt: -1 }).lean();
-    console.log(`[MY LISTINGS] Found ${listings.length} items`);
-    return res.json(listings);
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));
+    const skip = (page - 1) * limit;
+
+    const [listings, total] = await Promise.all([
+      Listing.find({ seller: req.userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Listing.countDocuments({ seller: req.userId }),
+    ]);
+
+    console.log(`[MY LISTINGS] Found ${listings.length} items (page=${page}, limit=${limit})`);
+
+    return res.json({
+      data: listings,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error("[MY LISTINGS Error]:", err);
     return res.status(500).json({ message: "Failed to fetch your listings" });
@@ -148,6 +182,17 @@ export async function createListing(req, res) {
 
     if (!companyName || !hydrogenType || price == null || quantity == null || !location || !description) {
       return res.status(400).json({ message: "All required fields must be provided" });
+    }
+
+    // SaaS: listing limit enforcement (seller plans)
+    const plan = getPlan(req.plan);
+    if (plan.listingsLimit != null) {
+      const existingCount = await Listing.countDocuments({ seller: req.userId });
+      if (existingCount >= plan.listingsLimit) {
+        return res.status(402).json({
+          message: `Listing limit reached for plan: ${plan.name}`,
+        });
+      }
     }
 
     const listing = await Listing.create({

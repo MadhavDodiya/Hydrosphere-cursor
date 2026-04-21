@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 /**
- * If a Bearer token is present and valid, sets req.userId and req.userRole.
+ * If a Bearer token is present and valid, sets req.userId and req.role.
  * Does not reject the request when missing or invalid (for public routes that enrich data).
  */
 export function optionalAuthenticate(req, _res, next) {
@@ -11,7 +11,7 @@ export function optionalAuthenticate(req, _res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
-    req.userRole = decoded.role;
+    req.role = decoded.role;
   } catch {
     // ignore invalid token on optional routes
   }

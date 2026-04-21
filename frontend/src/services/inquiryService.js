@@ -19,3 +19,8 @@ export async function addReply(id, message) {
   const { data } = await api.post(`/api/inquiries/${id}/reply`, { message });
   return data;
 }
+
+export async function updateInquiryStatus(id, status) {
+  const { data } = await api.put(`/api/inquiries/${id}/status`, { status });
+  return data;
+}

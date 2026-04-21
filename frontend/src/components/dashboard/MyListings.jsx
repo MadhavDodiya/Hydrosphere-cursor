@@ -28,10 +28,10 @@ export default function MyListings() {
 
   useEffect(() => {
     // Check for user._id specifically (Task #7)
-    if (user?._id || user?.id) {
+    if (user?._id) {
       loadListings();
     }
-  }, [user?._id, user?.id]);
+  }, [user]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;

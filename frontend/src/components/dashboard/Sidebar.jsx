@@ -10,6 +10,7 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
     { name: "Supplier Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
     { name: "My Listings",      icon: "bi-card-list",       link: "/dashboard/my-listings" },
     { name: "Leads Received",   icon: "bi-inbox-fill",      link: "/dashboard/leads", badge: stats?.newLeadsToday },
+    { name: "Billing",          icon: "bi-credit-card-fill", link: "/dashboard/billing" },
     { name: "Add Listing",      icon: "bi-plus-square-fill",link: "/add-listing" },
     { name: "Marketplace",      icon: "bi-shop",            link: "/marketplace" },
   ];
@@ -76,6 +77,23 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
             <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: user?.role === "seller" ? "rgba(34,197,94,0.2)" : "rgba(59,130,246,0.2)", color: user?.role === "seller" ? "#86efac" : "#93c5fd", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               {user?.role === "seller" ? "SUPPLIER" : "BUYER"}
             </span>
+            {user?.role === "seller" && (
+              <span
+                className="ms-2"
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  padding: "3px 10px",
+                  borderRadius: "20px",
+                  background: "rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.8)",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {String(user?.plan || "free").replace("_", " ")}
+              </span>
+            )}
           </div>
         </div>
 

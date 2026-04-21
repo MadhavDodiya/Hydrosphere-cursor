@@ -10,6 +10,7 @@ import {
 } from "../services/authService.js";
 import { setAuthToken, setUnauthorizedHandler } from "../services/api.js";
 import { useToast } from "./ToastContext.jsx";
+import { connectSocket, disconnectSocket } from "../api/socket.js";
 
 const AuthContext = createContext(null);
 
@@ -21,6 +22,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     setAuthToken(token);
+    if (token) connectSocket(token);
+    else disconnectSocket();
     setLoading(false);
   }, [token]);
 
@@ -55,6 +58,7 @@ export function AuthProvider({ children }) {
     clearSession();
     setToken(null);
     setUser(null);
+    disconnectSocket();
   };
 
   const updateUser = (nextUser) => {

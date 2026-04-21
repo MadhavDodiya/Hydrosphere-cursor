@@ -1,9 +1,12 @@
 import "./config/env.js";
 import express from "express";
+import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
 import mongoose from "mongoose";
+import { Server as SocketIOServer } from "socket.io";
 import { connectDatabase } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
@@ -13,8 +16,12 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import sellerRoutes from "./routes/sellerRoutes.js";
+import billingRoutes, { billingWebhookRouter } from "./routes/billingRoutes.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
+import jwt from "jsonwebtoken";
+import User from "./models/User.js";
+import { setIO } from "./utils/realtime.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -68,7 +75,16 @@ const corsOptions =
       };
 
 app.use(cors(corsOptions));
+// Stripe webhook must be mounted BEFORE express.json()
+app.use("/api/billing/webhook", billingWebhookRouter);
+
 app.use(express.json({ limit: "1mb" }));
+// Prevent NoSQL injection ($ operators) from request inputs
+app.use(
+  mongoSanitize({
+    replaceWith: "_",
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
@@ -78,6 +94,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/seller", sellerRoutes);
+app.use("/api/billing", billingRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, name: "HydroSphere API" });
@@ -102,7 +119,54 @@ async function start() {
   await connectDatabase(process.env.MONGODB_URI);
   console.log("MongoDB connected");
 
-  const server = app.listen(PORT, () => {
+  const server = createServer(app);
+
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: corsOptions.origin,
+      credentials: true,
+    },
+  });
+
+  // Socket authentication: Bearer token via `auth.token`
+  io.use(async (socket, next) => {
+    try {
+      const token =
+        socket.handshake.auth?.token ||
+        (socket.handshake.headers?.authorization?.startsWith("Bearer ")
+          ? socket.handshake.headers.authorization.slice(7)
+          : null);
+
+      if (!token) return next(new Error("Unauthorized"));
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId).select("role isSuspended");
+      if (!user) return next(new Error("Unauthorized"));
+      if (user.isSuspended) return next(new Error("Forbidden"));
+
+      socket.userId = decoded.userId;
+      socket.role = user.role;
+      return next();
+    } catch (err) {
+      return next(new Error("Unauthorized"));
+    }
+  });
+
+  io.on("connection", (socket) => {
+    // Per-user room for notifications
+    socket.join(`user:${socket.userId}`);
+
+    socket.on("inquiry:join", (inquiryId) => {
+      if (inquiryId) socket.join(`inquiry:${String(inquiryId)}`);
+    });
+
+    socket.on("inquiry:leave", (inquiryId) => {
+      if (inquiryId) socket.leave(`inquiry:${String(inquiryId)}`);
+    });
+  });
+
+  setIO(io);
+
+  server.listen(PORT, () => {
     console.log(`HydroSphere API listening on http://localhost:${PORT}`);
   });
 

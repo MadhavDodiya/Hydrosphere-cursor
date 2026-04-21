@@ -25,6 +25,8 @@ function publicUser(user) {
     companyName: user.companyName || "",
     phone: user.phone || "",
     isVerified: Boolean(user.isVerified),
+    plan: user.plan || "free",
+    subscriptionStatus: user.subscriptionStatus || "inactive",
   };
 }
 

@@ -10,13 +10,16 @@ import DashboardChart from "../components/dashboard/DashboardChart.jsx";
 import MyListings from "../components/dashboard/MyListings.jsx";
 import BuyerInquiries from "../components/dashboard/BuyerInquiries.jsx";
 import SavedListings from "../components/dashboard/SavedListings.jsx";
+import Billing from "../components/dashboard/Billing.jsx";
 
 import "./Dashboard.css";
 import { useAuth } from "../context/AuthContext.jsx";
 import api from "../services/api.js";
+import { useToast } from "../context/ToastContext.jsx";
 
 export default function Dashboard({ section = "overview" }) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -29,6 +32,7 @@ export default function Dashboard({ section = "overview" }) {
       setStats(data);
     } catch (err) {
       console.error("Error fetching stats:", err);
+      showToast(err?.response?.data?.message || "Failed to load dashboard");
     } finally {
       setLoading(false);
     }
@@ -130,6 +134,7 @@ export default function Dashboard({ section = "overview" }) {
       case "leads":        return <LeadsTable />;
       case "inquiries":    return <BuyerInquiries />;
       case "saved":        return <SavedListings />;
+      case "billing":      return <Billing />;
       default:             return renderOverview();
     }
   };

@@ -51,6 +51,12 @@ const inquirySchema = new mongoose.Schema(
       minlength: 1,
       maxlength: 5000,
     },
+    status: {
+      type: String,
+      enum: ["new", "contacted", "closed"],
+      default: "new",
+      index: true,
+    },
     isFlagged: {
       type: Boolean,
       default: false,
@@ -79,6 +85,6 @@ const inquirySchema = new mongoose.Schema(
 
 inquirySchema.index({ sellerId: 1, createdAt: -1 });
 inquirySchema.index({ buyerId: 1, createdAt: -1 });
+inquirySchema.index({ listingId: 1, buyerId: 1 }, { unique: true });
 
 export default mongoose.model("Inquiry", inquirySchema);
-

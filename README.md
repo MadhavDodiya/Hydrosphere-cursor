@@ -19,7 +19,7 @@ Hydrosphere centralizes listings and inquiries in a single platform with JWT aut
 
 ### Advanced Features
 - **Admin Panel**: Comprehensive oversight with user management, listing verification, inquiry monitoring, and platform-wide analytics.
-- **Inquiry / Lead System**: Direct communication channel between buyers and sellers with persistent storage.
+- **Inquiry / Lead System**: Threaded messaging between buyers and sellers, with optional real-time updates via Socket.IO.
 - **Seller Dashboard**: Real-time sales stats (Total Leads, Active Listings, New Leads Today) and inquiry management.
 - **Persistent Bookmarks**: Buyers can save listings to their collection for later review.
 - **Contact Integration**: Public contact form with admin response tracking.
@@ -57,6 +57,8 @@ Hydrosphere uses MongoDB collections via Mongoose.
 - `phone` (String, optional)
 - `isVerified` (Boolean, default: `false`)
 - `isSuspended` (Boolean, default: `false`)
+- `plan` (String, `free` | `pro_supplier` | `enterprise`)
+- `subscriptionStatus` (String, `inactive` | `active` | `past_due` | `canceled`)
 
 ### Listings collection (`listings`)
 - `seller` (ObjectId -> `users`, required)
@@ -74,6 +76,7 @@ Hydrosphere uses MongoDB collections via Mongoose.
 - `sellerId` (ObjectId -> `users`, required)
 - `listingId` (ObjectId -> `listings`, required)
 - `name`, `email`, `phone`, `message` (Strings)
+- `status` (String, `new` | `contacted` | `closed`)
 - `isFlagged` (Boolean, for admin monitoring)
 
 ### Contacts collection (`contacts`)
@@ -118,14 +121,23 @@ npm run dev
 ### Marketplace
 - `GET /api/listings` (Public, only Approved)
 - `GET /api/listings/:id` (Optional JWT for saved status)
+- `GET /api/listings/my-listings?page=1&limit=25` (Seller only)
 - `POST /api/listings` (Seller only)
 - `PUT /api/listings/:id` (Seller only, Owner)
 - `DELETE /api/listings/:id` (Seller only, Owner)
 
 ### Leads & Inquiries
 - `POST /api/inquiries` (Buyer only)
-- `GET /api/inquiries/seller` (Seller only)
-- `GET /api/inquiries/buyer` (Buyer only)
+- `GET /api/inquiries/received?page=1&limit=25` (Seller only)
+- `GET /api/inquiries/buyer?page=1&limit=25` (Buyer only)
+- `PUT /api/inquiries/:id/status` (Seller only)
+
+### Billing (Stripe Subscriptions)
+- `GET /api/billing/plans`
+- `GET /api/billing/me` (JWT)
+- `POST /api/billing/checkout` (Seller only)
+- `POST /api/billing/portal` (Seller only)
+- `POST /api/billing/webhook` (Stripe)
 
 ### Admin Panel
 - `GET /api/admin/stats` (Admin only)
@@ -150,7 +162,7 @@ npm run dev
 - **Insights**: Dashboard analytics for both Sellers and Admins.
 
 ## Future Scope
-- **Instant Chat**: Real-time WebSocket-based communication between users.
+- **Instant Chat**: Extend inquiry threads into full conversations (typing indicators, attachments, read receipts).
 - **Escrow Integration**: Milestone-based payment processing for large industrial orders.
 - **Advanced Analytics**: Deeper conversion tracking and market share heatmaps.
 - **File Management**: S3 integration for certificates and technical specification docs.

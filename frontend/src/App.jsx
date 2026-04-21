@@ -12,6 +12,8 @@ import Listing from "./pages/Listing.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import BillingSuccess from "./pages/BillingSuccess.jsx";
+import BillingCancel from "./pages/BillingCancel.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 import { Navigate } from "react-router-dom";
 
@@ -80,6 +82,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/dashboard/billing"
+            element={
+              <ProtectedRoute>
+                <Dashboard section="billing" />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/billing/success" element={<BillingSuccess />} />
+          <Route path="/billing/cancel" element={<BillingCancel />} />
           <Route
             path="/add-listing"
             element={

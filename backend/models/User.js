@@ -50,6 +50,38 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // SaaS subscription (seller-focused; buyers can remain "free")
+    plan: {
+      type: String,
+      enum: ["free", "pro_supplier", "enterprise"],
+      default: "free",
+      index: true,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["inactive", "active", "past_due", "canceled"],
+      default: "inactive",
+      index: true,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: "",
+      index: true,
+    },
+    stripeSubscriptionId: {
+      type: String,
+      default: "",
+      index: true,
+    },
+    stripePriceId: {
+      type: String,
+      default: "",
+    },
+    subscriptionCurrentPeriodEnd: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
