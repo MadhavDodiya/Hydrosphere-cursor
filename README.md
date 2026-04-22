@@ -55,7 +55,7 @@ Local dev uses a Vite proxy: the frontend calls `/api/*` and Vite forwards to th
 ## SaaS Plans (Supplier Monetization)
 Supplier accounts have plan-based limits enforced by the API:
 - `free`: limited listings + limited leads/month
-- `pro_supplier` (Pro): higher listings + unlimited leads
+- `pro_supplier`: higher listings + unlimited leads
 - `enterprise`: unlimited listings + unlimited leads
 
 Enforcement points:
@@ -64,7 +64,7 @@ Enforcement points:
 
 ## Stripe Setup (Subscriptions)
 1) Create 2 recurring prices in Stripe:
-- Pro
+- Pro Supplier
 - Enterprise
 
 2) Set these in `backend/.env`:
@@ -91,10 +91,6 @@ Frontend env (optional):
 Auth:
 - `POST /api/auth/register`
 - `POST /api/auth/login`
-- `GET /api/auth/verify-email?token=...&email=...`
-- `POST /api/auth/resend-verification`
-- `POST /api/auth/forgot-password`
-- `POST /api/auth/reset-password`
 
 Users:
 - `GET /api/users/me` (JWT)
@@ -137,3 +133,4 @@ Health:
 - Set `NODE_ENV=production` and `FRONTEND_URL` (comma-separated allowlist) in `backend/.env`.
 - Use HTTPS in production (Stripe + secure cookies/origins).
 - Run MongoDB with proper indexes (inquiries enforce unique `{ listingId, buyerId }`).
+
