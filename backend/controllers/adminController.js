@@ -3,6 +3,7 @@ import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
 import SavedListing from "../models/SavedListing.js";
 import Contact from "../models/Contact.js";
+import { sendApprovalEmail } from "../services/emailService.js";
 
 /**
  * GET /api/admin/stats
@@ -17,6 +18,7 @@ export const getStats = async (req, res) => {
     const featuredListings = await Listing.countDocuments({ isFeatured: true });
     const totalInquiries = await Inquiry.countDocuments();
     const unverifiedSellers = await User.countDocuments({ role: "seller", isVerified: false });
+    const pendingApprovals = await User.countDocuments({ role: "seller", isApproved: false });
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -30,7 +32,7 @@ export const getStats = async (req, res) => {
       totalUsers, totalBuyers, totalSellers,
       totalListings, pendingListings, featuredListings,
       totalInquiries, newUsersToday, newListingsThisWeek,
-      unverifiedSellers
+      unverifiedSellers, pendingApprovals
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching admin stats", error: error.message });
@@ -262,6 +264,7 @@ export const getContacts = async (req, res) => {
 
 /**
  * PUT /api/admin/users/:id/verify
+ * Grants the "Verified Badge" AND approves the supplier to create listings.
  */
 export const verifySupplier = async (req, res) => {
   try {
@@ -272,11 +275,50 @@ export const verifySupplier = async (req, res) => {
       return res.status(400).json({ message: "Only sellers can be verified" });
     }
 
+    const wasApproved = user.isApproved;
     user.isVerified = true;
+    user.isApproved = true; // Verification also grants listing creation access
     await user.save();
+
+    // Send approval email only if this is the first time being approved
+    if (!wasApproved) {
+      sendApprovalEmail(user.email, user.name).catch(err =>
+        console.error("Approval email failed:", err.message)
+      );
+    }
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error verifying supplier" });
+  }
+};
+
+/**
+ * PUT /api/admin/users/:id/approve
+ * Approves a supplier to create listings (without full verification badge).
+ */
+export const approveSupplier = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.role !== "seller") {
+      return res.status(400).json({ message: "Only sellers can be approved" });
+    }
+
+    const wasApproved = user.isApproved;
+    user.isApproved = true;
+    await user.save();
+
+    if (!wasApproved) {
+      sendApprovalEmail(user.email, user.name).catch(err =>
+        console.error("Approval email failed:", err.message)
+      );
+    }
+
+    res.json({ message: "Supplier approved", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error approving supplier" });
   }
 };
 

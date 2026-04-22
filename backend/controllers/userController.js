@@ -16,8 +16,11 @@ function publicUser(user) {
     companyName: user.companyName || "",
     phone: user.phone || "",
     isVerified: Boolean(user.isVerified),
+    isApproved: Boolean(user.isApproved),
+    emailVerified: Boolean(user.emailVerified),
     plan: user.plan || "free",
     subscriptionStatus: user.subscriptionStatus || "inactive",
+    subscriptionCurrentPeriodEnd: user.subscriptionCurrentPeriodEnd || null,
   };
 }
 

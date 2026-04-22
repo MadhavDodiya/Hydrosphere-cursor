@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Listing, { HYDROGEN_TYPES } from "../models/Listing.js";
 import SavedListing from "../models/SavedListing.js";
+import User from "../models/User.js";
 import { getEffectiveLimits } from "../utils/plans.js";
 
 /** Escape user input for safe use inside a Mongo regex. */
@@ -211,6 +212,11 @@ export async function createListing(req, res) {
     const effectiveTitle = String(title || companyName || "").trim();
     if (!effectiveTitle || !hydrogenType || price == null || quantity == null || !location || !description) {
       return res.status(400).json({ message: "All required fields must be provided" });
+    }
+
+    // Security: Admin Approval Check — uses req.isApproved set by auth middleware (no extra DB query)
+    if (req.role === "seller" && !req.isApproved) {
+      return res.status(403).json({ message: "Your supplier account is pending admin approval." });
     }
 
     // SaaS: listing limit enforcement (seller plans)

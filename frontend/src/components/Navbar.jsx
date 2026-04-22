@@ -70,6 +70,7 @@ export default function Navbar() {
         <nav className="hs-desktop-nav">
           <NavLink to="/" end style={navLinkStyle}>Home</NavLink>
           <NavLink to="/marketplace" style={navLinkStyle}>Marketplace</NavLink>
+          <NavLink to="/pricing" style={navLinkStyle}>Pricing</NavLink>
           <NavLink to="/about" style={navLinkStyle}>About</NavLink>
           <NavLink to="/contact" style={navLinkStyle}>Contact</NavLink>
         </nav>
@@ -147,6 +148,7 @@ export default function Navbar() {
           <nav className="hs-mobile-nav">
             <NavLink to="/" end style={navLinkStyle} onClick={close}>Home</NavLink>
             <NavLink to="/marketplace" style={navLinkStyle} onClick={close}>Marketplace</NavLink>
+            <NavLink to="/pricing" style={navLinkStyle} onClick={close}>Pricing</NavLink>
             <NavLink to="/about" style={navLinkStyle} onClick={close}>About</NavLink>
             <NavLink to="/contact" style={navLinkStyle} onClick={close}>Contact</NavLink>
           </nav>

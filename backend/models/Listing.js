@@ -60,6 +60,7 @@ const listingSchema = new mongoose.Schema(
 listingSchema.index({ status: 1, createdAt: -1 });
 listingSchema.index({ seller: 1, createdAt: -1 });
 listingSchema.index({ location: 1 });
+listingSchema.index({ hydrogenType: 1 }); // Required for hydrogen type filtering
 
 export { HYDROGEN_TYPES };
 export default mongoose.model("Listing", listingSchema);

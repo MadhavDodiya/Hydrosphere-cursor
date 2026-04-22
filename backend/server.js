@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { rateLimit } from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 import mongoose from "mongoose";
@@ -16,7 +17,7 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import sellerRoutes from "./routes/sellerRoutes.js";
-import billingRoutes, { billingWebhookRouter } from "./routes/billingRoutes.js";
+import billingRoutes from "./routes/billingRoutes.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
 import jwt from "jsonwebtoken";
@@ -75,8 +76,7 @@ const corsOptions =
       };
 
 app.use(cors(corsOptions));
-// Stripe webhook must be mounted BEFORE express.json()
-app.use("/api/billing/webhook", billingWebhookRouter);
+app.use(cookieParser());
 
 app.use(express.json({ limit: "1mb" }));
 // Prevent NoSQL injection ($ operators) from request inputs

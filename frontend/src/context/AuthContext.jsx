@@ -7,8 +7,9 @@ import {
   persistUser,
   login as loginRequest,
   register as registerRequest,
+  logoutAPI,
 } from "../services/authService.js";
-import { setAuthToken, setUnauthorizedHandler } from "../services/api.js";
+import { setAuthToken, setUnauthorizedHandler } from "../api/axiosInstance.js";
 import { useToast } from "./ToastContext.jsx";
 import { connectSocket, disconnectSocket } from "../api/socket.js";
 
@@ -54,7 +55,12 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await logoutAPI();
+    } catch (err) {
+      console.error("Logout error", err);
+    }
     clearSession();
     setToken(null);
     setUser(null);

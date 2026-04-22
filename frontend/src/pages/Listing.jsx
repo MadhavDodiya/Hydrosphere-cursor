@@ -53,9 +53,9 @@ export default function Listing() {
           id: item._id,
           name: item.companyName || "Unknown Supplier",
           location: item.location || 'Unknown Location',
-          rating: 4.5, // Logic for rating can be added if backend supports it
+          rating: 4.5,
           description: item.description || `${item.hydrogenType} Hydrogen - ${item.quantity} kg available`,
-          price: `$${item.price}`,
+          price: item.price != null ? `₹${Number(item.price).toLocaleString('en-IN')}` : 'Contact for price',
           rawPrice: Number(item.price),
           type: item.hydrogenType,
           imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
@@ -66,6 +66,10 @@ export default function Listing() {
         setTotalPages(response.totalPages || 1);
       } catch (error) {
         console.error("Error fetching listings:", error);
+        // Show user-friendly message — check if it's a network error
+        if (error?.isNetworkError) {
+          alert("Network error — please check your connection and try again.");
+        }
       } finally {
         setLoading(false);
       }

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Inquiry from "../models/Inquiry.js";
 import Listing from "../models/Listing.js";
 import User from "../models/User.js";
-import { sendEmail } from "../utils/email.js";
+import { sendInquiryEmail } from "../services/emailService.js";
 import { getEffectiveLimits } from "../utils/plans.js";
 import { emitInquiryCreated, emitInquiryUpdated } from "../utils/realtime.js";
 
@@ -98,17 +98,33 @@ export async function createInquiry(req, res) {
       throw e;
     }
 
-    // Notify seller
+    // Notify seller using Nodemailer
     try {
-      const seller = await User.findById(listing.seller);
+      // Fetch buyer details for the email (use their registered name, not just form field)
+      const buyer = await User.findById(req.userId).select("name email");
+      const buyerDisplayName = buyer?.name || name || "A buyer";
+
+      const seller = await User.findById(listing.seller).select("name email");
       if (seller?.email) {
-        await sendEmail({
-          to: seller.email,
-          subject: `New Lead: ${listing.companyName}`,
-          html: `<p>You have a new inquiry for ${listing.companyName}. Log in to view details.</p>`
-        });
+        console.log(`[EMAIL] Sending inquiry notification to supplier: ${seller.email}`);
+        const emailSent = await sendInquiryEmail(
+          seller.email,
+          buyerDisplayName,
+          listing.title || listing.companyName,
+          message
+        );
+        if (emailSent) {
+          console.log(`[EMAIL] ✅ Inquiry notification sent to ${seller.email}`);
+        } else {
+          console.warn(`[EMAIL] ⚠️ Email send returned false for ${seller.email} — check SMTP credentials`);
+        }
+      } else {
+        console.warn(`[EMAIL] ⚠️ Seller ${listing.seller} has no email address — skipping notification`);
       }
-    } catch (e) { console.error("Notification fail:", e.message); }
+    } catch (e) {
+      // Log full error but don't fail the inquiry
+      console.error("[EMAIL] ❌ Inquiry notification failed:", e.message, e.stack?.split("\n")?.[1]);
+    }
 
     // Realtime notify seller dashboard
     try {

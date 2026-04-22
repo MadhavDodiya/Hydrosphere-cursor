@@ -43,13 +43,23 @@ export default function Dashboard({ section = "overview" }) {
       fetchStats();
     }
     window.scrollTo(0, 0);
-  }, [user, section]);
+  }, [user?.role, section]); // Only re-run when role or section changes, not on every user object re-render
 
   const toggleSidebar = () => setMobileOpen(!mobileOpen);
   const closeSidebar = () => setMobileOpen(false);
 
   const renderOverview = () => (
     <>
+      {/* Unapproved Supplier Banner */}
+      {user?.role === 'seller' && !user?.isApproved && (
+        <div className="alert alert-warning d-flex align-items-center gap-3 rounded-4 mb-4 border-0 shadow-sm">
+          <i className="bi bi-hourglass-split fs-4 flex-shrink-0"></i>
+          <div>
+            <strong>Account Pending Approval</strong>
+            <p className="mb-0 small">Your supplier account is awaiting admin approval. You can set up your profile, but listing creation will be enabled once approved.</p>
+          </div>
+        </div>
+      )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="fw-bold text-dark mb-1">Welcome back, {user?.name || 'User'}!</h3>

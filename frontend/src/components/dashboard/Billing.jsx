@@ -16,44 +16,100 @@ export default function Billing() {
   const [plans, setPlans] = useState([]);
   const [sub, setSub] = useState(null);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const [{ data: plansRes }, { data: subRes }, { data: meRes }] = await Promise.all([
-        api.get("/api/billing/plans"),
-        api.get("/api/billing/me"),
-        api.get("/api/users/me"),
-      ]);
-      setPlans(plansRes?.plans || []);
-      setSub(subRes);
-      if (meRes?._id) updateUser(meRes);
-    } catch (err) {
-      console.error(err);
-      showToast(err?.response?.data?.message || "Failed to load billing");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loadTrigger, setLoadTrigger] = useState(0);
+  const reload = () => setLoadTrigger(n => n + 1); // Stable re-trigger without stale closure
 
   useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [{ data: plansRes }, { data: subRes }, { data: meRes }] = await Promise.all([
+          api.get("/api/billing/plans"),
+          api.get("/api/billing/me"),
+          api.get("/api/users/me"),
+        ]);
+        if (cancelled) return;
+        setPlans(plansRes?.plans || []);
+        setSub(subRes);
+        if (meRes?._id) updateUser(meRes);
+      } catch (err) {
+        if (cancelled) return;
+        console.error(err);
+        showToast(err?.response?.data?.message || "Failed to load billing");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
     load();
-  }, []);
+
+    // Load Razorpay script dynamically
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [loadTrigger]); // Only re-run when manually triggered via reload()
+
 
   const startCheckout = async (planId) => {
     try {
-      const { data } = await api.post("/api/billing/checkout", { planId });
-      if (data?.url) window.location.href = data.url;
-    } catch (err) {
-      showToast(err?.response?.data?.message || "Failed to start checkout");
-    }
-  };
+      if (!window.Razorpay) {
+        showToast("Razorpay SDK not loaded. Please check your connection.");
+        return;
+      }
 
-  const openPortal = async () => {
-    try {
-      const { data } = await api.post("/api/billing/portal");
-      if (data?.url) window.location.href = data.url;
+      // 1. Create order on backend
+      const { data: orderData } = await api.post("/api/billing/create-order", { planId });
+
+      // 2. Open Razorpay Checkout
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "HydroSphere",
+        description: `Upgrade to ${planLabel(planId)} Plan`,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            // 3. Verify payment on backend
+            await api.post("/api/billing/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId,
+            });
+            showToast("Payment successful! Your plan has been upgraded.", "success");
+            reload(); // Re-trigger the useEffect cleanly
+          } catch (verifyErr) {
+            showToast(verifyErr?.response?.data?.message || "Payment verification failed", "error");
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: user?.phone || "",
+        },
+        theme: {
+          color: "#0d6efd",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        showToast(`Payment Failed: ${response.error.description}`, "error");
+      });
+      rzp.open();
     } catch (err) {
-      showToast(err?.response?.data?.message || "Failed to open billing portal");
+      showToast(err?.response?.data?.message || "Failed to start checkout", "error");
     }
   };
 
@@ -84,9 +140,6 @@ export default function Billing() {
             Current plan: <span className="fw-semibold">{planLabel(user?.plan)}</span>
           </p>
         </div>
-        <button className="btn btn-outline-primary btn-sm rounded-pill px-4" onClick={openPortal}>
-          Manage Billing
-        </button>
       </div>
 
       <div className="p-4">
@@ -98,12 +151,12 @@ export default function Billing() {
               {sub?.subscriptionCurrentPeriodEnd ? (
                 <>
                   {" "}
-                  • renews on {new Date(sub.subscriptionCurrentPeriodEnd).toLocaleDateString()}
+                  • expires on {new Date(sub.subscriptionCurrentPeriodEnd).toLocaleDateString()}
                 </>
               ) : null}
             </div>
           </div>
-          <button className="btn btn-sm btn-outline-secondary" onClick={load}>
+          <button className="btn btn-sm btn-outline-secondary" onClick={reload}>
             Refresh
           </button>
         </div>
@@ -111,8 +164,6 @@ export default function Billing() {
         <div className="row g-3">
           {plans
             .filter((p) => p.id !== "free")
-            // Keep Enterprise hidden unless it is configured server-side.
-            .filter((p) => p.id !== "enterprise" || Boolean(p.stripePriceId))
             .map((p) => (
               <div key={p.id} className="col-12 col-lg-6">
                 <div className="border rounded-4 p-4 h-100">
@@ -123,6 +174,7 @@ export default function Billing() {
                         Listings: {p.listingsLimit == null ? "Unlimited" : p.listingsLimit} • Leads/month:{" "}
                         {p.leadsLimitPerMonth == null ? "Unlimited" : p.leadsLimitPerMonth}
                       </div>
+                      <h4 className="fw-bold mb-3">₹{p.price}</h4>
                     </div>
                     {user?.plan === p.id && (
                       <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
@@ -133,15 +185,10 @@ export default function Billing() {
                   <button
                     className="btn btn-primary rounded-pill px-4 mt-3"
                     onClick={() => startCheckout(p.id)}
-                    disabled={!p.stripePriceId}
+                    disabled={user?.plan === p.id}
                   >
-                    Upgrade to {p.name}
+                    {user?.plan === p.id ? "Current Plan" : `Upgrade to ${p.name}`}
                   </button>
-                  {!p.stripePriceId && (
-                    <div className="text-muted small mt-2">
-                      Stripe price not configured on server.
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

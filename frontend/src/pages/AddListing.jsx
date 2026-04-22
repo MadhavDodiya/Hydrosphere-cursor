@@ -113,6 +113,20 @@ export default function AddListing() {
     </div>
   );
 
+  // Block unapproved suppliers before they waste time filling the form
+  if (user?.role === 'seller' && !user?.isApproved && !isEdit) {
+    return (
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="text-center p-5">
+          <i className="bi bi-hourglass-split display-4 text-warning mb-3 d-block"></i>
+          <h4 className="fw-bold">Account Pending Approval</h4>
+          <p className="text-muted">Your supplier account is currently under review by our admin team.<br/>You'll receive an email at <strong>{user?.email}</strong> once approved.</p>
+          <a href="/dashboard" className="btn btn-primary rounded-pill px-5 mt-2">Back to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
+
   const inputStyle = { borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem", fontSize: "0.9rem", width: "100%", outline: "none", transition: "border-color 0.2s, box-shadow 0.2s", background: "white" };
   const labelStyle = { fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginBottom: "0.4rem", display: "block" };
 

@@ -2,17 +2,37 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import crypto from "crypto";
-import { sendEmail } from "../utils/email.js";
+import { sendEmail } from "../services/emailService.js";
 
 /**
- * Sign JWT for user
+ * Sign short-lived Access JWT
  */
-function signToken(user) {
+function signAccessToken(user) {
   return jwt.sign(
     { userId: user._id.toString(), role: user.role },
     process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+}
+
+/**
+ * Sign long-lived Refresh JWT
+ */
+function signRefreshToken(user) {
+  return jwt.sign(
+    { userId: user._id.toString(), role: user.role },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, // Fallback to JWT_SECRET if not provided
     { expiresIn: "7d" }
   );
+}
+
+function setRefreshTokenCookie(res, token) {
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
 }
 
 function appBaseUrl() {
@@ -83,18 +103,24 @@ export async function register(req, res) {
     console.log("[REGISTER] New User:", user._id);
 
     // Email verification (non-blocking if mail transport is not configured)
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your HydroSphere email",
-      html: `<p>Welcome to HydroSphere.</p>
-             <p>Please verify your email to activate your account:</p>
-             <p><a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(
-        user.email
-      )}">Verify Email</a></p>
-             <p>This link expires in 24 hours.</p>`,
-    });
+    sendEmail(
+      user.email,
+      "Verify your HydroSphere email",
+      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#0891b2;">Welcome to HydroSphere!</h2>
+        <p>Please verify your email to activate your account:</p>
+        <a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}"
+           style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;margin:16px 0;">
+          Verify Email
+        </a>
+        <p style="color:#64748b;font-size:0.85em;">This link expires in 24 hours. If you did not sign up, ignore this email.</p>
+      </div>`
+    ).catch(err => console.error("[REGISTER] Verification email failed:", err.message));
 
-    const token = signToken(user);
+    const token = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    setRefreshTokenCookie(res, refreshToken);
+
     return res.status(201).json({
       token,
       user: publicUser(user),
@@ -131,7 +157,10 @@ export async function login(req, res) {
 
     console.log("[LOGIN] User:", user._id);
 
-    const token = signToken(user);
+    const token = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    setRefreshTokenCookie(res, refreshToken);
+
     return res.json({
       token,
       user: publicUser(user),
@@ -193,13 +222,11 @@ export async function resendVerification(req, res) {
     user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
     await user.save();
 
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your HydroSphere email",
-      html: `<p><a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(
-        user.email
-      )}">Verify Email</a></p>`,
-    });
+    sendEmail(
+      user.email,
+      "Verify your HydroSphere email",
+      `<p><a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}">Verify Email</a></p>`
+    ).catch(err => console.error("[RESEND] Email failed:", err.message));
 
     return res.json({ message: "Verification email sent" });
   } catch (err) {
@@ -224,15 +251,19 @@ export async function forgotPassword(req, res) {
     user.passwordResetExpires = new Date(Date.now() + 1000 * 60 * 30); // 30m
     await user.save();
 
-    await sendEmail({
-      to: user.email,
-      subject: "Reset your HydroSphere password",
-      html: `<p>You requested a password reset.</p>
-             <p><a href="${appBaseUrl()}/reset-password?token=${resetToken}&email=${encodeURIComponent(
-        user.email
-      )}">Reset Password</a></p>
-             <p>This link expires in 30 minutes.</p>`,
-    });
+    sendEmail(
+      user.email,
+      "Reset your HydroSphere password",
+      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#0891b2;">Password Reset Request</h2>
+        <p>You requested a password reset for your HydroSphere account.</p>
+        <a href="${appBaseUrl()}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}"
+           style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;margin:16px 0;">
+          Reset Password
+        </a>
+        <p style="color:#64748b;font-size:0.85em;">This link expires in 30 minutes. If you did not request this, ignore this email.</p>
+      </div>`
+    ).catch(err => console.error("[FORGOT] Email failed:", err.message));
 
     return res.json({ message: "If the email exists, a reset link was sent." });
   } catch (err) {
@@ -274,3 +305,40 @@ export async function resetPassword(req, res) {
     return res.status(500).json({ message: "Password reset failed" });
   }
 }
+
+/**
+ * POST /api/auth/refresh
+ * Refreshes the access token using the HttpOnly refresh token cookie.
+ */
+export async function refreshToken(req, res) {
+  try {
+    const rToken = req.cookies?.refreshToken;
+    if (!rToken) return res.status(401).json({ message: "No refresh token provided" });
+
+    const decoded = jwt.verify(rToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    
+    if (!user) return res.status(401).json({ message: "Invalid refresh token" });
+    if (user.isSuspended) return res.status(403).json({ message: "Account suspended" });
+
+    const newToken = signAccessToken(user);
+    return res.json({ token: newToken, user: publicUser(user) });
+  } catch (err) {
+    console.error("[REFRESH TOKEN Error]:", err.message);
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+}
+
+/**
+ * POST /api/auth/logout
+ * Clears the refresh token cookie.
+ */
+export async function logout(req, res) {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  return res.json({ message: "Logged out successfully" });
+}
+

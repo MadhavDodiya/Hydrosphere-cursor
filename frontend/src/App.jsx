@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import SellerRoute from "./components/SellerRoute.jsx";
@@ -12,13 +12,11 @@ import Listing from "./pages/Listing.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
-import BillingSuccess from "./pages/BillingSuccess.jsx";
-import BillingCancel from "./pages/BillingCancel.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import Pricing from "./pages/Pricing.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
-import { Navigate } from "react-router-dom";
 
 const AdminRoute = ({ children }) => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -41,6 +39,7 @@ export default function App() {
           <Route path="/"              element={<Home />} />
           <Route path="/marketplace"   element={<Listing />} />
           <Route path="/about"         element={<About />} />
+          <Route path="/pricing"       element={<Pricing />} />
           <Route path="/contact"       element={<Contact />} />
           <Route path="/listings/:id"  element={<Detail />} />
           <Route path="/login"         element={<Login />} />
@@ -96,8 +95,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/billing/success" element={<BillingSuccess />} />
-          <Route path="/billing/cancel" element={<BillingCancel />} />
           <Route
             path="/add-listing"
             element={

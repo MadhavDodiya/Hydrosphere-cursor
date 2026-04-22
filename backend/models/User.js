@@ -64,6 +64,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Admin Approval for Suppliers
+    isApproved: {
+      type: Boolean,
+      default: false,
+      index: true, // Indexed for fast admin approval queue queries
+    },
 
     // SaaS subscription (seller-focused; buyers can remain "free")
     plan: {
@@ -78,17 +84,17 @@ const userSchema = new mongoose.Schema(
       default: "inactive",
       index: true,
     },
-    stripeCustomerId: {
+    razorpayCustomerId: {
       type: String,
       default: "",
       index: true,
     },
-    stripeSubscriptionId: {
+    razorpaySubscriptionId: {
       type: String,
       default: "",
       index: true,
     },
-    stripePriceId: {
+    razorpayOrderId: {
       type: String,
       default: "",
     },

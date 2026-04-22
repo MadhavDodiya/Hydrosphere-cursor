@@ -10,37 +10,41 @@ export default function MyListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadListings = async () => {
-    try {
-      setLoading(true);
-      // Fetched using dedicated /api/listings/my-listings endpoint (Task #1)
-      const res = await fetchMyListings();
-      console.log("MY_LISTINGS_DATA:", res);
-      // Support paginated object shape ({ data, total }) or raw array
-      setListings(res?.data || res || []);
-    } catch (err) {
-      console.error("Error loading my listings:", err);
-      showToast("Failed to load listings", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
-    // Check for user._id specifically (Task #7)
+    const loadListings = async () => {
+      try {
+        setLoading(true);
+        const res = await fetchMyListings();
+        setListings(res?.data || res || []);
+      } catch (err) {
+        console.error("Error loading my listings:", err);
+        showToast("Failed to load listings", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user?._id) {
       loadListings();
     }
-  }, [user]);
+  }, [user?._id, showToast]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;
     try {
+      setDeletingId(id);
       await deleteListing(id);
       showToast("Listing deleted successfully", "success");
-      loadListings();
+      
+      // Reload listings manually since loadListings is inside useEffect now
+      const res = await fetchMyListings();
+      setListings(res?.data || res || []);
     } catch (err) {
       showToast("Failed to delete listing", "error");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -119,8 +123,12 @@ export default function MyListings() {
                       <Link to={`/add-listing/${l._id}`} className="btn btn-light btn-sm rounded-circle border p-0 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 32, height: 32 }} title="Edit">
                         <i className="bi bi-pencil-fill text-secondary" style={{ fontSize: '0.75rem' }}></i>
                       </Link>
-                      <button onClick={() => handleDelete(l._id)} className="btn btn-light btn-sm rounded-circle border p-0 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 32, height: 32 }} title="Delete">
-                        <i className="bi bi-trash3-fill text-danger" style={{ fontSize: '0.75rem' }}></i>
+                      <button onClick={() => handleDelete(l._id)} disabled={deletingId === l._id} className="btn btn-light btn-sm rounded-circle border p-0 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 32, height: 32 }} title="Delete">
+                        {deletingId === l._id ? (
+                          <span className="spinner-border spinner-border-sm text-danger" />
+                        ) : (
+                          <i className="bi bi-trash3-fill text-danger" style={{ fontSize: '0.75rem' }}></i>
+                        )}
                       </button>
                     </div>
                   </td>

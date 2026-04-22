@@ -7,6 +7,8 @@ import {
   resendVerification,
   forgotPassword,
   resetPassword,
+  refreshToken,
+  logout,
 } from "../controllers/authController.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -30,5 +32,7 @@ router.get("/verify-email", verifyEmail);
 router.post("/resend-verification", authLimiter, validate({ body: emailOnlySchema }), resendVerification);
 router.post("/forgot-password", authLimiter, validate({ body: emailOnlySchema }), forgotPassword);
 router.post("/reset-password", authLimiter, validate({ body: resetPasswordSchema }), resetPassword);
+router.post("/refresh", refreshToken);
+router.post("/logout", logout);
 
 export default router;

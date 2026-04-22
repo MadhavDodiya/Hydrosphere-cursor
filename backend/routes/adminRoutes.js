@@ -15,6 +15,7 @@ router.get("/users", adminCtrl.getUsers);
 router.put("/users/:id/role", adminCtrl.updateUserRole);
 router.put("/users/:id/suspend", adminCtrl.suspendUser);
 router.put("/users/:id/verify", adminCtrl.verifySupplier);
+router.put("/users/:id/approve", adminCtrl.approveSupplier);
 router.delete("/users/:id", adminCtrl.deleteUser);
 
 // Listings

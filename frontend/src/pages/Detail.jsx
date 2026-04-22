@@ -30,6 +30,37 @@ export default function Detail() {
     loadListing();
   }, [id]);
 
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="detail-page-bg pb-0">
+        <div className="container py-4">
+          <div className="placeholder-glow">
+            <span className="placeholder col-3 mb-4" style={{ height: 18, borderRadius: 6 }}></span>
+            <div className="row g-4">
+              <div className="col-12 col-lg-8">
+                <div className="bg-white rounded shadow-sm p-4 mb-4">
+                  <span className="placeholder col-8 mb-3" style={{ height: 28 }}></span>
+                  <span className="placeholder col-4 mb-4" style={{ height: 16 }}></span>
+                  <span className="placeholder col-12 mb-2" style={{ height: 200, borderRadius: 12 }}></span>
+                  <span className="placeholder col-12 mt-3" style={{ height: 14 }}></span>
+                  <span className="placeholder col-10" style={{ height: 14 }}></span>
+                </div>
+              </div>
+              <div className="col-12 col-lg-4">
+                <div className="bg-white rounded shadow-sm p-4">
+                  <span className="placeholder col-8 mb-3" style={{ height: 20 }}></span>
+                  <span className="placeholder col-12 mb-2" style={{ height: 14 }}></span>
+                  <span className="placeholder col-12" style={{ height: 44, borderRadius: 22 }}></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="detail-page-bg pb-0">
       <div className="container py-4">
@@ -57,19 +88,7 @@ export default function Detail() {
             
             <SpecificationTable listing={listing} />
 
-            {/* Optional Reviews Section */}
-            <div className="bg-white p-4 rounded shadow-sm mt-4">
-               <h4 className="fw-bold mb-4">Customer Reviews</h4>
-               <div className="d-flex gap-3 mb-4 border-bottom pb-4">
-                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style={{width: "48px", height: "48px"}}>AJ</div>
-                  <div>
-                    <h6 className="fw-bold mb-1">Apex Journeys</h6>
-                    <div className="text-warning small mb-2"><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i></div>
-                    <p className="text-secondary small mb-0">Excellent communication and prompt delivery. The purity met exactly what was specified. Highly recommend HydroGen Pro.</p>
-                  </div>
-               </div>
-               <button className="btn btn-outline-primary btn-sm rounded-pill fw-medium px-4">Read All 120 Reviews</button>
-            </div>
+            {/* Reviews section hidden — no real reviews data yet */}
             
           </div>
           

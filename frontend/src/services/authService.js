@@ -42,3 +42,7 @@ export async function login(payload) {
   const { data } = await api.post("/api/auth/login", payload);
   return data;
 }
+
+export async function logoutAPI() {
+  await api.post("/api/auth/logout");
+}
