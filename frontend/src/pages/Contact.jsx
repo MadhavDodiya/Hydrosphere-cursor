@@ -272,7 +272,7 @@ export default function Contact() {
             <div className="col-md-8">
               <h2 className="fw-bold mb-4" style={{ color: "#0A2342" }}>Are you a water product supplier?</h2>
               <Link 
-                to="/for-suppliers" 
+                to="/signup" 
                 className="btn btn-teal text-white btn-lg px-5 py-3 fw-bold rounded-pill shadow-sm border-0 transition-all hover-up"
                 style={{ backgroundColor: "#1C7293", transition: "all 0.3s ease" }}
               >

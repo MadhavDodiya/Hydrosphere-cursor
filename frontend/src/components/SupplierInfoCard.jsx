@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import InquiryModal from "./InquiryModal.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
@@ -10,10 +10,6 @@ export default function SupplierInfoCard({ listing, supplierName, location, rati
   const [showModal, setShowModal] = useState(false);
   const [isSaved, setIsSaved] = useState(listing?.saved || false);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setIsSaved(listing?.saved || false);
-  }, [listing]);
 
   const toggleSave = async () => {
     if (!isAuthenticated) {
@@ -33,7 +29,7 @@ export default function SupplierInfoCard({ listing, supplierName, location, rati
         showToast("Removed from saved.");
       }
       setIsSaved(nextState);
-    } catch (err) {
+    } catch {
       showToast("Failed to update saved status.");
     } finally {
       setSaving(false);

@@ -42,20 +42,6 @@ export default function Navbar() {
     whiteSpace: "nowrap",
   });
 
-  const plainLinkStyle = {
-    display: "block",
-    padding: "0.5rem 0.875rem",
-    borderRadius: "10px",
-    fontWeight: 500,
-    fontSize: "0.9rem",
-    color: "#475569",
-    background: "transparent",
-    textDecoration: "none",
-    transition: "all 0.2s ease",
-    whiteSpace: "nowrap",
-    cursor: "pointer",
-  };
-
   return (
     <header className="hs-nav sticky-top">
       <div className="hs-nav-inner hs-container">

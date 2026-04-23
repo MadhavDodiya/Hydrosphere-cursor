@@ -37,6 +37,12 @@ export default function SupplierCard({ supplier }) {
           <span className="bi bi-star-fill text-warning me-1" aria-hidden="true" />
           {rating || "4.5"}
         </div>
+        {isVerified && (
+          <div className="position-absolute top-0 start-0 m-3 badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2">
+            <i className="bi bi-patch-check-fill me-1" aria-hidden="true" />
+            Verified
+          </div>
+        )}
       </div>
       <div className="card-body d-flex flex-column p-4">
         <h5 className="card-title fw-bold mb-1 text-truncate" title={name}>{name}</h5>

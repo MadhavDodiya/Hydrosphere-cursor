@@ -6,6 +6,7 @@ export default function DashboardChart({ loading, data }) {
     { label: "Thu", leads: 0 }, { label: "Fri", leads: 0 }, { label: "Sat", leads: 0 },
     { label: "Sun", leads: 0 }
   ];
+  const loadingHeights = ["42%", "58%", "36%", "72%", "54%", "63%", "47%"];
 
   const maxLeads = Math.max(...chartData.map(d => d.leads), 1);
 
@@ -15,7 +16,7 @@ export default function DashboardChart({ loading, data }) {
         <div style={{ height: 20, background: "#f1f5f9", borderRadius: 6, width: "40%", marginBottom: 24, animation: "dashPulse 1.5s infinite" }}></div>
         <div className="d-flex align-items-end gap-2" style={{ height: 200 }}>
           {chartData.map((_, i) => (
-            <div key={i} style={{ flex: 1, background: "#f1f5f9", borderRadius: "6px 6px 0 0", height: `${30 + Math.random() * 60}%`, animation: "dashPulse 1.5s infinite" }}></div>
+            <div key={i} style={{ flex: 1, background: "#f1f5f9", borderRadius: "6px 6px 0 0", height: loadingHeights[i % loadingHeights.length], animation: "dashPulse 1.5s infinite" }}></div>
           ))}
         </div>
       </div>

@@ -10,8 +10,6 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
   const [error, setError] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
 
-  if (!show || !inquiry) return null;
-
   useEffect(() => {
     const inquiryId = inquiry?._id;
     if (!inquiryId) return;
@@ -31,6 +29,8 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
       socket.off("inquiry:updated", onUpdated);
     };
   }, [inquiry?._id, onReplyAdded]);
+
+  if (!show || !inquiry) return null;
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -108,7 +108,7 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
               {/* Replies */}
               {(inquiry.replies || []).map((reply, idx) => {
                 const isSeller = reply.senderRole === "seller";
-                const isMe = (isSeller && user.role === "seller") || (!isSeller && user.role === "buyer");
+                const isMe = (isSeller && user?.role === "seller") || (!isSeller && user?.role === "buyer");
                 
                 return (
                   <div key={idx} className={`d-flex flex-column gap-1 mb-4 ${isMe ? "align-items-end" : "align-items-start"}`}>

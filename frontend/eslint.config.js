@@ -20,8 +20,14 @@ export default [
         console: "readonly",
         localStorage: "readonly",
         process: "readonly",
+        fetch: "readonly",
+        alert: "readonly",
+        FormData: "readonly",
+        IntersectionObserver: "readonly",
         setTimeout: "readonly",
-        clearTimeout: "readonly"
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly"
       }
     },
     plugins: {
@@ -34,6 +40,7 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+      "react-hooks/set-state-in-effect": "off",
       "no-unused-vars": ["warn", { varsIgnorePattern: "^React$" }]
     },
   },
