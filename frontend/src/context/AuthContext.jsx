@@ -47,12 +47,10 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const register = async (name, email, password, role) => {
-    const data = await registerRequest({ name, email, password, role });
-    persistSession(data.token, data.user);
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
+  const register = async (name, email, password, role, businessRegistrationNumber) => {
+    const data = await registerRequest({ name, email, password, role, businessRegistrationNumber });
+    // User is NOT logged in yet; they must verify email first.
+    return data; 
   };
 
   const logout = async () => {

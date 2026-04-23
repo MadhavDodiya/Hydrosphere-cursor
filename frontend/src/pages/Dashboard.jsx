@@ -24,26 +24,28 @@ export default function Dashboard({ section = "overview" }) {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const endpoint = user?.role === "seller" ? "/api/seller/stats" : "/api/users/stats";
-      const { data } = await api.get(endpoint);
-      setStats(data);
-    } catch (err) {
-      console.error("Error fetching stats:", err);
-      showToast(err?.response?.data?.message || "Failed to load dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (user) {
-      fetchStats();
-    }
+    if (!user) return;
+    let cancelled = false;
+
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const endpoint = user?.role === "seller" ? "/api/seller/stats" : "/api/users/stats";
+        const { data } = await api.get(endpoint);
+        if (!cancelled) setStats(data);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        if (!cancelled) showToast(err?.response?.data?.message || "Failed to load dashboard");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchStats();
     window.scrollTo(0, 0);
-  }, [user?.role, section]); // Only re-run when role or section changes, not on every user object re-render
+    return () => { cancelled = true; };
+  }, [user?.role, user?._id, section]); // Added user._id so stats reload after logout/login
 
   const toggleSidebar = () => setMobileOpen(!mobileOpen);
   const closeSidebar = () => setMobileOpen(false);

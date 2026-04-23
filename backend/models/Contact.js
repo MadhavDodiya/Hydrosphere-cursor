@@ -17,4 +17,6 @@ const contactSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+contactSchema.index({ createdAt: -1 }); // Performance: needed for admin dashboard sorting
+
 export default mongoose.model("Contact", contactSchema);

@@ -47,7 +47,7 @@ export async function getSellerStats(req, res) {
     const activity = recentInquiries.map(iq => ({
       id: iq._id,
       type: 'inquiry',
-      desc: `New inquiry from ${iq.name} for ${iq.listingId?.companyName || 'Listing'}`,
+      desc: `New inquiry from ${iq.name} for ${iq.listingId?.title || iq.listingId?.companyName || 'Listing'}`,
       time: iq.createdAt,
     }));
 

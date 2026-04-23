@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../services/api.js";
+import { useToast } from "../../../context/ToastContext.jsx";
+import { getApiErrorMessage } from "../../../utils/apiError.js";
 
 export default function InquiryMonitor() {
+  const { showToast } = useToast();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -9,9 +12,11 @@ export default function InquiryMonitor() {
     try {
       setLoading(true);
       const res = await api.get("/api/admin/inquiries");
-      setInquiries(res.data);
+      // Bug fix: backend now returns paginated { data, total } object instead of a plain array
+      setInquiries(res.data?.data || res.data || []);
     } catch (err) {
       console.error("Error fetching inquiries:", err);
+      showToast(getApiErrorMessage(err, "Failed to load inquiries"), "error");
     } finally {
       setLoading(false);
     }
@@ -22,7 +27,7 @@ export default function InquiryMonitor() {
       await api.put(`/api/admin/inquiries/${id}/flag`);
       fetchInquiries();
     } catch (err) {
-      alert("Flag toggle failed");
+      showToast("Flag toggle failed", "error");
     }
   };
 
@@ -30,9 +35,9 @@ export default function InquiryMonitor() {
     if (!window.confirm("Delete this inquiry from logs?")) return;
     try {
       await api.delete(`/api/admin/inquiries/${id}`);
-      fetchInquiries();
+      setInquiries(prev => prev.filter(i => i._id !== id));
     } catch (err) {
-      alert("Delete failed");
+      showToast("Delete failed", "error");
     }
   };
 
@@ -75,7 +80,7 @@ export default function InquiryMonitor() {
                     </td>
                     <td className="py-3">
                        <div className="badge bg-light text-primary border fw-bold" style={{ fontSize: "0.65rem" }}>
-                          {inq.listingId?.companyName || "Listing Deleted"}
+                          {inq.listingId?.title || inq.listingId?.companyName || "Listing Deleted"}
                        </div>
                     </td>
                     <td className="py-3">

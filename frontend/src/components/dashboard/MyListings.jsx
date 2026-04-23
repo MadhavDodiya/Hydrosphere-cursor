@@ -29,7 +29,7 @@ export default function MyListings() {
     if (user?._id) {
       loadListings();
     }
-  }, [user?._id, showToast]);
+  }, [user?._id]); // Bug fix: showToast is stable but shouldn't be in dep array — caused re-render loops
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;
@@ -37,10 +37,8 @@ export default function MyListings() {
       setDeletingId(id);
       await deleteListing(id);
       showToast("Listing deleted successfully", "success");
-      
-      // Reload listings manually since loadListings is inside useEffect now
-      const res = await fetchMyListings();
-      setListings(res?.data || res || []);
+      // Bug fix: optimistic local removal instead of re-fetching entire list
+      setListings(prev => prev.filter(l => l._id !== id));
     } catch (err) {
       showToast("Failed to delete listing", "error");
     } finally {

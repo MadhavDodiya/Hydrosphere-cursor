@@ -49,7 +49,7 @@ export async function getBuyerStats(req, res) {
     const [totalInquiries, totalSaved, totalListings] = await Promise.all([
       Inquiry.countDocuments({ buyerId: userId }),
       SavedListing.countDocuments({ user: userId }),
-      Listing.countDocuments({}), 
+      Listing.countDocuments({ status: "approved" }), 
     ]);
 
     // Fetch Activity feed
@@ -62,13 +62,13 @@ export async function getBuyerStats(req, res) {
       ...recentInquiries.map(iq => ({
         id: iq._id,
         type: 'inquiry',
-        desc: `You sent an inquiry for ${iq.listingId?.companyName || 'a listing'}`,
+        desc: `You sent an inquiry for ${iq.listingId?.title || iq.listingId?.companyName || 'a listing'}`,
         time: iq.createdAt
       })),
       ...recentSaved.map(s => ({
         id: s._id,
         type: 'save',
-        desc: `You saved ${s.listing?.companyName || 'a listing'}`,
+        desc: `You saved ${s.listing?.title || s.listing?.companyName || 'a listing'}`,
         time: s.createdAt
       }))
     ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
@@ -124,9 +124,10 @@ export async function updateMe(req, res) {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { companyName, phone } = req.body;
-    if (companyName != null) user.companyName = companyName;
-    if (phone != null) user.phone = phone;
+    const { name, companyName, phone } = req.body;
+    if (name != null && name.trim().length >= 1) user.name = name.trim();
+    if (companyName != null) user.companyName = companyName.trim();
+    if (phone != null) user.phone = phone.trim();
 
     await user.save();
     return res.json(publicUser(user));

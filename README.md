@@ -1,40 +1,43 @@
 # HydroSphere
 
 ## Overview
-HydroSphere is a MERN B2B marketplace connecting buyers and sellers of hydrogen supply. It supports listings, saved/favorites, inquiry-based lead generation, supplier dashboards, admin moderation, and subscription monetization for suppliers.
+HydroSphere is a modern MERN-stack B2B SaaS marketplace connecting buyers and sellers of hydrogen supply. It supports robust product listings, saved/favorites features, inquiry-based lead generation, role-based dashboards, admin moderation, and subscription monetization for suppliers.
 
 ## Key Features
-- Auth: JWT (Bearer) with role-based access control (buyer/seller/admin)
-- Marketplace: search + filters + sorting + pagination
-- Seller: listing CRUD, "My Listings", leads dashboard, lead status (new/contacted/closed)
-- Buyer: saved listings, inquiry threads, inquiry dashboard
-- SaaS: plan-based limits (listings + monthly leads) with Stripe subscriptions
-- Realtime (optional): Socket.IO updates for inquiry creation/replies
+- **Auth & Security**: JWT (Bearer + HTTP-only cookies via `withCredentials`), role-based access control (Buyer/Seller/Admin), and Helmet/Rate-Limiting/CORS middleware.
+- **Marketplace**: Search, filters, sorting, pagination, and detailed responsive listing pages.
+- **Seller Workflows**: Listing CRUD, "My Listings" management, leads dashboard, supplier approval systems (pending/approved statuses), and listing status tracking.
+- **Buyer Workflows**: Saved listings (favorites), inquiry threads, and a dedicated buyer dashboard.
+- **Admin Moderation**: Comprehensive admin dashboard for managing users, promoting roles, moderating listings, and handling system inquiries.
+- **SaaS Monetization**: Plan-based limits (listings + monthly leads) utilizing Stripe Subscriptions.
+- **Media & Communications**: Cloudinary integration for secure image uploads and SMTP-based email notifications for contact forms.
+- **Realtime (Optional)**: Socket.IO updates for inquiry creation and replies.
 
 ## Tech Stack
-- Frontend: React (Vite), Axios, React Router, Bootstrap + Tailwind utilities
-- Backend: Node.js, Express, Mongoose
-- Security: helmet, express-rate-limit, request validation (Zod), input sanitization (express-mongo-sanitize)
-- Billing: Stripe Subscriptions
-- Realtime: Socket.IO (optional)
+- **Frontend**: React 19 (Vite), Axios, React Router, Bootstrap + Tailwind utilities.
+- **Backend**: Node.js, Express, Mongoose.
+- **Security**: Helmet, express-rate-limit, request validation (Zod), input sanitization (express-mongo-sanitize), secure CORS.
+- **Billing**: Stripe Subscriptions.
+- **Media/Emails**: Cloudinary (Image Hosting), Nodemailer (SMTP).
+- **Realtime**: Socket.IO (optional).
 
 ## Project Structure
 backend/
-- middleware/ (auth, role, validate, upload)
+- middleware/ (auth, role, validate, upload, security)
 - controllers/
 - models/
 - routes/
-- utils/
+- utils/ (email, emailTemplates)
 
 frontend/
 - api/ (axiosInstance, socket)
 - services/
-- components/
+- components/ (UI, Dashboard, Forms)
 - pages/
 - hooks/
 
 ## Local Setup
-Prereqs:
+Prerequisites:
 - Node.js 18+
 - MongoDB (local) or MongoDB Atlas
 
@@ -47,7 +50,7 @@ Prereqs:
 3) (Optional) Seed sample data
 `cd backend && npm run seed`
 
-4) Start dev
+4) Start dev servers
 `npm run dev`
 
 Local dev uses a Vite proxy: the frontend calls `/api/*` and Vite forwards to the Express server using `PORT` from `backend/.env`.
@@ -62,72 +65,55 @@ Enforcement points:
 - Listing creation blocks when the seller listing limit is reached.
 - Inquiry creation blocks when the target seller's monthly lead cap is reached.
 
-## Stripe Setup (Subscriptions)
-1) Create 2 recurring prices in Stripe:
-- Pro Supplier
-- Enterprise
+## 3rd-Party Service Setup
 
-2) Set these in `backend/.env`:
+### 1) Stripe (Subscriptions)
+Set these in `backend/.env`:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PRICE_PRO_SUPPLIER`
 - `STRIPE_PRICE_ENTERPRISE`
 
-3) Configure Stripe webhook endpoint:
-- `POST /api/billing/webhook`
+Configure Stripe webhook endpoint: `POST /api/billing/webhook`.
 
-4) In the app (seller):
-- Dashboard -> Billing -> Upgrade / Manage Billing
+### 2) Cloudinary (Image Uploads)
+Used for listing images and avatars. Set in `backend/.env`:
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 
-## Realtime (Socket.IO)
-The API exposes Socket.IO on the same server port. Frontend connects using the stored JWT and receives:
-- `inquiry:created` (seller notifications)
-- `inquiry:updated` (replies/status changes)
-
-Frontend env (optional):
-- `frontend/.env`: `VITE_SOCKET_URL` (defaults to `VITE_API_URL`, then `http://localhost:5000`)
+### 3) Email / SMTP (Contact Forms)
+Used for automated email notifications. Set in `backend/.env`:
+- `EMAIL_SERVICE` (e.g., `gmail`)
+- `SMTP_USER`
+- `SMTP_PASS` (App password if using Gmail)
 
 ## API Endpoints (Core)
-Auth:
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-Users:
-- `GET /api/users/me` (JWT)
-- `PUT /api/users/me` (JWT)
+Auth & Users:
+- `POST /api/auth/register`, `POST /api/auth/login`
+- `GET /api/users/me`, `PUT /api/users/me`
 
 Listings:
-- `GET /api/listings?page=1&limit=12` (public, approved only)
-- `GET /api/listings/:id` (optional JWT to enrich saved status)
-- `GET /api/listings/my-listings?page=1&limit=25` (seller only, all statuses)
-- `POST /api/listings` (seller only)
-- `PUT /api/listings/:id` (seller only, owner)
-- `DELETE /api/listings/:id` (seller only, owner)
+- `GET /api/listings` (Public, approved only)
+- `GET /api/listings/:id`
+- `GET /api/listings/my-listings` (Seller only)
+- `POST /api/listings`, `PUT /api/listings/:id`, `DELETE /api/listings/:id` (Seller only)
 
 Saved (Favorites):
-- `GET /api/saved` (JWT)
-- `POST /api/saved` (JWT)
-- `DELETE /api/saved/:listingId` (JWT)
+- `GET /api/saved`, `POST /api/saved`, `DELETE /api/saved/:listingId`
 
 Inquiries (Leads):
-- `POST /api/inquiries` (buyer only, duplicate-protected)
-- `GET /api/inquiries/received?page=1&limit=25` (seller only, populates `listingId` + `buyerId`)
-- `GET /api/inquiries/buyer?page=1&limit=25` (buyer only)
-- `POST /api/inquiries/:id/reply` (buyer/seller, ownership enforced)
-- `PUT /api/inquiries/:id/status` (seller only)
+- `POST /api/inquiries` (Buyer only)
+- `GET /api/inquiries/received` (Seller only)
+- `GET /api/inquiries/buyer` (Buyer only)
+- `POST /api/inquiries/:id/reply`, `PUT /api/inquiries/:id/status`
 
 Billing (Stripe):
-- `GET /api/billing/plans`
-- `GET /api/billing/me` (JWT)
-- `POST /api/billing/checkout` (seller only)
-- `POST /api/billing/portal` (seller only)
-- `POST /api/billing/webhook` (Stripe)
+- `GET /api/billing/plans`, `GET /api/billing/me`
+- `POST /api/billing/checkout`, `POST /api/billing/portal`, `POST /api/billing/webhook`
 
 Admin:
-- `GET /api/admin/*` (admin only; users/listings/inquiries/contacts moderation)
-
-Health:
-- `GET /api/health`
+- `GET /api/admin/*` (Users/listings/inquiries/contacts moderation, User promotion)
 
 ## Production Notes
 - Set `NODE_ENV=production` and `FRONTEND_URL` (comma-separated allowlist) in `backend/.env`.

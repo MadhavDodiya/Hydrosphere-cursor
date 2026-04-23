@@ -12,8 +12,10 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("buyer");
+  const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,10 +25,15 @@ export default function Signup() {
       setError("Please enter your full name (at least 2 characters).");
       return;
     }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
     setSubmitting(true);
     try {
-      await register(trimmed, email, password, role);
-      navigate("/dashboard", { replace: true });
+      const data = await register(trimmed, email, password, role, businessRegistrationNumber);
+      setSuccessMsg(data.message || "Registration successful! Please check your email to verify your account.");
+      window.scrollTo(0, 0);
     } catch (err) {
       setError(getApiErrorMessage(err, "Registration failed"));
     } finally {
@@ -59,6 +66,16 @@ export default function Signup() {
             </div>
           )}
 
+          {successMsg && (
+            <div className="alert d-flex flex-column align-items-center gap-3 mb-4 py-4 px-4 text-center" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "16px", color: "#166534" }}>
+              <i className="bi bi-check-circle-fill" style={{ fontSize: "2rem" }}></i>
+              <div className="fw-bold">{successMsg}</div>
+              <Link to="/login" className="btn btn-success rounded-pill px-4">Go to Login</Link>
+            </div>
+          )}
+
+          {!successMsg && (
+            <>
           {/* Role Selector */}
           <div className="mb-4">
             <label className="form-label fw-semibold mb-2" style={{ fontSize: "0.875rem", color: "#374151" }}>I want to</label>
@@ -114,6 +131,19 @@ export default function Signup() {
               </div>
             </div>
 
+            {role === "seller" && (
+              <div className="mb-3">
+                <label htmlFor="su-biz-reg" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Business Registration Number (Aadhar/GST)</label>
+                <div className="position-relative">
+                  <i className="bi bi-file-earmark-text position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
+                  <input id="su-biz-reg" type="text"
+                    className="form-control ps-5"
+                    style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
+                    placeholder="Enter GST or Aadhar number" value={businessRegistrationNumber} onChange={(e) => setBusinessRegistrationNumber(e.target.value)} />
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <label htmlFor="su-password" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Password <span className="text-muted fw-normal">(min 6 characters)</span></label>
               <div className="position-relative">
@@ -146,6 +176,8 @@ export default function Signup() {
             <span className="text-muted" style={{ fontSize: "0.875rem" }}>Already have an account? </span>
             <Link to="/login" className="fw-semibold text-decoration-none" style={{ color: "#2563eb", fontSize: "0.875rem" }}>Sign in</Link>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

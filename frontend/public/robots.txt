@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+Allow: /
+Allow: /listings/
+Allow: /login
+Allow: /signup
+
+Sitemap: https://hydrosphere.com/sitemap.xml

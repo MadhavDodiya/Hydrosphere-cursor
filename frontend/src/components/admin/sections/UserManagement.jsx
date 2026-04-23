@@ -9,46 +9,51 @@ export default function UserManagement() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/api/admin/users", {
-        params: { q: search, role: roleFilter, page }
-      });
-      setUsers(res.data.users);
-      setTotalPages(res.data.pages);
-    } catch (err) {
-      console.error("Error fetching users:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let cancelled = false;
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const params = { page };
+        if (search.trim()) params.q = search.trim();
+        if (roleFilter !== "All") params.role = roleFilter.toLowerCase();
+        const res = await api.get("/api/admin/users", { params });
+        if (!cancelled) {
+          setUsers(res.data?.users || []);
+          setTotalPages(res.data?.pages || 1);
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
     fetchUsers();
-  }, [page, roleFilter]);
+    return () => { cancelled = true; };
+  }, [page, roleFilter, search]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(1);
-    fetchUsers();
+    setPage(1); // Reset to page 1; useEffect will pick up the search change
   };
 
   const handleRoleChange = async (userId, newRole) => {
     try {
       await api.put(`/api/admin/users/${userId}/role`, { role: newRole });
-      fetchUsers();
+      // Optimistic update: reflect the role change immediately in local state
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u));
     } catch (err) {
-      alert("Failed to update role");
+      console.error("Failed to update role", err);
     }
   };
 
   const handleToggleSuspend = async (userId, currentState) => {
     try {
       await api.put(`/api/admin/users/${userId}/suspend`, { suspend: !currentState });
-      fetchUsers();
+      // Optimistic update
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isSuspended: !currentState } : u));
     } catch (err) {
-      alert("Failed to update suspension status");
+      console.error("Failed to update suspension status", err);
     }
   };
 
@@ -56,9 +61,10 @@ export default function UserManagement() {
     if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
     try {
       await api.delete(`/api/admin/users/${userId}`);
-      fetchUsers();
+      // Remove from local state immediately
+      setUsers(prev => prev.filter(u => u._id !== userId));
     } catch (err) {
-      alert("Failed to delete user");
+      console.error("Failed to delete user", err);
     }
   };
 
@@ -120,7 +126,8 @@ export default function UserManagement() {
                     <td className="px-4 py-3">
                       <div className="d-flex align-items-center gap-3">
                         <div style={{ width: 36, height: 36, borderRadius: "10px", background: "#f8fafc", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.8rem" }}>
-                          {u.name[0].toUpperCase()}
+                          {/* Bug fix: guard against null/empty name before calling [0] */}
+                          {(u.name?.[0] || "?").toUpperCase()}
                         </div>
                         <div>
                           <div className="fw-bold text-dark mb-0" style={{ fontSize: "0.9rem" }}>{u.name}</div>

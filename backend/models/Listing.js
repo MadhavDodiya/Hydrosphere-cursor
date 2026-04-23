@@ -16,7 +16,7 @@ const listingSchema = new mongoose.Schema(
     // Canonical listing title (UI-facing). Kept optional for legacy documents.
     title: { type: String, trim: true, default: "", maxlength: 200, index: true },
     // Legacy field used across the MVP UI and admin search. New code should treat it as an alias of `title`.
-    companyName: { type: String, required: true, trim: true },
+    companyName: { type: String, required: true, trim: true, index: true },
     hydrogenType: {
       type: String,
       enum: HYDROGEN_TYPES,
@@ -25,6 +25,17 @@ const listingSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
     location: { type: String, required: true, trim: true },
+    // Industry Specific Features
+    productionCapacity: {
+      type: String,
+      trim: true,
+      default: "", // e.g., "500 kg/day"
+    },
+    deliveryAvailability: {
+      type: String,
+      trim: true,
+      default: "", // e.g., "Available", "30 Days Lead Time"
+    },
     // Hydrogen purity percentage (e.g. 99.9). Optional for legacy docs.
     purity: {
       type: Number,

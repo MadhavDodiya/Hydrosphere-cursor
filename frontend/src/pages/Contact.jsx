@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import emailjs from "@emailjs/browser";
 import { Link } from "react-router-dom";
 
 export default function Contact() {

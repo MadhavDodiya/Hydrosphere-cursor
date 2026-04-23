@@ -51,7 +51,8 @@ export async function createInquiry(req, res) {
     }
 
     // SaaS: lead monetization (limit leads for free sellers per month)
-    const seller = await User.findById(listing.seller).select("plan subscriptionStatus leadLimit");
+    // Bug fix: include 'email' in select so seller email is available for notification without a second query
+    const seller = await User.findById(listing.seller).select("plan subscriptionStatus leadLimit email");
     const { leadsLimitPerMonth } = getEffectiveLimits({
       planId: seller?.plan,
       listingLimitOverride: null,
@@ -104,7 +105,7 @@ export async function createInquiry(req, res) {
       const buyer = await User.findById(req.userId).select("name email");
       const buyerDisplayName = buyer?.name || name || "A buyer";
 
-      const seller = await User.findById(listing.seller).select("name email");
+      // Reuse seller already fetched above (Bug fix: avoid duplicate DB query)
       if (seller?.email) {
         console.log(`[EMAIL] Sending inquiry notification to supplier: ${seller.email}`);
         const emailSent = await sendInquiryEmail(
@@ -188,8 +189,8 @@ export async function getSellerInquiries(req, res) {
     const filter = { sellerId: req.userId };
     const [inquiries, total] = await Promise.all([
       Inquiry.find(filter)
-        .populate("listingId")
-        .populate("buyerId")
+        .populate("listingId", "title companyName hydrogenType price")
+        .populate("buyerId", "name email phone") // Bug fix: never expose buyer password hash to seller
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -330,6 +331,12 @@ export async function updateInquiryStatus(req, res) {
 
     if (String(inquiry.sellerId) !== String(req.userId)) {
       return res.status(403).json({ message: "Forbidden" });
+    }
+
+    // Bug fix: validate status against allowed enum values before saving
+    const VALID_STATUSES = ["new", "contacted", "closed"];
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ message: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` });
     }
 
     inquiry.status = status;

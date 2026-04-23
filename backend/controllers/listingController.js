@@ -65,6 +65,10 @@ function buildFilter(query) {
     if (!Number.isNaN(maxPurity)) filter.purity.$lte = maxPurity;
   }
 
+  if (query.deliveryAvailability && String(query.deliveryAvailability).trim() !== "") {
+    filter.deliveryAvailability = String(query.deliveryAvailability).trim();
+  }
+
   return filter;
 }
 
@@ -206,7 +210,7 @@ export async function getListingById(req, res) {
  */
 export async function createListing(req, res) {
   try {
-    const { title, companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
+    const { title, companyName, hydrogenType, price, quantity, location, description, purity, productionCapacity, deliveryAvailability } = req.body;
     const images = req.files ? req.files.map((file) => file.path) : [];
 
     const effectiveTitle = String(title || companyName || "").trim();
@@ -245,6 +249,8 @@ export async function createListing(req, res) {
       location: String(location).trim(),
       description: String(description).trim(),
       purity: purity != null && purity !== "" ? Number(purity) : null,
+      productionCapacity: productionCapacity ? String(productionCapacity).trim() : "",
+      deliveryAvailability: deliveryAvailability ? String(deliveryAvailability).trim() : "",
       images,
     });
 
@@ -271,7 +277,7 @@ export async function updateListing(req, res) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const { title, companyName, hydrogenType, price, quantity, location, description, purity } = req.body;
+    const { title, companyName, hydrogenType, price, quantity, location, description, purity, productionCapacity, deliveryAvailability } = req.body;
     const newImages = req.files ? req.files.map((file) => file.path) : [];
 
     if (newImages.length > 0) listing.images = [...listing.images, ...newImages];
@@ -286,6 +292,8 @@ export async function updateListing(req, res) {
     if (location) listing.location = location;
     if (description) listing.description = description;
     if (purity != null) listing.purity = purity === "" ? null : Number(purity);
+    if (productionCapacity !== undefined) listing.productionCapacity = String(productionCapacity).trim();
+    if (deliveryAvailability !== undefined) listing.deliveryAvailability = String(deliveryAvailability).trim();
 
     await listing.save();
     return res.json(listing);
@@ -311,8 +319,11 @@ export async function deleteListing(req, res) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    await Listing.deleteOne({ _id: id });
-    await SavedListing.deleteMany({ listing: id });
+    await Promise.all([
+      Listing.deleteOne({ _id: id }),
+      SavedListing.deleteMany({ listing: id }),
+      Inquiry.deleteMany({ listingId: id }),
+    ]);
     return res.json({ message: "Listing deleted" });
   } catch (err) {
     console.error("[DELETE LISTING Error]:", err);

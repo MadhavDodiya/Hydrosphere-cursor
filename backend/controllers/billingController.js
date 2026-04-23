@@ -123,7 +123,7 @@ export async function verifyPayment(req, res) {
           <strong>Plan Active Until:</strong> ${nextYear.toLocaleDateString("en-IN")}
         </div>
         <p>You can now access all <strong>${planName}</strong> features. Log in to your dashboard to start using them.</p>
-        <a href="http://localhost:5173/dashboard" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;">Go to Dashboard</a>
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;">Go to Dashboard</a>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
         <p style="font-size:12px;color:#64748b;">HydroSphere — B2B Hydrogen Marketplace</p>
       </div>`

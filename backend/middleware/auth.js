@@ -60,3 +60,13 @@ export async function authenticate(req, res, next) {
 export function requireSeller(req, res, next) {
   return authorizeRoles("seller")(req, res, next);
 }
+
+/**
+ * Ensures the authenticated user has verified their email.
+ */
+export function requireEmailVerified(req, res, next) {
+  if (!req.emailVerified) {
+    return res.status(403).json({ message: "Email verification required. Please check your inbox." });
+  }
+  next();
+}

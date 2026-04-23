@@ -4,9 +4,12 @@ import SupplierCard from "../components/SupplierCard.jsx";
 import Footer from "../components/Footer.jsx";
 import "./Listing.css";
 import { fetchListings } from "../services/listingService.js";
+import { useToast } from "../context/ToastContext.jsx";
+import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function Listing() {
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [suppliers, setSuppliers] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -18,7 +21,8 @@ export default function Listing() {
     types: [],
     minPrice: "",
     maxPrice: "",
-    minRating: false
+    minRating: false,
+    deliveryAvailability: ""
   });
   const [sort, setSort] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,6 +48,7 @@ export default function Listing() {
           ...(filters.location.trim() ? { location: filters.location.trim() } : {}),
           ...(filters.minPrice !== "" ? { minPrice: filters.minPrice } : {}),
           ...(filters.maxPrice !== "" ? { maxPrice: filters.maxPrice } : {}),
+          ...(filters.deliveryAvailability ? { deliveryAvailability: filters.deliveryAvailability } : {}),
           // Support multiple types (Bug 4)
           ...(filters.types.length > 0 ? { hydrogenType: filters.types.join(",") } : {}),
         };
@@ -51,13 +56,16 @@ export default function Listing() {
         
         const mapped = (response.data || []).map(item => ({
           id: item._id,
-          name: item.companyName || "Unknown Supplier",
+          name: item.title || item.companyName || "Unknown Supplier",
           location: item.location || 'Unknown Location',
           rating: 4.5,
           description: item.description || `${item.hydrogenType} Hydrogen - ${item.quantity} kg available`,
           price: item.price != null ? `₹${Number(item.price).toLocaleString('en-IN')}` : 'Contact for price',
           rawPrice: Number(item.price),
           type: item.hydrogenType,
+          deliveryAvailability: item.deliveryAvailability || "",
+          productionCapacity: item.productionCapacity || "",
+          isVerified: item.seller?.isVerified || false,
           imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
 
@@ -65,11 +73,9 @@ export default function Listing() {
         setTotalItems(response.total || 0);
         setTotalPages(response.totalPages || 1);
       } catch (error) {
-        console.error("Error fetching listings:", error);
-        // Show user-friendly message — check if it's a network error
-        if (error?.isNetworkError) {
-          alert("Network error — please check your connection and try again.");
-        }
+        const msg = getApiErrorMessage(error, "Failed to fetch listings");
+        console.error(msg, error);
+        showToast(msg, "error");
       } finally {
         setLoading(false);
       }
@@ -162,7 +168,7 @@ export default function Listing() {
                     <p className="text-secondary">Try adjusting your search or filter criteria to find what you're looking for.</p>
                     <button className="btn btn-primary mt-2 px-4 rounded-pill" onClick={() => {
                       setSearch("");
-                      setFilters({location: "", types: [], minPrice: "", maxPrice: "", minRating: false});
+                      setFilters({location: "", types: [], minPrice: "", maxPrice: "", minRating: false, deliveryAvailability: ""});
                     }}>
                       Clear All Filters
                     </button>

@@ -10,15 +10,18 @@ import { sendApprovalEmail } from "../services/emailService.js";
  */
 export const getStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalBuyers = await User.countDocuments({ role: "buyer" });
-    const totalSellers = await User.countDocuments({ role: "seller" });
-    const totalListings = await Listing.countDocuments();
-    const pendingListings = await Listing.countDocuments({ status: "pending" });
-    const featuredListings = await Listing.countDocuments({ isFeatured: true });
-    const totalInquiries = await Inquiry.countDocuments();
-    const unverifiedSellers = await User.countDocuments({ role: "seller", isVerified: false });
-    const pendingApprovals = await User.countDocuments({ role: "seller", isApproved: false });
+    const [totalUsers, totalBuyers, totalSellers, totalListings, pendingListings,
+      featuredListings, totalInquiries, unverifiedSellers, pendingApprovals] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: "buyer" }),
+      User.countDocuments({ role: "seller" }),
+      Listing.countDocuments(),
+      Listing.countDocuments({ status: "pending" }),
+      Listing.countDocuments({ isFeatured: true }),
+      Inquiry.countDocuments(),
+      User.countDocuments({ role: "seller", isVerified: false }),
+      User.countDocuments({ role: "seller", isApproved: false }),
+    ]);
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -28,11 +31,47 @@ export const getStats = async (req, res) => {
     weekStart.setDate(weekStart.getDate() - 7);
     const newListingsThisWeek = await Listing.countDocuments({ createdAt: { $gte: weekStart } });
 
+    // Hydrogen type distribution (live from DB)
+    const hydrogenDist = await Listing.aggregate([
+      { $match: { status: "approved" } },
+      { $group: { _id: "$hydrogenType", count: { $sum: 1 } } },
+    ]);
+    const approvedTotal = hydrogenDist.reduce((s, r) => s + r.count, 0) || 1;
+    const hydrogenBreakdown = hydrogenDist.map(r => ({
+      name: `${r._id} Hydrogen`,
+      count: r.count,
+      share: `${Math.round((r.count / approvedTotal) * 100)}%`,
+    }));
+
+    // Weekly user signups for the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    const dailySignups = await User.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      const found = dailySignups.find(s => s._id === ds);
+      chartData.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), leads: found ? found.count : 0 });
+    }
+
+    // Paid plan count
+    const paidUsers = await User.countDocuments({ plan: { $in: ["pro_supplier", "enterprise"] } });
+
     res.json({
       totalUsers, totalBuyers, totalSellers,
       totalListings, pendingListings, featuredListings,
       totalInquiries, newUsersToday, newListingsThisWeek,
-      unverifiedSellers, pendingApprovals
+      unverifiedSellers, pendingApprovals,
+      hydrogenBreakdown,
+      chartData,
+      paidUsers,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching admin stats", error: error.message });
@@ -190,6 +229,7 @@ export const getListings = async (req, res) => {
 export const approveListing = async (req, res) => {
   try {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
     res.json(listing);
   } catch (error) {
     res.status(500).json({ message: "Error approving listing" });
@@ -202,6 +242,7 @@ export const approveListing = async (req, res) => {
 export const rejectListing = async (req, res) => {
   try {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
     res.json(listing);
   } catch (error) {
     res.status(500).json({ message: "Error rejecting listing" });
@@ -214,6 +255,7 @@ export const rejectListing = async (req, res) => {
 export const toggleFeatureListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
     listing.isFeatured = !listing.isFeatured;
     await listing.save();
     res.json(listing);
@@ -227,7 +269,13 @@ export const toggleFeatureListing = async (req, res) => {
  */
 export const deleteListing = async (req, res) => {
   try {
-    await Listing.findByIdAndDelete(req.params.id);
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    // Cascade: remove any saved references to this listing
+    await Promise.all([
+      Listing.deleteOne({ _id: listing._id }),
+      SavedListing.deleteMany({ listing: listing._id }),
+    ]);
     res.json({ message: "Listing deleted" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting listing" });
@@ -239,12 +287,21 @@ export const deleteListing = async (req, res) => {
  */
 export const getInquiries = async (req, res) => {
   try {
-    const inquiries = await Inquiry.find()
-      .populate("buyerId", "name email")
-      .populate("sellerId", "name email")
-      .populate("listingId", "companyName")
-      .sort({ createdAt: -1 });
-    res.json(inquiries);
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));
+    const skip = (page - 1) * limit;
+    const [inquiries, total] = await Promise.all([
+      Inquiry.find()
+        .populate("buyerId", "name email")
+        .populate("sellerId", "name email")
+        .populate("listingId", "companyName title")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Inquiry.countDocuments(),
+    ]);
+    res.json({ data: inquiries, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: "Error fetching inquiries" });
   }
@@ -277,17 +334,20 @@ export const verifySupplier = async (req, res) => {
 
     const wasApproved = user.isApproved;
     user.isVerified = true;
-    user.isApproved = true; // Verification also grants listing creation access
+    user.isApproved = true;
     await user.save();
 
-    // Send approval email only if this is the first time being approved
     if (!wasApproved) {
       sendApprovalEmail(user.email, user.name).catch(err =>
         console.error("Approval email failed:", err.message)
       );
     }
 
-    res.json(user);
+    // Bug fix: never expose password hash — return only safe fields
+    res.json({
+      _id: user._id, name: user.name, email: user.email,
+      role: user.role, isVerified: user.isVerified, isApproved: user.isApproved,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error verifying supplier" });
   }
@@ -316,7 +376,13 @@ export const approveSupplier = async (req, res) => {
       );
     }
 
-    res.json({ message: "Supplier approved", user });
+    res.json({ 
+      message: "Supplier approved", 
+      user: {
+        _id: user._id, name: user.name, email: user.email,
+        role: user.role, isVerified: user.isVerified, isApproved: user.isApproved,
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: "Error approving supplier" });
   }
@@ -328,6 +394,8 @@ export const approveSupplier = async (req, res) => {
 export const flagInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(req.params.id);
+    // Bug fix: null check before accessing properties
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
     inquiry.isFlagged = !inquiry.isFlagged;
     await inquiry.save();
     res.json(inquiry);
@@ -354,6 +422,8 @@ export const deleteInquiry = async (req, res) => {
 export const updateContactStatus = async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);
+    // Bug fix: null check before accessing properties
+    if (!contact) return res.status(404).json({ message: "Contact not found" });
     contact.isResponded = !contact.isResponded;
     await contact.save();
     res.json(contact);

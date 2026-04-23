@@ -8,10 +8,13 @@ import { sendEmail } from "../services/emailService.js";
  * Sign short-lived Access JWT
  */
 function signAccessToken(user) {
+  // In production: short-lived 15m access token + refresh token rotation
+  // In dev: 24h so local sessions don't expire mid-development
+  const expiresIn = process.env.NODE_ENV === "production" ? "15m" : "24h";
   return jwt.sign(
     { userId: user._id.toString(), role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn }
   );
 }
 
@@ -56,6 +59,7 @@ function publicUser(user) {
     companyName: user.companyName || "",
     phone: user.phone || "",
     isVerified: Boolean(user.isVerified),
+    isApproved: Boolean(user.isApproved), // Bug fix: was missing, caused approval banner not to show after login
     emailVerified: Boolean(user.emailVerified),
     plan: user.plan || "free",
     subscriptionStatus: user.subscriptionStatus || "inactive",
@@ -67,7 +71,7 @@ function publicUser(user) {
  */
 export async function register(req, res) {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, businessRegistrationNumber } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
@@ -95,6 +99,7 @@ export async function register(req, res) {
       email: email.toLowerCase(),
       password: hashed,
       role: normalizedRole,
+      businessRegistrationNumber: normalizedRole === "seller" ? String(businessRegistrationNumber || "").trim() : "",
       emailVerified: false,
       emailVerificationToken: verificationTokenHash,
       emailVerificationExpires: verificationExpires,
@@ -117,12 +122,10 @@ export async function register(req, res) {
       </div>`
     ).catch(err => console.error("[REGISTER] Verification email failed:", err.message));
 
-    const token = signAccessToken(user);
-    const refreshToken = signRefreshToken(user);
-    setRefreshTokenCookie(res, refreshToken);
-
+    // Bug fix: don't log them in immediately if we require verification to login.
+    // This maintains consistency with the login() blocking logic.
     return res.status(201).json({
-      token,
+      message: "Registration successful! Please check your email to verify your account.",
       user: publicUser(user),
     });
   } catch (err) {

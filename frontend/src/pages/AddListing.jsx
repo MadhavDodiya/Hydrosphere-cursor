@@ -31,6 +31,8 @@ export default function AddListing() {
   const [quantity, setQuantity] = useState("");
   const [location, setLocation] = useState("");
   const [purity, setPurity] = useState("99.9");
+  const [productionCapacity, setProductionCapacity] = useState("");
+  const [deliveryAvailability, setDeliveryAvailability] = useState("Available");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(isEdit);
@@ -61,6 +63,8 @@ export default function AddListing() {
         setQuantity(String(found.quantity));
         setLocation(found.location);
         setPurity(found.purity != null ? String(found.purity) : "99.9");
+        setProductionCapacity(found.productionCapacity ?? "");
+        setDeliveryAvailability(found.deliveryAvailability ?? "Available");
         setDescription(found.description ?? "");
       } catch (err) {
         if (!cancelled) { const msg = getApiErrorMessage(err, "Failed to load listing."); setError(msg); showToast(msg); }
@@ -69,7 +73,7 @@ export default function AddListing() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, isEdit, user, showToast]);
+  }, [id, isEdit, user?._id, user?.role]); // Bug fix: user object reference changes every render — use primitives
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,6 +98,8 @@ export default function AddListing() {
     formData.append("quantity", q);
     formData.append("location", location.trim());
     if (pu != null) formData.append("purity", pu);
+    formData.append("productionCapacity", productionCapacity.trim());
+    formData.append("deliveryAvailability", deliveryAvailability.trim());
     formData.append("description", desc);
     Array.from(imageFiles).forEach((file) => formData.append("images", file));
 
@@ -259,6 +265,31 @@ export default function AddListing() {
                   </div>
                   <div className="text-muted mt-1" style={{ fontSize: "0.75rem" }}>
                     Optional, used for marketplace filtering.
+                  </div>
+                </div>
+              </div>
+
+              {/* Industry Specific Fields */}
+              <div className="row g-3">
+                <div className="col-12 col-sm-6">
+                  <label htmlFor="productionCapacity" style={labelStyle}>Production Capacity (Optional)</label>
+                  <div className="position-relative">
+                    <i className="bi bi-gear-wide-connected position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                    <input id="productionCapacity" type="text" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                      placeholder="e.g. 500 kg/day" value={productionCapacity} onChange={(e) => setProductionCapacity(e.target.value)} />
+                  </div>
+                </div>
+                <div className="col-12 col-sm-6">
+                  <label htmlFor="deliveryAvailability" style={labelStyle}>Delivery Availability</label>
+                  <div className="position-relative">
+                    <i className="bi bi-truck position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+                    <select id="deliveryAvailability" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
+                      value={deliveryAvailability} onChange={(e) => setDeliveryAvailability(e.target.value)}>
+                      <option value="Available">Ready to Ship</option>
+                      <option value="30 Days Lead Time">30 Days Lead Time</option>
+                      <option value="60 Days Lead Time">60 Days Lead Time</option>
+                      <option value="Pickup Only">Pickup Only</option>
+                    </select>
                   </div>
                 </div>
               </div>

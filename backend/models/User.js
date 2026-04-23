@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       minlength: 1,
       maxlength: 120,
+      index: true, // Performance: needed for admin user search
     },
     email: {
       type: String,
@@ -35,6 +36,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 160,
       default: "",
+      index: true, // Performance: needed for search
     },
     phone: {
       type: String,
@@ -63,6 +65,16 @@ const userSchema = new mongoose.Schema(
     isSuspended: {
       type: Boolean,
       default: false,
+    },
+    // Industry Specific: Seller Verification
+    businessRegistrationNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    certifications: {
+      type: [String],
+      default: [],
     },
     // Admin Approval for Suppliers
     isApproved: {

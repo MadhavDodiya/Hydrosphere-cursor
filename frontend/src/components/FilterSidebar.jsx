@@ -17,7 +17,8 @@ export default function FilterSidebar({ filters = {}, onFilterChange }) {
       types: [],
       minPrice: "",
       maxPrice: "",
-      minRating: false
+      minRating: false,
+      deliveryAvailability: ""
     });
   };
 
@@ -88,6 +89,21 @@ export default function FilterSidebar({ filters = {}, onFilterChange }) {
               onChange={(e) => onFilterChange({ ...filters, maxPrice: e.target.value })}
             />
           </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="form-label fw-semibold text-secondary small">Delivery</label>
+          <select 
+            className="form-select form-select-sm shadow-none"
+            value={filters.deliveryAvailability || ""}
+            onChange={(e) => onFilterChange({ ...filters, deliveryAvailability: e.target.value })}
+          >
+            <option value="">Any</option>
+            <option value="Available">Ready to Ship</option>
+            <option value="30 Days Lead Time">30 Days Lead Time</option>
+            <option value="60 Days Lead Time">60 Days Lead Time</option>
+            <option value="Pickup Only">Pickup Only</option>
+          </select>
         </div>
 
         <div className="mb-4">
