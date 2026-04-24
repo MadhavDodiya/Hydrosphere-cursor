@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -75,6 +76,9 @@ export default function Navbar() {
               <NavLink to="/dashboard" className="hs-btn-outline" onClick={close}>
                 <i className="bi bi-columns-gap me-1" />Dashboard
               </NavLink>
+
+              {/* Notification Bell */}
+              <NotificationBell user={user} />
 
               {/* User dropdown */}
               <div className="hs-user-menu" ref={dropRef}>

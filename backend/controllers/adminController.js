@@ -3,7 +3,7 @@ import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
 import SavedListing from "../models/SavedListing.js";
 import Contact from "../models/Contact.js";
-import { sendApprovalEmail } from "../services/emailService.js";
+import { sendApprovalEmail, sendListingStatusEmail } from "../services/emailService.js";
 
 /**
  * GET /api/admin/stats
@@ -228,8 +228,18 @@ export const getListings = async (req, res) => {
  */
 export const approveListing = async (req, res) => {
   try {
-    const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
+    const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true }).populate("seller", "email name");
     if (!listing) return res.status(404).json({ message: "Listing not found" });
+
+    if (listing.seller?.email) {
+      sendListingStatusEmail(
+        listing.seller.email,
+        listing.seller.name,
+        listing.title || listing.companyName,
+        "approved"
+      ).catch((err) => console.error("[ADMIN] Approval email failed:", err.message));
+    }
+
     res.json(listing);
   } catch (error) {
     res.status(500).json({ message: "Error approving listing" });
@@ -241,8 +251,18 @@ export const approveListing = async (req, res) => {
  */
 export const rejectListing = async (req, res) => {
   try {
-    const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
+    const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true }).populate("seller", "email name");
     if (!listing) return res.status(404).json({ message: "Listing not found" });
+
+    if (listing.seller?.email) {
+      sendListingStatusEmail(
+        listing.seller.email,
+        listing.seller.name,
+        listing.title || listing.companyName,
+        "rejected"
+      ).catch((err) => console.error("[ADMIN] Rejection email failed:", err.message));
+    }
+
     res.json(listing);
   } catch (error) {
     res.status(500).json({ message: "Error rejecting listing" });
@@ -271,10 +291,11 @@ export const deleteListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ message: "Listing not found" });
-    // Cascade: remove any saved references to this listing
+    // Cascade: remove any saved references and inquiries to this listing
     await Promise.all([
       Listing.deleteOne({ _id: listing._id }),
       SavedListing.deleteMany({ listing: listing._id }),
+      Inquiry.deleteMany({ listingId: listing._id }),
     ]);
     res.json({ message: "Listing deleted" });
   } catch (error) {

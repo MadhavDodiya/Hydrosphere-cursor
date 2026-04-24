@@ -110,10 +110,10 @@ export async function verifyPayment(req, res) {
     // Send payment confirmation email (non-blocking)
     const planName = planId === "pro_supplier" ? "Pro Supplier" : "Enterprise";
     const planPrice = getPriceForPlan(planId);
-    sendEmail(
-      user.email,
-      `✅ Payment Successful — HydroSphere ${planName} Plan`,
-      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #e2e8f0;border-radius:10px;">
+    sendEmail({
+      to: user.email,
+      subject: `✅ Payment Successful — HydroSphere ${planName} Plan`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #e2e8f0;border-radius:10px;">
         <h2 style="color:#0891b2;">Payment Successful! 🎉</h2>
         <p>Hello ${user.name},</p>
         <p>Your payment of <strong>₹${planPrice}</strong> for the <strong>${planName}</strong> plan has been received.</p>
@@ -127,7 +127,7 @@ export async function verifyPayment(req, res) {
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
         <p style="font-size:12px;color:#64748b;">HydroSphere — B2B Hydrogen Marketplace</p>
       </div>`
-    ).catch(err => console.error("[BILLING] Payment email failed:", err.message));
+    }).catch(err => console.error("[BILLING] Payment email failed:", err.message));
 
     return res.json({ message: "Payment verified and plan updated successfully", plan: user.plan });
   } catch (err) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import FilterSidebar from "../components/FilterSidebar.jsx";
 import SupplierCard from "../components/SupplierCard.jsx";
 import Footer from "../components/Footer.jsx";
@@ -8,17 +9,18 @@ import { useToast } from "../context/ToastContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function Listing() {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
   const [suppliers, setSuppliers] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("q") || "");
   
   const [filters, setFilters] = useState({
-    location: "",
-    types: [],
+    location: searchParams.get("location") || "",
+    types: searchParams.get("type") ? [searchParams.get("type")] : [],
     minPrice: "",
     maxPrice: "",
     minRating: false,
@@ -27,6 +29,21 @@ export default function Listing() {
   const [sort, setSort] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
+
+  // Sync URL search params to state (Task: Fix Hero search)
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    const loc = searchParams.get("location") || "";
+    const type = searchParams.get("type");
+
+    setSearch(q);
+    setDebouncedSearch(q);
+    setFilters(prev => ({
+      ...prev,
+      location: loc,
+      types: type ? [type] : prev.types.length === 0 ? [] : prev.types 
+    }));
+  }, [searchParams]);
 
   // Debounce search input
   useEffect(() => {
@@ -66,6 +83,7 @@ export default function Listing() {
           deliveryAvailability: item.deliveryAvailability || "",
           productionCapacity: item.productionCapacity || "",
           isVerified: item.seller?.isVerified || false,
+          purity: item.purity || null,
           imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
 

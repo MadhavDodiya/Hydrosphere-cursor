@@ -313,3 +313,37 @@
 .hs-cta h2 {
   font-size: 3rem;
 }
+
+/* Hero Stats Section */
+.hs-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: var(--color-primary-start);
+  font-size: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.hs-hero-stats .col-6:hover .hs-stat-icon,
+.hs-hero-stats .col-12:hover .hs-stat-icon {
+  background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+  color: white;
+  transform: translateY(-3px) rotate(8deg);
+  box-shadow: var(--shadow-glow);
+}
+
+.hs-stat-icon i {
+  line-height: 1;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

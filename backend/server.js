@@ -30,15 +30,29 @@ const PORT = process.env.PORT || 5000;
 // Security: Set security HTTP headers
 app.use(helmet());
 
-// Global Rate Limiting: 15min / 100 requests per IP
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
+// ── Rate Limiting ──────────────────────────────────────────────────────────
+// Strict limiter for authentication (prevent brute force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 20, // Limit each IP to 20 requests per window
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { message: "Too many requests from this IP, please try again after 15 minutes" },
+  message: { message: "Too many authentication attempts. Please try again after 15 minutes." },
 });
-app.use("/api", limiter);
+
+// Relaxed limiter for general API & Dashboard (prevent abuse but allow high activity)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 500, // Increased from 100 to 500 to accommodate dashboard polling and heavy usage
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "Too many requests from this IP. Please try again after 15 minutes." },
+});
+
+// Apply limiters
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api", apiLimiter);
 
 /**
  * CORS: production uses FRONTEND_URL (comma-separated). Dev allows localhost,
@@ -113,6 +127,10 @@ async function start() {
   }
   if (!process.env.JWT_SECRET) {
     console.error("Missing JWT_SECRET in environment");
+    process.exit(1);
+  }
+  if (!process.env.JWT_REFRESH_SECRET) {
+    console.error("Missing JWT_REFRESH_SECRET in environment");
     process.exit(1);
   }
 

@@ -119,7 +119,7 @@ export default function Dashboard({ section = "overview" }) {
       {/* Chart & Activity Row */}
       <div className="row g-4 mb-4">
         <div className="col-12 col-lg-8">
-          <DashboardChart loading={loading} data={stats?.chartData} />
+          <DashboardChart loading={loading} data={stats?.chartData} planUsage={stats?.planUsage} />
         </div>
         <div className="col-12 col-lg-4">
           <ActivityFeed loading={loading} activities={stats?.activity} />

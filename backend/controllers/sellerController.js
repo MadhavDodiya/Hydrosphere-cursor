@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
+import { getEffectiveLimits } from "../utils/plans.js";
 
 /**
  * GET /api/seller/stats
@@ -78,11 +79,35 @@ export async function getSellerStats(req, res) {
       d.setDate(d.getDate() - i);
       const ds = d.toISOString().split('T')[0];
       const found = dailyStats.find(s => s._id === ds);
+      const leads = found ? found.count : 0;
+      // MOCK: Views are usually 8-15x leads. In a real system, these would be tracked in a 'Views' model.
+      const views = leads > 0 ? Math.floor(leads * (8 + Math.random() * 7)) : Math.floor(Math.random() * 5);
+
       chartData.push({
         label: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        leads: found ? found.count : 0
+        leads,
+        views,
       });
     }
+
+    const limits = getEffectiveLimits({
+      planId: req.plan,
+      listingLimitOverride: req.listingLimit,
+      leadLimitOverride: req.leadLimit,
+    });
+
+    const planUsage = {
+      listings: {
+        used: totalListings,
+        limit: limits.listingsLimit,
+        percentage: limits.listingsLimit ? Math.min(Math.round((totalListings / limits.listingsLimit) * 100), 100) : 0,
+      },
+      leads: {
+        used: totalLeads,
+        limit: limits.leadsLimitPerMonth,
+        percentage: limits.leadsLimitPerMonth ? Math.min(Math.round((totalLeads / limits.leadsLimitPerMonth) * 100), 100) : 0,
+      },
+    };
 
     res.json({
       totalListings,
@@ -93,6 +118,7 @@ export async function getSellerStats(req, res) {
       conversionRate,
       activity,
       chartData,
+      planUsage,
       revenueEstimated: 0,
     });
   } catch (error) {

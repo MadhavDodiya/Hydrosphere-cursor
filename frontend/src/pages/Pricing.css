@@ -58,7 +58,7 @@
   position: absolute;
   top: 0.35rem;
   bottom: 0.35rem;
-  width: calc(33.333% - 0.7rem);
+  width: calc(50% - 0.7rem);
   background: linear-gradient(135deg, var(--color-primary-end), var(--color-primary-start));
   border-radius: 99px;
   box-shadow: var(--shadow-glow);

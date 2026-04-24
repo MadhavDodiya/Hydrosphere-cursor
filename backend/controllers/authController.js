@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import crypto from "crypto";
-import { sendEmail } from "../services/emailService.js";
+import { sendEmail, sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../services/emailService.js";
 
 /**
  * Sign short-lived Access JWT
@@ -24,7 +24,7 @@ function signAccessToken(user) {
 function signRefreshToken(user) {
   return jwt.sign(
     { userId: user._id.toString(), role: user.role },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, // Fallback to JWT_SECRET if not provided
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: "7d" }
   );
 }
@@ -107,20 +107,9 @@ export async function register(req, res) {
 
     console.log("[REGISTER] New User:", user._id);
 
-    // Email verification (non-blocking if mail transport is not configured)
-    sendEmail(
-      user.email,
-      "Verify your HydroSphere email",
-      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-        <h2 style="color:#0891b2;">Welcome to HydroSphere!</h2>
-        <p>Please verify your email to activate your account:</p>
-        <a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}"
-           style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;margin:16px 0;">
-          Verify Email
-        </a>
-        <p style="color:#64748b;font-size:0.85em;">This link expires in 24 hours. If you did not sign up, ignore this email.</p>
-      </div>`
-    ).catch(err => console.error("[REGISTER] Verification email failed:", err.message));
+    // Email verification (non-blocking)
+    sendVerificationEmail(user.email, verificationToken, appBaseUrl())
+      .catch(err => console.error("[REGISTER] Verification email failed:", err.message));
 
     // Bug fix: don't log them in immediately if we require verification to login.
     // This maintains consistency with the login() blocking logic.
@@ -201,6 +190,11 @@ export async function verifyEmail(req, res) {
     user.emailVerificationExpires = null;
     await user.save();
 
+    // Trigger welcome email (non-blocking)
+    sendWelcomeEmail(user.email, user.name).catch((err) =>
+      console.error("[VERIFY] Welcome email failed:", err.message)
+    );
+
     return res.json({ message: "Email verified successfully" });
   } catch (err) {
     console.error("[VERIFY EMAIL Error]:", err);
@@ -225,11 +219,8 @@ export async function resendVerification(req, res) {
     user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
     await user.save();
 
-    sendEmail(
-      user.email,
-      "Verify your HydroSphere email",
-      `<p><a href="${appBaseUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}">Verify Email</a></p>`
-    ).catch(err => console.error("[RESEND] Email failed:", err.message));
+    sendVerificationEmail(user.email, verificationToken, appBaseUrl())
+      .catch(err => console.error("[RESEND] Email failed:", err.message));
 
     return res.json({ message: "Verification email sent" });
   } catch (err) {
@@ -254,19 +245,8 @@ export async function forgotPassword(req, res) {
     user.passwordResetExpires = new Date(Date.now() + 1000 * 60 * 30); // 30m
     await user.save();
 
-    sendEmail(
-      user.email,
-      "Reset your HydroSphere password",
-      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-        <h2 style="color:#0891b2;">Password Reset Request</h2>
-        <p>You requested a password reset for your HydroSphere account.</p>
-        <a href="${appBaseUrl()}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}"
-           style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;margin:16px 0;">
-          Reset Password
-        </a>
-        <p style="color:#64748b;font-size:0.85em;">This link expires in 30 minutes. If you did not request this, ignore this email.</p>
-      </div>`
-    ).catch(err => console.error("[FORGOT] Email failed:", err.message));
+    sendPasswordResetEmail(user.email, resetToken, appBaseUrl())
+      .catch(err => console.error("[FORGOT] Email failed:", err.message));
 
     return res.json({ message: "If the email exists, a reset link was sent." });
   } catch (err) {
@@ -318,7 +298,7 @@ export async function refreshToken(req, res) {
     const rToken = req.cookies?.refreshToken;
     if (!rToken) return res.status(401).json({ message: "No refresh token provided" });
 
-    const decoded = jwt.verify(rToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+    const decoded = jwt.verify(rToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.userId);
     
     if (!user) return res.status(401).json({ message: "Invalid refresh token" });

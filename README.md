@@ -9,7 +9,7 @@ HydroSphere is a modern MERN-stack B2B SaaS marketplace connecting buyers and se
 - **Seller Workflows**: Listing CRUD, "My Listings" management, leads dashboard, supplier approval systems (pending/approved statuses), and listing status tracking.
 - **Buyer Workflows**: Saved listings (favorites), inquiry threads, and a dedicated buyer dashboard.
 - **Admin Moderation**: Comprehensive admin dashboard for managing users, promoting roles, moderating listings, and handling system inquiries.
-- **SaaS Monetization**: Plan-based limits (listings + monthly leads) utilizing Stripe Subscriptions.
+- **SaaS Monetization**: Plan-based limits (listings + monthly leads) utilizing Razorpay Payments.
 - **Media & Communications**: Cloudinary integration for secure image uploads and SMTP-based email notifications for contact forms.
 - **Realtime (Optional)**: Socket.IO updates for inquiry creation and replies.
 
@@ -17,7 +17,7 @@ HydroSphere is a modern MERN-stack B2B SaaS marketplace connecting buyers and se
 - **Frontend**: React 19 (Vite), Axios, React Router, Bootstrap + Tailwind utilities.
 - **Backend**: Node.js, Express, Mongoose.
 - **Security**: Helmet, express-rate-limit, request validation (Zod), input sanitization (express-mongo-sanitize), secure CORS.
-- **Billing**: Stripe Subscriptions.
+- **Billing**: Razorpay.
 - **Media/Emails**: Cloudinary (Image Hosting), Nodemailer (SMTP).
 - **Realtime**: Socket.IO (optional).
 
@@ -67,26 +67,32 @@ Enforcement points:
 
 ## 3rd-Party Service Setup
 
-### 1) Stripe (Subscriptions)
+### 1) Razorpay (Payments & Billing)
+The platform uses Razorpay for supplier subscriptions (Pro/Enterprise).
 Set these in `backend/.env`:
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PRICE_PRO_SUPPLIER`
-- `STRIPE_PRICE_ENTERPRISE`
+- `RAZORPAY_KEY_ID`: Your Razorpay Test/Live Key ID.
+- `RAZORPAY_KEY_SECRET`: Your Razorpay Secret.
 
-Configure Stripe webhook endpoint: `POST /api/billing/webhook`.
+**How it works:**
+1. **Order Creation**: Frontend calls `POST /api/billing/create-order` with a `planId`. The backend creates a Razorpay Order and returns the `orderId`.
+2. **Checkout**: The frontend opens the Razorpay Standard Checkout modal.
+3. **Verification**: Upon success, the frontend sends the payment details to `POST /api/billing/verify`. The backend verifies the HMAC signature using your `RAZORPAY_KEY_SECRET` before upgrading the user's plan.
 
-### 2) Cloudinary (Image Uploads)
-Used for listing images and avatars. Set in `backend/.env`:
+*Note: In this version, payments are treated as one-time transactions that grant 1 year of access.*
+
+### 2) Cloudinary (Media Hosting)
+Used for listing images and user profile pictures. Set in `backend/.env`:
 - `CLOUDINARY_CLOUD_NAME`
 - `CLOUDINARY_API_KEY`
 - `CLOUDINARY_API_SECRET`
 
-### 3) Email / SMTP (Contact Forms)
-Used for automated email notifications. Set in `backend/.env`:
-- `EMAIL_SERVICE` (e.g., `gmail`)
-- `SMTP_USER`
-- `SMTP_PASS` (App password if using Gmail)
+### 3) Email / SMTP (Notifications)
+Standard SMTP configuration for inquiries and auth emails. Set in `backend/.env`:
+- `EMAIL_SERVICE`: e.g., `gmail`
+- `SMTP_USER`: Your email address
+- `SMTP_PASS`: Your App Password (required for Gmail)
+
+---
 
 ## API Endpoints (Core)
 Auth & Users:
@@ -108,15 +114,21 @@ Inquiries (Leads):
 - `GET /api/inquiries/buyer` (Buyer only)
 - `POST /api/inquiries/:id/reply`, `PUT /api/inquiries/:id/status`
 
-Billing (Stripe):
-- `GET /api/billing/plans`, `GET /api/billing/me`
-- `POST /api/billing/checkout`, `POST /api/billing/portal`, `POST /api/billing/webhook`
+Billing (Razorpay):
+- `GET /api/billing/plans`: Returns available plans and prices
+- `GET /api/billing/me`: Returns current subscription status
+- `POST /api/billing/create-order`: Generates a Razorpay Order
+- `POST /api/billing/verify`: Verifies payment signature and upgrades plan
 
 Admin:
 - `GET /api/admin/*` (Users/listings/inquiries/contacts moderation, User promotion)
 
-## Production Notes
-- Set `NODE_ENV=production` and `FRONTEND_URL` (comma-separated allowlist) in `backend/.env`.
-- Use HTTPS in production (Stripe + secure cookies/origins).
-- Run MongoDB with proper indexes (inquiries enforce unique `{ listingId, buyerId }`).
+## Production Deployment
+For detailed instructions on moving to a live environment (Atlas, Cloudinary, Razorpay Live, SSL/TLS), please refer to our **[Production Checklist](./PRODUCTION_CHECKLIST.md)**.
+
+### Core Production Requirements:
+- Set `NODE_ENV=production` to enable secure cookie handling and strict CORS.
+- Configure `FRONTEND_URL` in `backend/.env` with your actual domain (e.g., `https://yourdomain.com`).
+- Use HTTPS for both frontend and backend to ensure JWT security and Razorpay compliance.
+- Run MongoDB with proper indexes; ensure Atlas Network Access allows your production server IP.
 

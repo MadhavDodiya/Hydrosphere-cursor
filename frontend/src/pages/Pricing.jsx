@@ -5,7 +5,7 @@ import Footer from "../components/Footer.jsx";
 import "./Pricing.css";
 
 export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState("monthly"); // 'weekly', 'monthly', 'yearly'
+  const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly', 'yearly'
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -21,34 +21,32 @@ export default function Pricing() {
   const plans = [
     {
       id: "free",
-      name: "Starter",
-      description: "Perfect for testing the platform",
+      name: "Free",
+      description: "Ideal for buyers and new suppliers",
       price: {
-        weekly: 0,
         monthly: 0,
         yearly: 0,
       },
       features: [
         "Up to 3 active listings",
         "10 buyer leads per month",
-        "Standard support",
+        "Community support",
         "Basic analytics"
       ],
       notIncluded: [
         "Verified Supplier badge",
         "Unlimited listings",
-        "Priority 24/7 support"
+        "Priority support"
       ]
     },
     {
       id: "pro_supplier",
-      name: "Pro",
+      name: "Pro Supplier",
       description: "For growing hydrogen businesses",
       isPopular: true,
       price: {
-        weekly: 999,
-        monthly: 3999,
-        yearly: 39999,
+        monthly: 4999,
+        yearly: 3999, // price per month when billed annually
       },
       features: [
         "Up to 50 active listings",
@@ -67,9 +65,8 @@ export default function Pricing() {
       name: "Enterprise",
       description: "Maximum visibility and volume",
       price: {
-        weekly: 4999,
-        monthly: 14999,
-        yearly: 149999,
+        monthly: 19999,
+        yearly: 14999,
       },
       features: [
         "Unlimited active listings",
@@ -86,9 +83,7 @@ export default function Pricing() {
 
   // Helper to calculate slider position
   const getSliderTransform = () => {
-    if (billingCycle === "weekly") return "translateX(0%)";
-    if (billingCycle === "monthly") return "translateX(100%)";
-    return "translateX(200%)";
+    return billingCycle === "monthly" ? "translateX(0%)" : "translateX(100%)";
   };
 
   return (
@@ -108,27 +103,23 @@ export default function Pricing() {
 
         {/* Toggle Switch */}
         <div className="d-flex justify-content-center mb-5">
-          <div className="hs-pricing-toggle">
-            <div className="hs-toggle-slider" style={{ transform: getSliderTransform() }}></div>
-            <button 
-              className={`hs-toggle-btn ${billingCycle === "weekly" ? "active" : ""}`}
-              onClick={() => setBillingCycle("weekly")}
-            >
-              Weekly
-            </button>
+          <div className="hs-pricing-toggle" style={{ width: "fit-content" }}>
+            <div className="hs-toggle-slider" style={{ transform: getSliderTransform(), width: "calc(50% - 0.7rem)" }}></div>
             <button 
               className={`hs-toggle-btn ${billingCycle === "monthly" ? "active" : ""}`}
               onClick={() => setBillingCycle("monthly")}
+              style={{ width: "120px" }}
             >
               Monthly
             </button>
             <button 
               className={`hs-toggle-btn ${billingCycle === "yearly" ? "active" : ""}`}
               onClick={() => setBillingCycle("yearly")}
+              style={{ width: "120px" }}
             >
               Yearly
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: "0.6rem" }}>
-                Save 20%
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: "0.6rem" }}>
+                -25%
               </span>
             </button>
           </div>

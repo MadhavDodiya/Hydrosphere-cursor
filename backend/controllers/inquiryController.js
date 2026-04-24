@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Inquiry from "../models/Inquiry.js";
 import Listing from "../models/Listing.js";
 import User from "../models/User.js";
-import { sendInquiryEmail } from "../services/emailService.js";
+import { sendInquiryEmail, sendReplyNotificationEmail } from "../services/emailService.js";
 import { getEffectiveLimits } from "../utils/plans.js";
 import { emitInquiryCreated, emitInquiryUpdated } from "../utils/realtime.js";
 
@@ -297,9 +297,30 @@ export async function replyToInquiry(req, res) {
         .populate("buyerId")
         .populate("sellerId")
         .lean();
+      
       emitInquiryUpdated(populated);
+
+      // Task: Notify the OTHER party via email
+      const otherUser = senderRole === "seller" ? populated.buyerId : populated.sellerId;
+      const otherUserRole = senderRole === "seller" ? "Buyer" : "Seller";
+      
+      if (otherUser?.email) {
+        const senderName = senderRole === "seller" 
+          ? (populated.sellerId?.companyName || populated.sellerId?.name || "The supplier")
+          : (populated.buyerId?.name || "The buyer");
+          
+        const listingTitle = populated.listingId?.title || populated.listingId?.companyName || "the listing";
+
+        console.log(`[REPLY] Notifying ${otherUserRole}: ${otherUser.email}`);
+        sendReplyNotificationEmail(
+          otherUser.email,
+          senderName,
+          listingTitle,
+          String(message).trim()
+        ).catch((err) => console.error(`[REPLY] Email notification to ${otherUserRole} failed:`, err.message));
+      }
     } catch (e) {
-      console.error("Realtime emit failed:", e?.message || e);
+      console.error("Post-reply notifications failed:", e?.message || e);
     }
 
     return res.status(201).json(inquiry);

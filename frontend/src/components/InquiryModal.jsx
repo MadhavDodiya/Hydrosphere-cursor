@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { createInquiry } from "../services/inquiryService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../context/ToastContext.jsx";
 
 export default function InquiryModal({ listing, show, onClose }) {
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,6 +40,7 @@ export default function InquiryModal({ listing, show, onClose }) {
         message: formData.message,
       });
       setSuccess(true);
+      showToast("Inquiry sent successfully!", "success");
       setTimeout(() => {
         onClose();
         setSuccess(false);

@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../context/ToastContext.jsx";
 
 export default function Contact() {
+  const { showToast } = useToast();
   const formRef = useRef();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
@@ -47,6 +49,7 @@ export default function Contact() {
         type: "success", 
         message: "Message sent! We'll get back to you within 24 hours." 
       });
+      showToast("Message sent successfully!", "success");
       setFormData({
         user_name: "",
         user_email: "",
@@ -61,6 +64,7 @@ export default function Contact() {
         type: "danger", 
         message: error.message || "Oops! Something went wrong. Please try again later." 
       });
+      showToast(error.message || "Failed to send message.", "error");
     } finally {
       setLoading(false);
     }

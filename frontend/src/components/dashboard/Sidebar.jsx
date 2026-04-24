@@ -26,40 +26,59 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
 
   return (
     <>
-      {/* Overlay */}
-      {mobileOpen && (
-        <div
-          onClick={closeMobileSidebar}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 1039, backdropFilter: "blur(4px)" }}
-          className="d-lg-none"
-        />
-      )}
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed-bottom bg-white border-top d-lg-none px-2 py-1 shadow-lg" style={{ zIndex: 1045 }}>
+        <div className="d-flex justify-content-around align-items-center">
+          {menuItems.slice(0, 4).map((item) => {
+            const isActive = location.pathname === item.link;
+            return (
+              <Link
+                key={item.name}
+                to={item.link}
+                className="d-flex flex-column align-items-center text-decoration-none py-2 px-3"
+                style={{
+                  color: isActive ? "var(--color-primary-end)" : "#94a3b8",
+                  transition: "all 0.2s ease",
+                  flex: 1
+                }}
+              >
+                <i className={`bi ${item.icon} fs-4 mb-1`}></i>
+                <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>{item.name.split(' ')[0]}</span>
+              </Link>
+            );
+          })}
+          <button 
+            className="btn d-flex flex-column align-items-center border-0 py-2 px-3"
+            onClick={closeMobileSidebar ? () => {} : undefined} // This logic is handled by parent's toggle
+            data-bs-toggle="offcanvas" 
+            data-bs-target="#dashboardMobileSidebar"
+            style={{ color: "#94a3b8", flex: 1 }}
+          >
+            <i className="bi bi-list fs-4 mb-1"></i>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Menu</span>
+          </button>
+        </div>
+      </div>
 
-      {/* Sidebar Panel */}
+      {/* Desktop Sidebar (Permanent) */}
       <aside
-        className={`dashboard-sidebar ${mobileOpen ? "mobile-open" : ""} d-flex flex-column`}
+        className="d-none d-lg-flex flex-column"
         style={{
           background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
-          borderRight: "none",
           position: "fixed",
           top: 0, left: 0, bottom: 0,
           width: 260,
           zIndex: 1040,
-          transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-          transform: mobileOpen ? "translateX(0)" : undefined,
         }}
       >
         {/* Logo */}
         <div className="d-flex align-items-center justify-content-between px-4 py-4 flex-shrink-0">
-          <Link to="/" className="d-flex align-items-center gap-2 text-decoration-none" onClick={closeMobileSidebar}>
+          <Link to="/" className="d-flex align-items-center gap-2 text-decoration-none">
             <div style={{ width: 34, height: 34, borderRadius: "10px", background: "linear-gradient(135deg,#3b82f6,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "white", fontSize: "1rem", boxShadow: "0 4px 12px rgba(59,130,246,0.4)" }}>
               H
             </div>
             <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "white", letterSpacing: "-0.02em" }}>HydroSphere</span>
           </Link>
-          <button className="btn p-0 border-0 d-lg-none" onClick={closeMobileSidebar}>
-            <i className="bi bi-x-lg" style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}></i>
-          </button>
         </div>
 
         {/* User Profile */}
@@ -73,35 +92,10 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
               <div className="text-truncate" style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)" }}>{user?.email}</div>
             </div>
           </div>
-          <div className="mt-2">
-            <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: user?.role === "seller" ? "rgba(34,197,94,0.2)" : "rgba(59,130,246,0.2)", color: user?.role === "seller" ? "#86efac" : "#93c5fd", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              {user?.role === "seller" ? "SUPPLIER" : "BUYER"}
-            </span>
-            {user?.role === "seller" && (
-              <span
-                className="ms-2"
-                style={{
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                  padding: "3px 10px",
-                  borderRadius: "20px",
-                  background: "rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.8)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {String(user?.plan || "free").replace("_", " ")}
-              </span>
-            )}
-          </div>
         </div>
 
-        {/* Nav */}
+        {/* Nav Items */}
         <div className="flex-fill px-3 overflow-auto">
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", padding: "0 0.5rem", marginBottom: "0.5rem" }}>
-            {user?.role === "seller" ? "SUPPLIER PANEL" : "BUYER PANEL"}
-          </p>
           <nav className="d-flex flex-column gap-1">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.link;
@@ -109,7 +103,6 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
                 <Link
                   key={item.name}
                   to={item.link}
-                  onClick={closeMobileSidebar}
                   className="d-flex align-items-center gap-3 text-decoration-none"
                   style={{
                     padding: "0.65rem 0.875rem",
@@ -133,7 +126,7 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
           </nav>
         </div>
 
-        {/* Bottom */}
+        {/* Logout Button */}
         <div className="p-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <button
             onClick={logout}
@@ -144,6 +137,43 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
           </button>
         </div>
       </aside>
+
+      {/* Mobile Offcanvas Menu */}
+      <div className="offcanvas offcanvas-start border-0 d-lg-none" tabIndex="-1" id="dashboardMobileSidebar" style={{ background: "#0f172a", width: "280px" }}>
+        <div className="offcanvas-header px-4 pt-4">
+          <h5 className="offcanvas-title text-white fw-bold">Menu</h5>
+          <button type="button" className="btn-close btn-close-white shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div className="offcanvas-body px-3">
+          <nav className="d-flex flex-column gap-1">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.link;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.link}
+                  data-bs-dismiss="offcanvas"
+                  className="d-flex align-items-center gap-3 text-decoration-none"
+                  style={{
+                    padding: "0.75rem 1rem",
+                    borderRadius: "10px",
+                    background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                    color: isActive ? "white" : "rgba(255,255,255,0.6)",
+                    fontSize: "0.95rem"
+                  }}
+                >
+                  <i className={`bi ${item.icon}`}></i>
+                  {item.name}
+                </Link>
+              );
+            })}
+            <hr className="my-3 border-secondary border-opacity-25" />
+            <button onClick={logout} className="btn text-danger border-0 d-flex align-items-center gap-3 p-2 ps-3 shadow-none">
+              <i className="bi bi-box-arrow-left"></i> Log out
+            </button>
+          </nav>
+        </div>
+      </div>
     </>
   );
 }

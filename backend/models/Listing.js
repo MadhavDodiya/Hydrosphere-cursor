@@ -65,8 +65,17 @@ const listingSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
+
+// Canonical display name (Bug fix: resolves title vs companyName inconsistency)
+listingSchema.virtual("displayName").get(function () {
+  return this.title || this.companyName;
+});
 
 listingSchema.index({ status: 1, createdAt: -1 });
 listingSchema.index({ seller: 1, createdAt: -1 });

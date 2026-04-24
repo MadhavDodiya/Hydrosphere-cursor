@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Hero() {
   const navigate = useNavigate();
-  const productOptions = useMemo(() => ["Hydrogen Gas", "Liquid Hydrogen", "Equipment", "Storage"], []);
+  const productOptions = useMemo(() => ["Green", "Blue", "Grey"], []);
   const [location, setLocation] = useState("");
   const [product, setProduct] = useState(productOptions[0]);
 
@@ -31,7 +31,10 @@ export default function Hero() {
                 className="hs-search-form"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  navigate("/marketplace");
+                  const params = new URLSearchParams();
+                  if (location.trim()) params.set("location", location.trim());
+                  if (product) params.set("type", product);
+                  navigate(`/marketplace?${params.toString()}`);
                 }}
               >
                 <div className="hs-search-field">
@@ -79,6 +82,44 @@ export default function Hero() {
                   <div className="lh-sm">
                     <div className="fw-bold small">99.9% Purity</div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="hs-hero-stats mt-5 pt-lg-4 border-top border-secondary border-opacity-10">
+          <div className="row g-4">
+            <div className="col-6 col-md-4">
+              <div className="d-flex align-items-center gap-3">
+                <div className="hs-stat-icon">
+                  <i className="bi bi-patch-check-fill" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="fw-bold fs-5 lh-1">500+</div>
+                  <div className="small hs-muted mt-1">Verified Suppliers</div>
+                </div>
+              </div>
+            </div>
+            <div className="col-6 col-md-4">
+              <div className="d-flex align-items-center gap-3">
+                <div className="hs-stat-icon">
+                  <i className="bi bi-droplet-fill" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="fw-bold fs-5 lh-1">3</div>
+                  <div className="small hs-muted mt-1">Hydrogen Types</div>
+                </div>
+              </div>
+            </div>
+            <div className="col-12 col-md-4">
+              <div className="d-flex align-items-center gap-3">
+                <div className="hs-stat-icon">
+                  <i className="bi bi-chat-dots-fill" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="fw-bold fs-5 lh-1">Real-time</div>
+                  <div className="small hs-muted mt-1">Inquiries</div>
                 </div>
               </div>
             </div>

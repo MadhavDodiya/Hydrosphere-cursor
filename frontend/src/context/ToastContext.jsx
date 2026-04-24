@@ -22,7 +22,7 @@ export function ToastProvider({ children }) {
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4800);
+    const t = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -35,16 +35,16 @@ export function ToastProvider({ children }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4 sm:p-6 pointer-events-none"
+          className="hs-toast-container"
         >
           <div
-            className={`pointer-events-auto max-w-md rounded-lg border px-4 py-3 text-sm shadow-lg ${
-              toast.variant === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                : "border-red-200 bg-red-50 text-red-900"
-            }`}
+            className={`hs-toast ${toast.variant === "success" ? "hs-toast-success" : "hs-toast-error"}`}
           >
-            {toast.message}
+            <div className="d-flex align-items-center gap-3">
+              <i className={`bi ${toast.variant === "success" ? "bi-check-circle-fill" : "bi-exclamation-circle-fill"}`}></i>
+              <div className="fw-medium">{toast.message}</div>
+              <button onClick={() => setToast(null)} className="btn-close btn-close-white shadow-none ms-auto small" style={{ fontSize: '0.6rem' }}></button>
+            </div>
           </div>
         </div>
       )}

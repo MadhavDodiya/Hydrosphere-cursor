@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Listing, { HYDROGEN_TYPES } from "../models/Listing.js";
 import SavedListing from "../models/SavedListing.js";
+import Inquiry from "../models/Inquiry.js";
 import User from "../models/User.js";
 import { getEffectiveLimits } from "../utils/plans.js";
 
