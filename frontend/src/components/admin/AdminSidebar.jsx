@@ -19,7 +19,7 @@ export default function AdminSidebar({ mobileOpen, closeMobileSidebar, stats }) 
       name: "Verify Suppliers", 
       icon: "bi-patch-check-fill", 
       route: "/admin/verify", 
-      badge: stats?.unverifiedSellers > 0 ? stats.unverifiedSellers : null 
+      badge: stats?.pendingApprovals > 0 ? stats.pendingApprovals : null 
     },
     { name: "Inquiries", icon: "bi-chat-left-dots", route: "/admin/inquiries" },
     { name: "Contact Messages", icon: "bi-envelope-fill", route: "/admin/contacts" },

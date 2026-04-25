@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Hero() {
   const navigate = useNavigate();
-  const productOptions = useMemo(() => ["Green", "Blue", "Grey"], []);
+  const productOptions = useMemo(() => ["All Types", "Green", "Blue", "Grey"], []);
   const [location, setLocation] = useState("");
   const [product, setProduct] = useState(productOptions[0]);
 
@@ -33,7 +33,8 @@ export default function Hero() {
                   e.preventDefault();
                   const params = new URLSearchParams();
                   if (location.trim()) params.set("location", location.trim());
-                  if (product) params.set("type", product);
+                  // Only add type filter if it's not "All Types"
+                  if (product && product !== "All Types") params.set("type", product);
                   navigate(`/marketplace?${params.toString()}`);
                 }}
               >
@@ -41,7 +42,7 @@ export default function Hero() {
                   <span className="bi bi-geo-alt hs-search-icon" aria-hidden="true" />
                   <input
                     className="form-control bg-transparent"
-                    placeholder="Location"
+                    placeholder="Location (e.g. India)"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     aria-label="Location"

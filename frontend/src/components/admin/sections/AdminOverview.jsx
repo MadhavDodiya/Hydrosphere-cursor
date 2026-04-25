@@ -81,7 +81,7 @@ export default function AdminOverview() {
           <StatsCard title="Total Inquiries" value={stats?.totalInquiries || "0"} icon="bi-chat-left-dots" colorClass="success" trend="All time" loading={loading} />
         </div>
         <div className="col-12 col-sm-6 col-xl-3">
-          <StatsCard title="Active Suppliers" value={stats?.totalSellers || "0"} icon="bi-shop" colorClass="info" trend={`${stats?.unverifiedSellers || 0} unverified`} loading={loading} />
+          <StatsCard title="Active Suppliers" value={stats?.totalSuppliers || "0"} icon="bi-shop" colorClass="info" trend={`${stats?.unverifiedSuppliers || 0} unverified`} loading={loading} />
         </div>
       </div>
 
@@ -139,7 +139,7 @@ export default function AdminOverview() {
             <div className="card-body p-4 pt-2">
               {[
                 { label: "Buyers", value: stats?.totalBuyers || 0, color: "#2563eb", icon: "bi-cart3" },
-                { label: "Sellers", value: stats?.totalSellers || 0, color: "#0891b2", icon: "bi-shop" },
+                { label: "Suppliers", value: stats?.totalSuppliers || 0, color: "#0891b2", icon: "bi-shop" },
                 { label: "Paid Plans", value: stats?.paidUsers || 0, color: "#7c3aed", icon: "bi-star-fill" },
               ].map((row, i) => {
                 const pct = stats?.totalUsers > 0 ? Math.round((row.value / stats.totalUsers) * 100) : 0;
@@ -168,8 +168,8 @@ export default function AdminOverview() {
               <div className="row g-3">
                 {[
                   { label: "Listing Approval Rate", numerator: (stats?.totalListings || 0) - (stats?.pendingListings || 0), denominator: stats?.totalListings || 1, color: "#16a34a" },
-                  { label: "Supplier Approval Rate", numerator: (stats?.totalSellers || 0) - (stats?.pendingApprovals || 0), denominator: stats?.totalSellers || 1, color: "#2563eb" },
-                  { label: "Supplier Verification Rate", numerator: (stats?.totalSellers || 0) - (stats?.unverifiedSellers || 0), denominator: stats?.totalSellers || 1, color: "#7c3aed" },
+                  { label: "Supplier Approval Rate", numerator: (stats?.totalSuppliers || 0) - (stats?.pendingApprovals || 0), denominator: stats?.totalSuppliers || 1, color: "#2563eb" },
+                  { label: "Supplier Verification Rate", numerator: (stats?.totalSuppliers || 0) - (stats?.unverifiedSuppliers || 0), denominator: stats?.totalSuppliers || 1, color: "#7c3aed" },
                 ].map((metric, i) => {
                   const pct = Math.round((metric.numerator / metric.denominator) * 100);
                   return (

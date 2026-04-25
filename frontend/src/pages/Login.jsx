@@ -146,7 +146,7 @@ export default function Login() {
         <div className="text-center mt-4 p-3" style={{ background: "rgba(255,255,255,0.7)", borderRadius: "16px", backdropFilter: "blur(10px)" }}>
           <p className="mb-1 fw-semibold" style={{ fontSize: "0.8rem", color: "#64748b" }}>DEMO CREDENTIALS</p>
           <p className="mb-0" style={{ fontSize: "0.8rem", color: "#475569" }}>
-            <strong>Buyer:</strong> buyer@hydrosphere.demo / <strong>Seller:</strong> seller@hydrosphere.demo
+            <strong>Buyer:</strong> buyer@hydrosphere.demo / <strong>Supplier:</strong> supplier@hydrosphere.demo
           </p>
           <p className="mb-0" style={{ fontSize: "0.8rem", color: "#475569" }}>Password: <code>password123</code></p>
         </div>

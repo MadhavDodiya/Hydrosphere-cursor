@@ -37,7 +37,7 @@ async function main() {
         name: "Supplier Alpha",
         email: sEmail,
         password: "Password123!",
-        role: "seller"
+        role: "supplier"
       })
     });
     if (!res.ok && res.status !== 400) throw new Error("Unexpected status " + res.status);
@@ -173,7 +173,7 @@ async function main() {
         message: "Invalid"
       })
     });
-    // Our logic currently doesn't restrict sellers from inquiring on other listings, 
+    // Our logic currently doesn't restrict suppliers from inquiring on other listings, 
     // but they shouldn't be able to inquire on their OWN listing.
     // Let's just check if it gracefully handles or errors.
     if (res.status === 500) throw new Error("Server crashed on supplier inquiry");

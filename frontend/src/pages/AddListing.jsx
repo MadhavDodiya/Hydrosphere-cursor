@@ -51,7 +51,7 @@ export default function AddListing() {
         
         // Security check: Ensure the listing belongs to the current user
         // The backend should also enforce this, but good to have here.
-        if (found.seller?._id !== user._id && found.seller !== user._id) {
+        if (found.supplier?._id !== user._id && found.supplier !== user._id) {
           setError("You do not have permission to edit this listing.");
           setLoading(false);
           return;
@@ -120,7 +120,7 @@ export default function AddListing() {
   );
 
   // Block unapproved suppliers before they waste time filling the form
-  if (user?.role === 'seller' && !user?.isApproved && !isEdit) {
+  if (user?.role === 'supplier' && !user?.isApproved && !isEdit) {
     return (
       <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="text-center p-5">

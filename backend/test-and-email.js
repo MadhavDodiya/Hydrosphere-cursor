@@ -68,7 +68,7 @@ async function runTests() {
       name: "QA Supplier",
       email: supplierEmail,
       password: "TestPass123!",
-      role: "seller",
+      role: "supplier",
     });
     return `Registered: ${supplierEmail}`;
   });
@@ -90,7 +90,7 @@ async function runTests() {
         name: "Duplicate",
         email: supplierEmail,
         password: "TestPass123!",
-        role: "seller",
+        role: "supplier",
       });
       throw new Error("Should have returned 409");
     } catch (e) {

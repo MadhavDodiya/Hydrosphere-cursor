@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
+import { loadStripe } from "@stripe/stripe-js";
 
-function planLabel(planId) {
-  if (planId === "pro_supplier") return "Pro";
-  if (planId === "enterprise") return "Enterprise";
-  return "Free";
-}
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export default function Billing() {
   const { user, updateUser } = useAuth();
@@ -15,9 +12,10 @@ export default function Billing() {
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
   const [sub, setSub] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
 
   const [loadTrigger, setLoadTrigger] = useState(0);
-  const reload = () => setLoadTrigger(n => n + 1); // Stable re-trigger without stale closure
+  const reload = () => setLoadTrigger(n => n + 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,80 +42,27 @@ export default function Billing() {
     };
 
     load();
-
-    // Load Razorpay script dynamically
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      cancelled = true;
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, [loadTrigger]); // Only re-run when manually triggered via reload()
-
+    return () => { cancelled = true; };
+  }, [loadTrigger]);
 
   const startCheckout = async (planId) => {
     try {
-      if (!window.Razorpay) {
-        showToast("Razorpay SDK not loaded. Please check your connection.");
-        return;
-      }
-
-      // 1. Create order on backend
-      const { data: orderData } = await api.post("/api/billing/create-order", { planId });
-
-      // 2. Open Razorpay Checkout
-      const options = {
-        key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "HydroSphere",
-        description: `Upgrade to ${planLabel(planId)} Plan`,
-        order_id: orderData.orderId,
-        handler: async function (response) {
-          try {
-            // 3. Verify payment on backend
-            await api.post("/api/billing/verify", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              planId,
-            });
-            showToast("Payment successful! Your plan has been upgraded.", "success");
-            reload(); // Re-trigger the useEffect cleanly
-          } catch (verifyErr) {
-            showToast(verifyErr?.response?.data?.message || "Payment verification failed", "error");
-          }
-        },
-        prefill: {
-          name: user?.name,
-          email: user?.email,
-          contact: user?.phone || "",
-        },
-        theme: {
-          color: "#0d6efd",
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response){
-        showToast(`Payment Failed: ${response.error.description}`, "error");
-      });
-      rzp.open();
+      setCheckoutLoading(planId);
+      const { data: session } = await api.post("/api/billing/create-checkout-session", { planId });
+      const stripe = await stripePromise;
+      await stripe.redirectToCheckout({ sessionId: session.id });
     } catch (err) {
       showToast(err?.response?.data?.message || "Failed to start checkout", "error");
+    } finally {
+      setCheckoutLoading(null);
     }
   };
 
-  if (user?.role !== "seller") {
+  if (user?.role !== "supplier") {
     return (
       <div className="bg-white rounded-4 shadow-sm border p-4">
         <h5 className="fw-bold mb-1">Billing</h5>
-        <p className="text-muted mb-0">Supplier subscriptions apply only to seller accounts.</p>
+        <p className="text-muted mb-0">Supplier subscriptions apply only to supplier accounts.</p>
       </div>
     );
   }
@@ -137,13 +82,13 @@ export default function Billing() {
         <div>
           <h6 className="fw-bold mb-0 text-dark">Subscription & Billing</h6>
           <p className="text-secondary mb-0" style={{ fontSize: "0.75rem" }}>
-            Current plan: <span className="fw-semibold">{planLabel(user?.plan)}</span>
+            Current plan: <span className="fw-semibold">{user?.plan || "none"}</span>
           </p>
         </div>
       </div>
 
       <div className="p-4">
-        <div className="alert alert-light border d-flex justify-content-between align-items-center">
+        <div className="alert alert-light border d-flex justify-content-between align-items-center mb-4">
           <div>
             <div className="fw-semibold text-dark">Status</div>
             <div className="text-muted small">
@@ -161,33 +106,26 @@ export default function Billing() {
           </button>
         </div>
 
-        <div className="row g-3">
+        <div className="row g-4">
           {plans
-            .filter((p) => p.id !== "free")
+            .filter((p) => p.id !== "none")
             .map((p) => (
-              <div key={p.id} className="col-12 col-lg-6">
-                <div className="border rounded-4 p-4 h-100">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h5 className="fw-bold mb-1">{p.name}</h5>
-                      <div className="text-muted small mb-2">
-                        Listings: {p.listingsLimit == null ? "Unlimited" : p.listingsLimit} • Leads/month:{" "}
-                        {p.leadsLimitPerMonth == null ? "Unlimited" : p.leadsLimitPerMonth}
-                      </div>
-                      <h4 className="fw-bold mb-3">₹{p.price}</h4>
-                    </div>
-                    {user?.plan === p.id && (
-                      <span className="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
-                        Active
-                      </span>
-                    )}
+              <div key={p.id} className="col-12 col-lg-4">
+                <div className={`border rounded-4 p-4 h-100 ${user?.plan === p.id ? 'border-primary' : ''}`}>
+                  <h5 className="fw-bold mb-1">{p.name}</h5>
+                  <div className="text-muted small mb-3">
+                    Listings: {p.listingsLimit == null ? "Unlimited" : p.listingsLimit} • Leads: {p.leadsLimitPerMonth == null ? "Unlimited" : p.leadsLimitPerMonth}
+                  </div>
+                  <div className="mb-4">
+                    <span className="h3 fw-bold">₹{p.basePrice}</span>
+                    <span className="text-muted small"> + 18% GST</span>
                   </div>
                   <button
-                    className="btn btn-primary rounded-pill px-4 mt-3"
+                    className={`btn w-100 rounded-pill py-2 fw-bold ${user?.plan === p.id ? 'btn-success' : 'btn-primary'}`}
                     onClick={() => startCheckout(p.id)}
-                    disabled={user?.plan === p.id}
+                    disabled={user?.plan === p.id || checkoutLoading === p.id}
                   >
-                    {user?.plan === p.id ? "Current Plan" : `Upgrade to ${p.name}`}
+                    {checkoutLoading === p.id ? "Processing..." : user?.plan === p.id ? "Current Plan" : `Upgrade`}
                   </button>
                 </div>
               </div>

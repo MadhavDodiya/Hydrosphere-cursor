@@ -42,8 +42,8 @@ export default function Topbar({ toggleSidebar }) {
           />
         </div>
 
-        {/* Add listing shortcut (sellers only) */}
-        {user?.role === "seller" && (
+        {/* Add listing shortcut (suppliers only) */}
+        {user?.role === "supplier" && (
           <Link to="/add-listing" className="btn btn-sm fw-semibold d-none d-md-inline-flex align-items-center gap-2"
             style={{ borderRadius: "10px", background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "white", border: "none", fontSize: "0.8rem", padding: "0.4rem 0.9rem", boxShadow: "0 4px 10px rgba(37,99,235,0.25)" }}>
             <i className="bi bi-plus-lg"></i> New Listing

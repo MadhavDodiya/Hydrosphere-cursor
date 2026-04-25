@@ -12,15 +12,15 @@ export default function SupplierVerification() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchPendingSellers = async () => {
+  const fetchPendingSuppliers = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/api/admin/users", { params: { role: "seller", limit: 50 } });
-      // Show sellers who are NOT yet approved (pending admin action)
+      const res = await api.get("/api/admin/users", { params: { role: "supplier", limit: 50 } });
+      // Show suppliers who are NOT yet approved (pending admin action)
       const pending = res.data.users.filter(u => !u.isApproved);
       setSuppliers(pending);
     } catch (err) {
-      console.error("Error fetching pending sellers:", err);
+      console.error("Error fetching pending suppliers:", err);
       showToast("Failed to load suppliers", "danger");
     } finally {
       setLoading(false);
@@ -28,7 +28,7 @@ export default function SupplierVerification() {
   };
 
   useEffect(() => {
-    fetchPendingSellers();
+    fetchPendingSuppliers();
   }, []);
 
   const handleApprove = async (userId) => {
@@ -36,7 +36,7 @@ export default function SupplierVerification() {
     try {
       await api.put(`/api/admin/users/${userId}/approve`);
       showToast("Supplier approved! They can now create listings. ✅");
-      fetchPendingSellers();
+      fetchPendingSuppliers();
     } catch (err) {
       showToast("Approval failed. Please try again.", "danger");
     } finally {
@@ -49,7 +49,7 @@ export default function SupplierVerification() {
     try {
       await api.put(`/api/admin/users/${userId}/verify`);
       showToast("Supplier fully verified with badge! 🏅");
-      fetchPendingSellers();
+      fetchPendingSuppliers();
     } catch (err) {
       showToast("Verification failed. Please try again.", "danger");
     } finally {

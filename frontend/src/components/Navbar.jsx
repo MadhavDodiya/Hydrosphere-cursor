@@ -104,7 +104,7 @@ export default function Navbar() {
                         <i className="bi bi-shield-lock-fill text-danger" /> Admin Panel
                       </NavLink>
                     )}
-                    {user?.role === "seller" && (
+                    {user?.role === "supplier" && (
                       <NavLink to="/add-listing" className="hs-dropdown-item" onClick={close}>
                         <i className="bi bi-plus-circle" /> Add Listing
                       </NavLink>
@@ -166,7 +166,7 @@ export default function Navbar() {
                 <NavLink to="/dashboard" className="hs-mobile-btn-outline" onClick={close}>
                   <i className="bi bi-columns-gap me-2" />Dashboard
                 </NavLink>
-                {user?.role === "seller" && (
+                {user?.role === "supplier" && (
                   <NavLink to="/add-listing" className="hs-mobile-btn-outline" onClick={close}>
                     <i className="bi bi-plus-circle me-2" />Add Listing
                   </NavLink>

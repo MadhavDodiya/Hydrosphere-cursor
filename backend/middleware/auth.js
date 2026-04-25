@@ -55,10 +55,10 @@ export async function authenticate(req, res, next) {
 }
 
 /**
- * Ensures the authenticated user is a seller.
+ * Ensures the authenticated user is a supplier.
  */
-export function requireSeller(req, res, next) {
-  return authorizeRoles("seller")(req, res, next);
+export function requireSupplier(req, res, next) {
+  return authorizeRoles("supplier")(req, res, next);
 }
 
 /**

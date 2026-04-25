@@ -26,10 +26,10 @@ For a MERN stack application, I recommend the following "Production-Grade" servi
 Before launching, you MUST configure these 3rd-party services:
 
 1.  **Media (Cloudinary)**: Ensure you have your `CLOUD_NAME`, `API_KEY`, and `API_SECRET`. This is vital for listing images.
-2.  **Payments (Razorpay)**: 
+2.  **Payments (Stripe)**: 
     *   Switch to **Live Mode**.
-    *   Update your Keys.
-    *   Configure a **Webhook** in Razorpay pointing to `https://your-api.com/api/billing/webhook` (if you implement automated renewals later).
+    *   Update your Keys (`STRIPE_SECRET_KEY`).
+    *   Configure a **Webhook** in Stripe pointing to `https://your-api.com/api/billing/webhook`.
 3.  **Emails (SMTP)**: 
     *   Use a professional provider like **SendGrid**, **Amazon SES**, or **Postmark**.
     *   Avoid using a personal Gmail for large volumes; use a dedicated domain email (e.g., `notifications@hydrosphere.com`).
@@ -55,7 +55,7 @@ Before launching, you MUST configure these 3rd-party services:
 
 ### **Step 4: Internal Beta**
 - Invite 2-3 trusted partners or colleagues to use the platform.
-- Have them perform a full "Buyer Journey" (Search -> Inquire) and "Seller Journey" (List -> Pay -> Upgrade).
+- Have them perform a full "Buyer Journey" (Search -> Inquire) and "Supplier Journey" (List -> Pay -> Upgrade).
 - Collect feedback on the mobile responsiveness and email notifications.
 
 ### **Step 5: Public Launch**

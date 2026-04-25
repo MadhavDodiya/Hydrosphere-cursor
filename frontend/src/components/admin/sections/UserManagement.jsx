@@ -85,7 +85,7 @@ export default function UserManagement() {
                 >
                   <option value="All">All Roles</option>
                   <option>Buyer</option>
-                  <option>Seller</option>
+                  <option>Supplier</option>
                   <option>Admin</option>
                 </select>
                 <div className="position-relative">
@@ -142,7 +142,7 @@ export default function UserManagement() {
                         onChange={(e) => handleRoleChange(u._id, e.target.value)}
                       >
                         <option value="buyer">Buyer</option>
-                        <option value="seller">Seller</option>
+                        <option value="supplier">Supplier</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>

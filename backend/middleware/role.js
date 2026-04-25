@@ -2,7 +2,7 @@
  * Role-based authorization middleware.
  *
  * Usage:
- *   router.get("/path", authenticate, authorizeRoles("seller", "admin"), handler)
+ *   router.get("/path", authenticate, authorizeRoles("supplier", "admin"), handler)
  */
 export function authorizeRoles(...allowedRoles) {
   const allowed = new Set(allowedRoles.flat().filter(Boolean));

@@ -22,7 +22,7 @@ export default function SpecificationTable({ listing }) {
     { label: "Production Site", value: listing.location || "—" },
     { label: "Production Capacity", value: listing.productionCapacity || "—" },
     { label: "Delivery", value: listing.deliveryAvailability || "—" },
-    { label: "Supplier Verification", value: listing.seller?.isVerified
+    { label: "Supplier Verification", value: listing.supplier?.isVerified
       ? <span className="text-success fw-semibold"><i className="bi bi-patch-check-fill me-1"></i>Verified Supplier</span>
       : <span className="text-muted"><i className="bi bi-hourglass-split me-1"></i>Pending Verification</span>
     },

@@ -1,7 +1,5 @@
 /**
  * Seed script: demo users, listings, and one saved bookmark.
- * Run: npm run seed (from backend/). Requires .env with MONGODB_URI.
- * WARNING: Deletes ALL users, listings, and saved rows in the database.
  */
 import "../config/env.js";
 import bcrypt from "bcryptjs";
@@ -32,19 +30,21 @@ async function seed() {
     emailVerified: true,
   });
 
-  const seller = await User.create({
-    name: "Sam Seller",
-    email: "seller@hydrosphere.demo",
+  const supplier = await User.create({
+    name: "Sam Supplier",
+    email: "supplier@hydrosphere.demo",
     password: passwordHash,
-    role: "seller",
+    role: "supplier",
     emailVerified: true,
+    isApproved: true,
     isVerified: true,
-    plan: "free",
+    plan: "Basic",
+    subscriptionStatus: "active",
   });
 
   const listings = await Listing.insertMany([
     {
-      seller: seller._id,
+      supplier: supplier._id,
       title: "Nordic Green H2 AS",
       companyName: "Nordic Green H2 AS",
       hydrogenType: "Green",
@@ -54,9 +54,10 @@ async function seed() {
       purity: 99.9,
       description:
         "Electrolysis-based green hydrogen from wind. ISO-certified, weekly delivery slots available for industrial buyers.",
+      status: "approved",
     },
     {
-      seller: seller._id,
+      supplier: supplier._id,
       title: "Gulf Coast Hydrogen Co.",
       companyName: "Gulf Coast Hydrogen Co.",
       hydrogenType: "Blue",
@@ -66,18 +67,7 @@ async function seed() {
       purity: 99.5,
       description:
         "Blue hydrogen with carbon capture. Suitable for refineries and ammonia plants. FOB pricing.",
-    },
-    {
-      seller: seller._id,
-      title: "EuroChem Supply",
-      companyName: "EuroChem Supply",
-      hydrogenType: "Grey",
-      price: 2.4,
-      quantity: 800,
-      location: "Rotterdam, Netherlands",
-      purity: 98.0,
-      description:
-        "Steam methane reforming supply for short-term contracts. Transition pathway to lower-carbon options.",
+      status: "approved",
     },
   ]);
 
@@ -88,7 +78,7 @@ async function seed() {
 
   console.log("\nHydroSphere seed complete.");
   console.log("  buyer@hydrosphere.demo  / password123  (role: buyer)");
-  console.log("  seller@hydrosphere.demo / password123  (role: seller)");
+  console.log("  supplier@hydrosphere.demo / password123  (role: supplier)");
   console.log(`  Created ${listings.length} listings; buyer saved the first one.\n`);
 
   process.exit(0);

@@ -14,7 +14,7 @@ export const fetchListings = async (params = {}) => {
 };
 
 /**
- * Fetch seller's own listings
+ * Fetch supplier's own listings
  */
 export const fetchMyListings = async () => {
   try {
@@ -40,7 +40,7 @@ export const fetchListingById = async (id) => {
 };
 
 /**
- * Create new listing (Seller only)
+ * Create new listing (Supplier only)
  */
 export const createListing = async (formData) => {
   try {

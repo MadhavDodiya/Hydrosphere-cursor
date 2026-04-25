@@ -17,7 +17,7 @@ export async function getSavedListings(req, res) {
       SavedListing.find(filter)
         .populate({
           path: "listing",
-          populate: { path: "seller", select: "name email role" },
+          populate: { path: "supplier", select: "name email role" },
         })
         .sort({ createdAt: -1 })
         .skip(skip)

@@ -31,7 +31,7 @@ export default function Dashboard({ section = "overview" }) {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const endpoint = user?.role === "seller" ? "/api/seller/stats" : "/api/users/stats";
+        const endpoint = user?.role === "supplier" ? "/api/supplier/stats" : "/api/users/stats";
         const { data } = await api.get(endpoint);
         if (!cancelled) setStats(data);
       } catch (err) {
@@ -53,7 +53,7 @@ export default function Dashboard({ section = "overview" }) {
   const renderOverview = () => (
     <>
       {/* Unapproved Supplier Banner */}
-      {user?.role === 'seller' && !user?.isApproved && (
+      {user?.role === 'supplier' && !user?.isApproved && (
         <div className="alert alert-warning d-flex align-items-center gap-3 rounded-4 mb-4 border-0 shadow-sm">
           <i className="bi bi-hourglass-split fs-4 flex-shrink-0"></i>
           <div>
@@ -65,7 +65,7 @@ export default function Dashboard({ section = "overview" }) {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3 className="fw-bold text-dark mb-1">Welcome back, {user?.name || 'User'}!</h3>
-          <p className="text-secondary mb-0">Here's what is happening with your {user?.role === 'seller' ? 'store' : 'account'} today.</p>
+          <p className="text-secondary mb-0">Here's what is happening with your {user?.role === 'supplier' ? 'store' : 'account'} today.</p>
         </div>
         <button className="btn btn-primary shadow-sm d-none d-md-block px-4 fw-medium">
           <i className="bi bi-cloud-download pe-2"></i>Export Report
@@ -77,8 +77,8 @@ export default function Dashboard({ section = "overview" }) {
         <div className="col-12 col-sm-6 col-xl-3">
           <StatsCard 
             loading={loading} 
-            title={user?.role === 'seller' ? "Total Leads" : "Sent Inquiries"} 
-            value={user?.role === 'seller' ? stats?.totalLeads : stats?.totalInquiries || "0"} 
+            title={user?.role === 'supplier' ? "Total Leads" : "Sent Inquiries"} 
+            value={user?.role === 'supplier' ? stats?.totalLeads : stats?.totalInquiries || "0"} 
             trend="+10%" 
             icon="bi-people" 
             colorClass="primary" 
@@ -87,8 +87,8 @@ export default function Dashboard({ section = "overview" }) {
         <div className="col-12 col-sm-6 col-xl-3">
           <StatsCard 
             loading={loading} 
-            title={user?.role === 'seller' ? "Active Listings" : "Saved Listings"} 
-            value={user?.role === 'seller' ? stats?.activeListings : stats?.totalSaved || "0"} 
+            title={user?.role === 'supplier' ? "Active Listings" : "Saved Listings"} 
+            value={user?.role === 'supplier' ? stats?.activeListings : stats?.totalSaved || "0"} 
             trend="+5%" 
             icon="bi-card-list" 
             colorClass="success" 
@@ -97,8 +97,8 @@ export default function Dashboard({ section = "overview" }) {
         <div className="col-12 col-sm-6 col-xl-3">
           <StatsCard 
             loading={loading} 
-            title={user?.role === 'seller' ? "New Today" : "Market Listings"} 
-            value={user?.role === 'seller' ? stats?.newLeadsToday : stats?.marketListings || "0"} 
+            title={user?.role === 'supplier' ? "New Today" : "Market Listings"} 
+            value={user?.role === 'supplier' ? stats?.newLeadsToday : stats?.marketListings || "0"} 
             trend="+2%" 
             icon="bi-chat-dots" 
             colorClass="warning" 
@@ -107,9 +107,9 @@ export default function Dashboard({ section = "overview" }) {
         <div className="col-12 col-sm-6 col-xl-3">
           <StatsCard 
             loading={loading} 
-            title={user?.role === 'seller' ? "Total Listings" : "Account Status"} 
-            value={user?.role === 'seller' ? (stats?.totalListings || "0") : "Active"} 
-            trend={user?.role === 'seller' ? "+0%" : "Verified"} 
+            title={user?.role === 'supplier' ? "Total Listings" : "Account Status"} 
+            value={user?.role === 'supplier' ? (stats?.totalListings || "0") : "Active"} 
+            trend={user?.role === 'supplier' ? "+0%" : "Verified"} 
             icon="bi-box" 
             colorClass="info" 
           />
@@ -129,7 +129,7 @@ export default function Dashboard({ section = "overview" }) {
       {/* Conditional bottom content */}
       <div className="row">
         <div className="col-12">
-          {user?.role === 'seller' ? (
+          {user?.role === 'supplier' ? (
             <LeadsTable loading={loading} />
           ) : (
             <BuyerInquiries />

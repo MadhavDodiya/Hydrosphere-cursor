@@ -22,11 +22,12 @@ Ensure your Cloudinary account is configured for production:
 - [ ] Verify **CLOUDINARY_CLOUD_NAME**, **API_KEY**, and **API_SECRET** are set.
 - [ ] (Optional) Set a custom upload folder in your Cloudinary dashboard to separate Dev and Prod assets.
 
-## 4. Payments (Razorpay)
+## 4. Payments (Stripe)
 Switch from Test to Live mode:
-- [ ] Generate **Live Keys** in your Razorpay Dashboard.
-- [ ] Update **RAZORPAY_KEY_ID** and **RAZORPAY_KEY_SECRET**.
-- [ ] Ensure your account is "Activated" on Razorpay to accept real payments.
+- [ ] Generate **Live Keys** in your Stripe Dashboard.
+- [ ] Update **STRIPE_SECRET_KEY**.
+- [ ] Set up a **Webhook Endpoint** in Stripe Dashboard pointing to `https://your-api.com/api/billing/webhook`.
+- [ ] Update **STRIPE_WEBHOOK_SECRET** in `.env` with the signing secret from the Stripe dashboard.
 
 ## 5. Security & HTTPS
 - [ ] **Enable SSL/TLS**: Ensure your frontend and backend are served over `https://`.

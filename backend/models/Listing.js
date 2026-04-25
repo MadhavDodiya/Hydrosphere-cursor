@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const HYDROGEN_TYPES = ["Green", "Blue", "Grey"];
 
 /**
- * Hydrogen listing — owned by a seller.
+ * Hydrogen listing — owned by a supplier.
  * createdAt / updatedAt come from { timestamps: true }.
  */
 const listingSchema = new mongoose.Schema(
   {
-    seller: {
+    supplier: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -78,7 +78,7 @@ listingSchema.virtual("displayName").get(function () {
 });
 
 listingSchema.index({ status: 1, createdAt: -1 });
-listingSchema.index({ seller: 1, createdAt: -1 });
+listingSchema.index({ supplier: 1, createdAt: -1 });
 listingSchema.index({ location: 1 });
 listingSchema.index({ hydrogenType: 1 }); // Required for hydrogen type filtering
 

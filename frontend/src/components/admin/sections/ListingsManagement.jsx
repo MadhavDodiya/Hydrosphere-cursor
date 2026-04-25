@@ -123,7 +123,7 @@ export default function ListingsManagement() {
                         <div className="fw-bold text-dark mb-1" style={{ fontSize: "0.9rem" }}>{l.companyName}</div>
                         <div className="d-flex align-items-center gap-2">
                            <span className="badge bg-light text-muted border fw-normal" style={{ fontSize: "0.65rem" }}>{l.hydrogenType} H2</span>
-                           <span className="text-muted small">by {l.seller?.name || "Deleted User"}</span>
+                           <span className="text-muted small">by {l.supplier?.name || "Deleted User"}</span>
                         </div>
                       </div>
                     </td>

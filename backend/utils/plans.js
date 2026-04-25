@@ -1,26 +1,29 @@
 export const PLANS = {
-  free: {
-    id: "free",
-    name: "Free",
-    listingsLimit: 3,
-    leadsLimitPerMonth: 10,
+  Basic: {
+    id: "Basic",
+    name: "Basic",
+    basePrice: 1000, // Monthly base price in INR
+    listingsLimit: 10,
+    leadsLimitPerMonth: 20,
   },
-  pro_supplier: {
-    id: "pro_supplier",
+  Pro: {
+    id: "Pro",
     name: "Pro",
+    basePrice: 5000,
     listingsLimit: 50,
     leadsLimitPerMonth: null, // unlimited
   },
-  enterprise: {
-    id: "enterprise",
+  Enterprise: {
+    id: "Enterprise",
     name: "Enterprise",
+    basePrice: 15000,
     listingsLimit: null, // unlimited
     leadsLimitPerMonth: null, // unlimited
   },
 };
 
 export function getPlan(planId) {
-  return PLANS[planId] || PLANS.free;
+  return PLANS[planId] || { id: "none", name: "No Plan", basePrice: 0 };
 }
 
 export function getEffectiveLimits({ planId, listingLimitOverride, leadLimitOverride }) {
@@ -28,8 +31,8 @@ export function getEffectiveLimits({ planId, listingLimitOverride, leadLimitOver
   return {
     plan,
     listingsLimit:
-      typeof listingLimitOverride === "number" ? listingLimitOverride : plan.listingsLimit,
+      typeof listingLimitOverride === "number" ? listingLimitOverride : (plan.listingsLimit || 0),
     leadsLimitPerMonth:
-      typeof leadLimitOverride === "number" ? leadLimitOverride : plan.leadsLimitPerMonth,
+      typeof leadLimitOverride === "number" ? leadLimitOverride : (plan.leadsLimitPerMonth || 0),
   };
 }

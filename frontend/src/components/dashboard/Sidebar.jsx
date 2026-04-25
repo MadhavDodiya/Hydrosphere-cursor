@@ -6,7 +6,7 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const sellerMenu = [
+  const supplierMenu = [
     { name: "Supplier Dashboard", icon: "bi-grid-1x2-fill",  link: "/dashboard" },
     { name: "My Listings",      icon: "bi-card-list",       link: "/dashboard/my-listings" },
     { name: "Leads Received",   icon: "bi-inbox-fill",      link: "/dashboard/leads", badge: stats?.newLeadsToday },
@@ -22,7 +22,7 @@ export default function Sidebar({ mobileOpen, closeMobileSidebar, stats }) {
     { name: "Marketplace",     icon: "bi-shop",            link: "/marketplace" },
   ];
 
-  const menuItems = user?.role === "seller" ? sellerMenu : buyerMenu;
+  const menuItems = user?.role === "supplier" ? supplierMenu : buyerMenu;
 
   return (
     <>

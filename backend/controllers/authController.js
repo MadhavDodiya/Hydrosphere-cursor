@@ -67,7 +67,7 @@ function publicUser(user) {
 }
 
 /**
- * Register a new buyer or seller.
+ * Register a new buyer or supplier.
  */
 export async function register(req, res) {
   try {
@@ -78,8 +78,7 @@ export async function register(req, res) {
     }
 
     const trimmedName = String(name).trim();
-    const normalizedRole = role === "supplier" ? "seller" : role;
-    if (!["buyer", "seller"].includes(normalizedRole)) {
+    if (!["buyer", "supplier"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
 
@@ -98,8 +97,8 @@ export async function register(req, res) {
       name: trimmedName,
       email: email.toLowerCase(),
       password: hashed,
-      role: normalizedRole,
-      businessRegistrationNumber: normalizedRole === "seller" ? String(businessRegistrationNumber || "").trim() : "",
+      role: role,
+      businessRegistrationNumber: role === "supplier" ? String(businessRegistrationNumber || "").trim() : "",
       emailVerified: false,
       emailVerificationToken: verificationTokenHash,
       emailVerificationExpires: verificationExpires,

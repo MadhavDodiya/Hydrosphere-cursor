@@ -1,182 +1,147 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { loadStripe } from "@stripe/stripe-js";
+import axios from "axios";
 import Footer from "../components/Footer.jsx";
 import "./Pricing.css";
 
-export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState("monthly"); // 'monthly', 'yearly'
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-  const handleCTA = () => {
-    if (isAuthenticated) {
-      navigate("/dashboard/billing");
-    } else {
-      navigate("/signup");
-    }
+export default function Pricing() {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(null);
+
+  const calculatePrice = (basePrice) => {
+    const gst = basePrice * 0.18;
+    const total = basePrice + gst;
+    return { basePrice, gst, total };
   };
 
-  // Prices in INR (₹)
   const plans = [
     {
-      id: "free",
-      name: "Free",
-      description: "Ideal for buyers and new suppliers",
-      price: {
-        monthly: 0,
-        yearly: 0,
-      },
+      id: "Basic",
+      name: "Basic",
+      basePrice: 1000,
+      description: "Essential features for small suppliers",
       features: [
-        "Up to 3 active listings",
-        "10 buyer leads per month",
-        "Community support",
-        "Basic analytics"
+        "10 Active Listings",
+        "20 Inquiries per month",
+        "Email Support",
+        "Basic Profile Visibility"
       ],
-      notIncluded: [
-        "Verified Supplier badge",
-        "Unlimited listings",
-        "Priority support"
-      ]
     },
     {
-      id: "pro_supplier",
-      name: "Pro Supplier",
-      description: "For growing hydrogen businesses",
+      id: "Pro",
+      name: "Pro",
+      basePrice: 5000,
+      description: "Advanced tools for growing suppliers",
       isPopular: true,
-      price: {
-        monthly: 499,
-        yearly: 5499, // price per month when billed annually
-      },
       features: [
-        "Up to 50 active listings",
-        "Unlimited buyer leads",
-        "Verified Supplier badge",
-        "Advanced analytics dashboard",
-        "Priority email support"
+        "50 Active Listings",
+        "Unlimited Inquiries",
+        "Priority Support",
+        "Verified Supplier Badge",
+        "Featured in Search Results"
       ],
-      notIncluded: [
-        "Dedicated account manager",
-        "Custom API integration"
-      ]
     },
     {
-      id: "enterprise",
+      id: "Enterprise",
       name: "Enterprise",
-      description: "Maximum visibility and volume",
-      price: {
-        monthly: 999,
-        yearly: 11999,
-      },
+      basePrice: 15000,
+      description: "Full power for large hydrogen plants",
       features: [
-        "Unlimited active listings",
-        "Unlimited buyer leads",
-        "Verified Supplier badge",
-        "Enterprise analytics suite",
-        "Priority 24/7 phone support",
-        "Dedicated account manager",
-        "Custom API integration"
+        "Unlimited Listings",
+        "Unlimited Inquiries",
+        "Dedicated Account Manager",
+        "API Access",
+        "Custom Branding"
       ],
-      notIncluded: []
-    }
+    },
   ];
 
-  // Helper to calculate slider position
-  const getSliderTransform = () => {
-    return billingCycle === "monthly" ? "translateX(0%)" : "translateX(100%)";
+  const handleSubscribe = async (planId) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (user?.role !== "supplier") {
+      alert("Only suppliers can subscribe to plans.");
+      return;
+    }
+
+    try {
+      setLoading(planId);
+      const response = await axios.post("/api/billing/create-checkout-session", { planId });
+      const stripe = await stripePromise;
+      await stripe.redirectToCheckout({ sessionId: response.data.id });
+    } catch (err) {
+      console.error("Subscription error:", err);
+      alert("Failed to initiate checkout. Please try again.");
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
     <div className="hs-pricing-page">
-      <div className="container">
+      <div className="container py-5">
         <div className="text-center mb-5">
-          <div className="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill fw-bold" style={{ letterSpacing: '0.1em' }}>
-            PRICING PLANS
-          </div>
-          <h1 className="hs-pricing-title">
-            Simple, transparent <span className="hs-accent">pricing</span>
-          </h1>
-          <p className="text-muted fs-5 mx-auto" style={{ maxWidth: "600px" }}>
-            Choose the perfect plan to accelerate your hydrogen business. No hidden fees. Cancel anytime.
-          </p>
+          <h1 className="display-4 fw-bold mb-3">Simple, Transparent <span className="text-primary">Pricing</span></h1>
+          <p className="lead text-muted">Accelerate your hydrogen business with the right plan.</p>
         </div>
 
-        {/* Toggle Switch */}
-        <div className="d-flex justify-content-center mb-5">
-          <div className="hs-pricing-toggle" style={{ width: "fit-content" }}>
-            <div className="hs-toggle-slider" style={{ transform: getSliderTransform(), width: "calc(50% - 0.7rem)" }}></div>
-            <button 
-              className={`hs-toggle-btn ${billingCycle === "monthly" ? "active" : ""}`}
-              onClick={() => setBillingCycle("monthly")}
-              style={{ width: "120px" }}
-            >
-              Monthly
-            </button>
-            <button 
-              className={`hs-toggle-btn ${billingCycle === "yearly" ? "active" : ""}`}
-              onClick={() => setBillingCycle("yearly")}
-              style={{ width: "120px" }}
-            >
-              Yearly
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: "0.6rem" }}>
-                -25%
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
         <div className="row g-4 justify-content-center">
-          {plans.map((plan) => (
-            <div key={plan.id} className="col-12 col-md-6 col-lg-4">
-              <div className={`hs-pricing-card h-100 d-flex flex-column ${plan.isPopular ? "popular" : ""}`}>
-                {plan.isPopular && <div className="hs-popular-badge">Most Popular</div>}
-                
-                <h3 className="h4 fw-bold mb-2">{plan.name}</h3>
-                <p className="text-muted small mb-0">{plan.description}</p>
-                
-                <div className="hs-price">
-                  <span className="hs-price-currency">₹</span>
-                  {plan.price[billingCycle].toLocaleString("en-IN")}
-                  {plan.price[billingCycle] > 0 && (
-                    <span className="hs-price-period">/{billingCycle.replace('ly', '')}</span>
-                  )}
+          {plans.map((plan) => {
+            const { basePrice, gst, total } = calculatePrice(plan.basePrice);
+            return (
+              <div key={plan.id} className="col-lg-4">
+                <div className={`card h-100 border-0 shadow-sm ${plan.isPopular ? 'border-primary border-top border-4' : ''}`}>
+                  <div className="card-body p-5">
+                    {plan.isPopular && <div className="badge bg-primary mb-3">Most Popular</div>}
+                    <h3 className="card-title fw-bold">{plan.name}</h3>
+                    <p className="text-muted small">{plan.description}</p>
+                    
+                    <div className="my-4">
+                      <div className="d-flex align-items-baseline">
+                        <span className="h4 mb-0">₹</span>
+                        <span className="display-5 fw-bold">{basePrice}</span>
+                        <span className="text-muted ms-2">/ month</span>
+                      </div>
+                      <div className="small text-muted mt-2">
+                        + ₹{gst} GST (18%)
+                      </div>
+                      <div className="h5 fw-bold text-primary mt-1">
+                        Total: ₹{total}
+                      </div>
+                    </div>
+
+                    <button 
+                      className={`btn w-100 py-3 rounded-pill fw-bold ${plan.isPopular ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={loading === plan.id}
+                    >
+                      {loading === plan.id ? "Processing..." : `Upgrade to ${plan.name}`}
+                    </button>
+
+                    <ul className="list-unstyled mt-4 mb-0">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="mb-3 d-flex align-items-center">
+                          <i className="bi bi-check-circle-fill text-success me-3"></i>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-
-                <button 
-                  className={`btn w-100 py-3 rounded-pill fw-bold ${plan.isPopular ? "btn-primary" : "btn-outline-primary"}`}
-                  onClick={handleCTA}
-                >
-                  {plan.price[billingCycle] === 0 ? "Get Started for Free" : "Upgrade to " + plan.name}
-                </button>
-
-                <ul className="hs-feature-list flex-grow-1">
-                  {plan.features.map((feat, i) => (
-                    <li key={i} className="hs-feature-item">
-                      <span className="hs-feature-icon">
-                        <i className="bi bi-check" style={{ fontSize: "1.2rem" }}></i>
-                      </span>
-                      {feat}
-                    </li>
-                  ))}
-                  {plan.notIncluded.map((feat, i) => (
-                    <li key={`not-${i}`} className="hs-feature-item text-muted">
-                      <span className="hs-feature-icon disabled">
-                        <i className="bi bi-x" style={{ fontSize: "1.2rem" }}></i>
-                      </span>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
-      
-      <div className="mt-5 pt-5">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

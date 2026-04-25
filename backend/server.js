@@ -16,7 +16,7 @@ import inquiryRoutes from "./routes/inquiryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
-import sellerRoutes from "./routes/sellerRoutes.js";
+import supplierRoutes from "./routes/supplierRoutes.js";
 import billingRoutes from "./routes/billingRoutes.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -92,6 +92,10 @@ const corsOptions =
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
+// Stripe Webhook: Needs raw body for signature verification
+import { handleWebhook } from "./controllers/billingController.js";
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), handleWebhook);
+
 app.use(express.json({ limit: "1mb" }));
 // Prevent NoSQL injection ($ operators) from request inputs
 app.use(
@@ -107,7 +111,7 @@ app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contacts", contactRoutes);
-app.use("/api/seller", sellerRoutes);
+app.use("/api/supplier", supplierRoutes);
 app.use("/api/billing", billingRoutes);
 
 app.get("/api/health", (_req, res) => {

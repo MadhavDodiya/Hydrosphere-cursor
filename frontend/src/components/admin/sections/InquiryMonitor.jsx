@@ -12,7 +12,6 @@ export default function InquiryMonitor() {
     try {
       setLoading(true);
       const res = await api.get("/api/admin/inquiries");
-      // Bug fix: backend now returns paginated { data, total } object instead of a plain array
       setInquiries(res.data?.data || res.data || []);
     } catch (err) {
       console.error("Error fetching inquiries:", err);
@@ -50,7 +49,7 @@ export default function InquiryMonitor() {
       <div className="card border-0 shadow-sm rounded-4">
         <div className="card-header bg-transparent p-4 border-0">
           <h5 className="fw-bold mb-0">Platform Communication Log</h5>
-          <p className="text-muted small mb-0">Monitor inquiries between buyers and sellers for security and compliance.</p>
+          <p className="text-muted small mb-0">Monitor inquiries between buyers and suppliers for security and compliance.</p>
         </div>
 
         <div className="card-body p-0">
@@ -75,7 +74,7 @@ export default function InquiryMonitor() {
                     <td className="px-4 py-3">
                        <div className="d-flex flex-column small">
                           <span className="fw-bold text-dark">Buyer: {inq.buyerId?.name || inq.name}</span>
-                          <span className="text-muted">Seller: {inq.sellerId?.name || "Multiple"}</span>
+                          <span className="text-muted">Supplier: {inq.supplierId?.name || "Multiple"}</span>
                        </div>
                     </td>
                     <td className="py-3">

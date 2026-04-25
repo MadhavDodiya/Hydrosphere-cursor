@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 /**
- * Application user — buyer or seller (bookmarks live in SavedListing model).
+ * Application user — buyer or supplier (bookmarks live in SavedListing model).
  */
 const userSchema = new mongoose.Schema(
   {
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["buyer", "seller", "admin"],
+      enum: ["buyer", "supplier", "admin"],
       default: "buyer",
       required: true,
     },
@@ -66,7 +66,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // Industry Specific: Seller Verification
+    // Industry Specific: Supplier Verification
     businessRegistrationNumber: {
       type: String,
       trim: true,
@@ -83,11 +83,11 @@ const userSchema = new mongoose.Schema(
       index: true, // Indexed for fast admin approval queue queries
     },
 
-    // SaaS subscription (seller-focused; buyers can remain "free")
+    // SaaS subscription (supplier-focused; buyers can remain "free")
     plan: {
       type: String,
-      enum: ["free", "pro_supplier", "enterprise"],
-      default: "free",
+      enum: ["none", "Basic", "Pro", "Enterprise"],
+      default: "none",
       index: true,
     },
     subscriptionStatus: {
@@ -96,19 +96,15 @@ const userSchema = new mongoose.Schema(
       default: "inactive",
       index: true,
     },
-    razorpayCustomerId: {
+    stripeCustomerId: {
       type: String,
       default: "",
       index: true,
     },
-    razorpaySubscriptionId: {
+    stripeSubscriptionId: {
       type: String,
       default: "",
       index: true,
-    },
-    razorpayOrderId: {
-      type: String,
-      default: "",
     },
     subscriptionCurrentPeriodEnd: {
       type: Date,

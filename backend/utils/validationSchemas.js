@@ -9,8 +9,7 @@ export const registerSchema = z.object({
   name: z.string().trim().min(1).max(120),
   email: z.string().trim().toLowerCase().email().max(320),
   password: z.string().min(6).max(200),
-  // Accept "supplier" as an alias of "seller" for API ergonomics.
-  role: z.enum(["buyer", "seller", "supplier"]),
+  role: z.enum(["buyer", "supplier"]),
 });
 
 export const loginSchema = z.object({
@@ -30,8 +29,6 @@ export const resetPasswordSchema = z.object({
 
 export const listingCreateSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  // Backwards-compatible alias (frontend used companyName historically).
-  companyName: z.string().trim().min(1).max(200).optional(),
   hydrogenType: z.enum(["Green", "Blue", "Grey"]),
   price: z.coerce.number().min(0),
   quantity: z.coerce.number().min(0),
@@ -55,5 +52,5 @@ export const inquiryReplySchema = z.object({
 });
 
 export const inquiryStatusSchema = z.object({
-  status: z.enum(["new", "contacted", "closed"]),
+  status: z.enum(["pending", "responded", "closed"]),
 });

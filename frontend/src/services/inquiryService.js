@@ -5,8 +5,8 @@ export async function createInquiry(payload) {
   return data;
 }
 
-export async function fetchSellerInquiries() {
-  const { data } = await api.get("/api/inquiries/seller");
+export async function fetchSupplierInquiries() {
+  const { data } = await api.get("/api/inquiries/supplier");
   return data;
 }
 

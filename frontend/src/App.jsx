@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import SellerRoute from "./components/SellerRoute.jsx";
+import SupplierRoute from "./components/SupplierRoute.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -28,7 +28,6 @@ const AdminRoute = ({ children }) => {
 
 export default function App() {
   const location = useLocation();
-  // Hide global Navbar on dashboard or admin panels
   const hideNav = location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/admin");
 
   return (
@@ -98,17 +97,17 @@ export default function App() {
           <Route
             path="/add-listing"
             element={
-              <SellerRoute>
+              <SupplierRoute>
                 <AddListing />
-              </SellerRoute>
+              </SupplierRoute>
             }
           />
           <Route
             path="/add-listing/:id"
             element={
-              <SellerRoute>
+              <SupplierRoute>
                 <AddListing />
-              </SellerRoute>
+              </SupplierRoute>
             }
           />
           <Route path="/admin" element={<AdminRoute><AdminDashboard section="overview" /></AdminRoute>} />

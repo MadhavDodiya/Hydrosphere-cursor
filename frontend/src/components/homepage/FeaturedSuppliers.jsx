@@ -16,10 +16,10 @@ export default function FeaturedSuppliers() {
         
         const mapped = (res.data || []).map(item => ({
           id: item._id,
-          name: item.companyName,
+          name: item.title || item.companyName,
           location: item.location,
           rating: "4.8", // Featured usually higher
-          price: `$${item.price}/kg`,
+          price: `₹${item.price}/kg`,
           imageUrl: item.images?.[0] || "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
         }));
         

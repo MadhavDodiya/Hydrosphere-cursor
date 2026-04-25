@@ -75,7 +75,7 @@ export default function InquiryModal({ listing, show, onClose }) {
                   <i className="bi bi-check-circle-fill"></i>
                 </div>
                 <h4 className="fw-bold">Inquiry Sent!</h4>
-                <p className="text-muted">Your message has been delivered to the seller. We'll notify you when they respond.</p>
+                <p className="text-muted">Your message has been delivered to the supplier. We'll notify you when they respond.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>

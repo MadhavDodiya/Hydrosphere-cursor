@@ -124,8 +124,8 @@ export default function AdminAnalytics() {
               <tbody style={{ fontSize: "0.875rem" }}>
                 {[
                   { metric: "Total Buyers", value: stats?.totalBuyers, detail: "Registered buyer accounts", ok: true },
-                  { metric: "Total Suppliers", value: stats?.totalSellers, detail: `${stats?.pendingApprovals || 0} pending approval`, ok: (stats?.pendingApprovals || 0) === 0 },
-                  { metric: "Verified Suppliers", value: (stats?.totalSellers || 0) - (stats?.unverifiedSellers || 0), detail: `${stats?.unverifiedSellers || 0} not yet verified`, ok: (stats?.unverifiedSellers || 0) === 0 },
+                  { metric: "Total Suppliers", value: stats?.totalSuppliers, detail: `${stats?.pendingApprovals || 0} pending approval`, ok: (stats?.pendingApprovals || 0) === 0 },
+                  { metric: "Verified Suppliers", value: (stats?.totalSuppliers || 0) - (stats?.unverifiedSuppliers || 0), detail: `${stats?.unverifiedSuppliers || 0} not yet verified`, ok: (stats?.unverifiedSuppliers || 0) === 0 },
                   { metric: "Listings in Review", value: stats?.pendingListings, detail: "Awaiting admin approval", ok: (stats?.pendingListings || 0) === 0 },
                   { metric: "Featured Listings", value: stats?.featuredListings, detail: "Priority marketplace placement", ok: true },
                   { metric: "New Users Today", value: stats?.newUsersToday, detail: "Signed up in the last 24h", ok: true },

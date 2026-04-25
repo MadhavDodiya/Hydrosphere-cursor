@@ -75,15 +75,15 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
                 {inquiry.listingId?.title || inquiry.listingId?.companyName} • {inquiry.listingId?.hydrogenType} Hydrogen
               </p>
             </div>
-            {user?.role === "seller" && (
+            {user?.role === "supplier" && (
               <select
                 className="form-select form-select-sm w-auto me-3"
-                value={inquiry.status || "new"}
+                value={inquiry.status || "pending"}
                 onChange={handleStatusChange}
                 disabled={statusUpdating}
               >
-                <option value="new">new</option>
-                <option value="contacted">contacted</option>
+                <option value="pending">pending</option>
+                <option value="responded">responded</option>
                 <option value="closed">closed</option>
               </select>
             )}
@@ -96,7 +96,7 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
               <div className="d-flex flex-column gap-1 mb-4 align-items-start">
                 <div className="small fw-bold text-muted d-flex align-items-center gap-2">
                   <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, fontSize: "0.7rem" }}>
-                    {inquiry.name[0].toUpperCase()}
+                    {(inquiry.name || "B")[0].toUpperCase()}
                   </div>
                   {inquiry.name} <span style={{ fontSize: "0.65rem", fontWeight: "normal" }}>({new Date(inquiry.createdAt).toLocaleString()})</span>
                 </div>
@@ -107,13 +107,13 @@ export default function InquiryThreadModal({ inquiry, show, onClose, onReplyAdde
 
               {/* Replies */}
               {(inquiry.replies || []).map((reply, idx) => {
-                const isSeller = reply.senderRole === "seller";
-                const isMe = (isSeller && user?.role === "seller") || (!isSeller && user?.role === "buyer");
+                const isSupplier = reply.senderRole === "supplier";
+                const isMe = (isSupplier && user?.role === "supplier") || (!isSupplier && user?.role === "buyer");
                 
                 return (
                   <div key={idx} className={`d-flex flex-column gap-1 mb-4 ${isMe ? "align-items-end" : "align-items-start"}`}>
                     <div className="small fw-bold text-muted">
-                      {isSeller ? "Seller" : inquiry.name} <span style={{ fontSize: "0.65rem", fontWeight: "normal" }}>({new Date(reply.createdAt).toLocaleString()})</span>
+                      {isSupplier ? "Supplier" : inquiry.name} <span style={{ fontSize: "0.65rem", fontWeight: "normal" }}>({new Date(reply.createdAt).toLocaleString()})</span>
                     </div>
                     <div 
                       className={`p-3 rounded-3 shadow-sm ${isMe ? "bg-primary text-white" : "bg-white border"}`}

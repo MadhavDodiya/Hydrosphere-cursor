@@ -81,7 +81,7 @@ export default function Signup() {
             <div className="d-flex gap-3">
               {[
                 { value: "buyer", label: "Buyer", icon: "bi-cart3", desc: "Search listings & send inquiries" },
-                { value: "seller", label: "Supplier", icon: "bi-shop", desc: "Add & manage hydrogen listings" },
+                { value: "supplier", label: "Supplier", icon: "bi-shop", desc: "Add & manage hydrogen listings" },
               ].map(r => (
                 <button
                   key={r.value}
@@ -130,7 +130,7 @@ export default function Signup() {
               </div>
             </div>
 
-            {role === "seller" && (
+            {role === "supplier" && (
               <div className="mb-3">
                 <label htmlFor="su-biz-reg" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Business Registration Number (Aadhar/GST)</label>
                 <div className="position-relative">

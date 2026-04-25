@@ -244,7 +244,7 @@ function WhatWeOffer() {
   const features = [
     { icon: "🔍", title: "Smart Supplier Discovery", desc: "Search and filter verified hydrogen suppliers by type, location, and price. Real-time availability data at your fingertips.", color: "blue" },
     { icon: "🤖", title: "AI-Powered Chatbot", desc: "Get instant answers, supplier recommendations, and pricing guidance from our intelligent hydrogen procurement assistant.", color: "violet" },
-    { icon: "📊", title: "Lead Generation System", desc: "Sellers receive qualified buyer inquiries with full contact details. Buyers get tailored matches — automated, not manual.", color: "cyan" },
+    { icon: "📊", title: "Lead Generation System", desc: "Suppliers receive qualified buyer inquiries with full contact details. Buyers get tailored matches — automated, not manual.", color: "cyan" },
     { icon: "✅", title: "Verified Suppliers", desc: "Every supplier on Hydrosphere undergoes a verification process. Trade with confidence using our trust framework.", color: "green" },
     { icon: "💰", title: "Transparent Pricing",  desc: "No hidden fees, no opaque markups. See real market pricing and request quotes directly from suppliers.", color: "amber" },
     { icon: "🌐", title: "Global Reach",         desc: "Access suppliers across 12+ countries. Whether you need local or international sourcing, we have you covered.", color: "rose" },
@@ -319,7 +319,7 @@ function WhyChooseUs() {
 function OurStory() {
   const timeline = [
     { year: "2023", icon: "💡", title: "The Idea",       desc: "A developer in India struggling to find hydrogen suppliers online asked: why is there no Airbnb for hydrogen? The seed of Hydrosphere was planted." },
-    { year: "2024", icon: "🛠️", title: "Building the MVP", desc: "Using React, Node.js, and MongoDB, the first version was built in 90 days — a clean listing marketplace with JWT auth, buyer/seller roles, and inquiry system." },
+    { year: "2024", icon: "🛠️", title: "Building the MVP", desc: "Using React, Node.js, and MongoDB, the first version was built in 90 days — a clean listing marketplace with JWT auth, buyer/supplier roles, and inquiry system." },
     { year: "2024", icon: "🚀", title: "First Suppliers",  desc: "The platform onboarded its first batch of verified hydrogen suppliers across India and Europe, generating 100+ qualified leads." },
     { year: "2025", icon: "🌍", title: "Going Global",    desc: "Hydrosphere expands with AI-driven supplier matching, multi-tier pricing, and a roadmap for the world's leading clean hydrogen ecosystem." },
   ];

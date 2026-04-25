@@ -41,7 +41,7 @@ export default function Listing() {
     setFilters(prev => ({
       ...prev,
       location: loc,
-      types: type ? [type] : prev.types.length === 0 ? [] : prev.types 
+      types: type ? [type] : [] // Source of truth is URL; if type is missing, it's "All"
     }));
   }, [searchParams]);
 
@@ -82,7 +82,7 @@ export default function Listing() {
           type: item.hydrogenType,
           deliveryAvailability: item.deliveryAvailability || "",
           productionCapacity: item.productionCapacity || "",
-          isVerified: item.seller?.isVerified || false,
+          isVerified: item.supplier?.isVerified || false,
           purity: item.purity || null,
           imageUrl: item.images && item.images.length > 0 ? item.images[0] : "https://images.unsplash.com/photo-1518623489648-a173ef7824f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         }));
