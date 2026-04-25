@@ -1,131 +1,79 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
+import React from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { Button, Badge } from '../ui';
 
 export default function AdminSidebar({ mobileOpen, closeMobileSidebar, stats }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
 
-  const adminMenuItems = [
-    { name: "Overview", icon: "bi-grid-1x2-fill", route: "/admin" },
-    { name: "Users", icon: "bi-people-fill", route: "/admin/users" },
-    { 
-      name: "Listings", 
-      icon: "bi-card-list", 
-      route: "/admin/listings",
-      badge: stats?.pendingListings > 0 ? stats.pendingListings : null 
-    },
-    { 
-      name: "Verify Suppliers", 
-      icon: "bi-patch-check-fill", 
-      route: "/admin/verify", 
-      badge: stats?.pendingApprovals > 0 ? stats.pendingApprovals : null 
-    },
-    { name: "Inquiries", icon: "bi-chat-left-dots", route: "/admin/inquiries" },
-    { name: "Contact Messages", icon: "bi-envelope-fill", route: "/admin/contacts" },
-    { name: "Analytics", icon: "bi-bar-chart-fill", route: "/admin/analytics" },
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const navItems = [
+    { label: 'Platform Overview', icon: 'bi-speedometer2', path: '/admin' },
+    { label: 'User Management', icon: 'bi-people-fill', path: '/admin/users' },
+    { label: 'Marketplace Audit', icon: 'bi-list-check', path: '/admin/listings' },
+    { label: 'Supplier Verification', icon: 'bi-shield-check-fill', path: '/admin/verify', badge: stats?.pendingVerifications > 0 ? stats.pendingVerifications : null },
+    { label: 'Inquiry Monitor', icon: 'bi-chat-square-dots-fill', path: '/admin/inquiries' },
+    { label: 'Contact Messages', icon: 'bi-envelope-paper-fill', path: '/admin/contacts', badge: stats?.unreadContacts > 0 ? stats.unreadContacts : null },
+    { label: 'Global Analytics', icon: 'bi-bar-chart-fill', path: '/admin/analytics' },
   ];
 
   return (
     <>
-      {/* Overlay */}
-      {mobileOpen && (
-        <div
-          onClick={closeMobileSidebar}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 1039, backdropFilter: "blur(4px)" }}
-          className="d-lg-none"
-        />
-      )}
+      <div 
+        className={`fixed inset-0 bg-[#1d1d1f]/60 backdrop-blur-md z-40 transition-opacity lg:hidden ${mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={closeMobileSidebar} 
+      />
 
-      {/* Sidebar Panel */}
-      <aside
-        className={`dashboard-sidebar ${mobileOpen ? "mobile-open" : ""} d-flex flex-column`}
-        style={{
-          background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
-          borderRight: "none",
-          position: "fixed",
-          top: 0, left: 0, bottom: 0,
-          width: 260,
-          zIndex: 1040,
-          transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-          transform: mobileOpen ? "translateX(0)" : undefined,
-        }}
-      >
-        {/* Logo */}
-        <div className="d-flex align-items-center justify-content-between px-4 py-4 flex-shrink-0">
-          <Link to="/" className="d-flex align-items-center gap-2 text-decoration-none" onClick={closeMobileSidebar}>
-            <div style={{ width: 34, height: 34, borderRadius: "10px", background: "linear-gradient(135deg,#EF4444,#B91C1C)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "white", fontSize: "1rem", boxShadow: "0 4px 12px rgba(239,68,68,0.4)" }}>
+      <aside className={`fixed inset-y-0 left-0 w-72 bg-[#1d1d1f] text-white z-50 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="h-full flex flex-col p-6">
+          
+          {/* Brand */}
+          <div className="flex items-center gap-3 px-2 mb-10">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#1d1d1f] font-black text-xl shadow-lg">
               H
             </div>
-            <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "white", letterSpacing: "-0.02em" }}>HydroSphere</span>
-            <span className="badge bg-danger ms-1" style={{ fontSize: "0.6rem", padding: "2px 5px" }}>ADMIN</span>
-          </Link>
-          <button className="btn p-0 border-0 d-lg-none" onClick={closeMobileSidebar}>
-            <i className="bi bi-x-lg" style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}></i>
-          </button>
-        </div>
-
-        {/* User Profile */}
-        <div className="mx-3 mb-4 p-3" style={{ background: "rgba(255,255,255,0.05)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div className="d-flex align-items-center gap-3">
-            <div style={{ width: 38, height: 38, borderRadius: "10px", background: "linear-gradient(135deg,#EF4444,#B91C1C)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "white", fontSize: "0.9rem", flexShrink: 0 }}>
-              {(user?.name || "A")[0].toUpperCase()}
-            </div>
-            <div style={{ overflow: "hidden" }}>
-              <div className="fw-semibold text-truncate" style={{ fontSize: "0.875rem", color: "white" }}>{user?.name || "Admin"}</div>
-              <div className="text-truncate" style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)" }}>{user?.email}</div>
+            <div className="flex flex-col">
+               <span className="text-lg font-black tracking-tight leading-none">HydroSphere</span>
+               <span className="text-[10px] font-black text-[#0071E3] uppercase tracking-widest mt-1">Super Admin</span>
             </div>
           </div>
-          <div className="mt-2">
-            <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "3px 10px", borderRadius: "20px", background: "rgba(239,68,68,0.2)", color: "#fca5a5", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              SYSTEM ADMIN
-            </span>
-          </div>
-        </div>
 
-        {/* Nav */}
-        <div className="flex-fill px-3 overflow-auto">
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", padding: "0 0.5rem", marginBottom: "0.5rem" }}>CONTROL PANEL</p>
-          <nav className="d-flex flex-column gap-1">
-            {adminMenuItems.map((item) => {
-              const isActive = location.pathname === item.route;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.route}
-                  onClick={closeMobileSidebar}
-                  className="d-flex align-items-center gap-3 text-decoration-none"
-                  style={{
-                    padding: "0.65rem 0.875rem",
-                    borderRadius: "10px",
-                    transition: "all 0.2s ease",
-                    background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
-                    color: isActive ? "white" : "rgba(255,255,255,0.55)",
-                    fontWeight: isActive ? 600 : 400,
-                    fontSize: "0.875rem",
-                    borderLeft: isActive ? "3px solid #EF4444" : "3px solid transparent",
-                  }}
-                >
-                  <i className={`bi ${item.icon}`} style={{ fontSize: "1rem", flexShrink: 0 }}></i>
-                  {item.name}
-                  {item.badge && (
-                    <span className="ms-auto" style={{ background: "#EF4444", color: "white", fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "20px" }}>{item.badge}</span>
-                  )}
-                </Link>
-              );
-            })}
+          {/* Navigation */}
+          <nav className="flex-grow space-y-1.5">
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-3 mb-4">System Controls</p>
+            {navItems.map(item => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/admin'}
+                className={({ isActive }) => `
+                  flex items-center justify-between px-3 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 group
+                  ${isActive ? 'bg-[#0071E3] text-white shadow-lg shadow-blue-500/40' : 'text-white/50 hover:bg-white/5 hover:text-white'}
+                `}
+                onClick={closeMobileSidebar}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-lg transition-colors ${location.pathname === item.path ? 'bg-white/20' : 'bg-white/5 text-white/40 group-hover:bg-[#0071E3]/20 group-hover:text-white'}`}>
+                    <i className={`bi ${item.icon}`} />
+                  </div>
+                  {item.label}
+                </div>
+                {item.badge && <Badge variant="primary" className="!bg-red-500 !text-white !border-none !px-2">{item.badge}</Badge>}
+              </NavLink>
+            ))}
           </nav>
-        </div>
 
-        {/* Bottom */}
-        <div className="p-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <button
-            onClick={logout}
-            className="btn w-100 d-flex align-items-center gap-2 fw-medium"
-            style={{ borderRadius: "10px", background: "rgba(239,68,68,0.1)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.2)", fontSize: "0.85rem", padding: "0.55rem" }}
-          >
-            <i className="bi bi-box-arrow-left"></i> Log out
-          </button>
+          <div className="mt-auto pt-6 border-t border-white/5">
+             <Button variant="ghost" className="w-full justify-start gap-3 text-white/60 hover:bg-white/5 hover:text-red-400" onClick={handleLogout}>
+               <i className="bi bi-power" /> Exit Panel
+             </Button>
+          </div>
         </div>
       </aside>
     </>

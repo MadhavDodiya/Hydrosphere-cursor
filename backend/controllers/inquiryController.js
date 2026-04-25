@@ -4,6 +4,7 @@ import Listing from "../models/Listing.js";
 import User from "../models/User.js";
 import { sendInquiryEmail, sendReplyNotificationEmail } from "../services/emailService.js";
 import { emitInquiryCreated, emitInquiryUpdated } from "../utils/realtime.js";
+import { trackEvent, ANALYTICS_EVENTS } from "../services/analyticsService.js";
 
 /**
  * POST /api/inquiries
@@ -28,9 +29,32 @@ export async function createInquiry(req, res) {
       return res.status(404).json({ success: false, message: "Supplier not found" });
     }
 
-    // Only paid suppliers can receive inquiries
+    // Only paid/trial suppliers can receive inquiries
     if (supplier.subscriptionStatus !== "active") {
       return res.status(403).json({ success: false, message: "This supplier is currently not accepting inquiries." });
+    }
+
+    // SaaS: Inquiry/Lead limit enforcement
+    const { plan, leadsLimitPerMonth } = getEffectiveLimits({
+      planId: supplier.plan,
+    });
+
+    if (leadsLimitPerMonth != null) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const leadCount = await Inquiry.countDocuments({
+        supplierId: listing.supplier,
+        createdAt: { $gte: startOfMonth }
+      });
+
+      if (leadCount >= leadsLimitPerMonth) {
+        return res.status(402).json({
+          success: false,
+          message: `This supplier has reached their monthly lead limit for the ${plan.name} plan.`,
+        });
+      }
     }
 
     // Prevent duplicate inquiries
@@ -61,6 +85,9 @@ export async function createInquiry(req, res) {
     } catch (e) {
       console.error("Realtime notification failed:", e);
     }
+
+    // Track Event
+    trackEvent(req.userId, ANALYTICS_EVENTS.INQUIRY_SENT, { listingId, supplierId: listing.supplier });
 
     return res.status(201).json({ 
       success: true, 

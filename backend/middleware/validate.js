@@ -22,7 +22,11 @@ export function validate(schemas) {
     } catch (err) {
       const issues = formatZodError(err);
       if (issues) {
-        return res.status(400).json({ message: "Validation failed", issues });
+        return res.status(400).json({ 
+          success: false, 
+          message: "Validation failed", 
+          data: { issues } 
+        });
       }
       return next(err);
     }

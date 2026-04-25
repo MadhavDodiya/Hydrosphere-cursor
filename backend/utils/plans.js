@@ -40,6 +40,16 @@ export function getPlan(planId) {
   return PLANS[planId] || { id: "none", name: "No Plan", basePrice: 0, listingsLimit: 0, leadsLimitPerMonth: 0 };
 }
 
+export function calculateFinalPrice(basePrice) {
+  const gstRate = 0.18;
+  const gstAmount = basePrice * gstRate;
+  return {
+    base: basePrice,
+    gst: gstAmount,
+    total: Math.round((basePrice + gstAmount) * 100) / 100
+  };
+}
+
 export function getEffectiveLimits({ planId, listingLimitOverride, leadLimitOverride }) {
   const plan = getPlan(planId);
   

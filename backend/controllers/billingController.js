@@ -4,6 +4,7 @@ import Subscription from "../models/Subscription.js";
 import StripeEvent from "../models/StripeEvent.js";
 import { PLANS } from "../utils/plans.js";
 import { sendPaymentConfirmationEmail } from "../services/emailService.js";
+import { trackEvent, ANALYTICS_EVENTS } from "../services/analyticsService.js";
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -151,6 +152,9 @@ export async function handleWebhook(req, res) {
       sendPaymentConfirmationEmail(user.email, user.name, plan.name, total, expiryDate)
         .catch(err => console.error("Failed to send payment email:", err));
     }
+
+    // Track Event
+    trackEvent(userId, ANALYTICS_EVENTS.PLAN_UPGRADED, { planId, total });
 
     // 💳 Mark as processed (Idempotency)
     await StripeEvent.create({ eventId: event.id, type: event.type });

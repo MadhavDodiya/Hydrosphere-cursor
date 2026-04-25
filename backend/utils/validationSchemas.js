@@ -13,6 +13,14 @@ export const registerSchema = z.object({
   companyName: z.string().trim().optional(),
   location: z.string().trim().optional(),
   businessRegistrationNumber: z.string().trim().optional(),
+}).refine(data => {
+  if (data.role === "supplier") {
+    return !!data.companyName && !!data.location && !!data.businessRegistrationNumber;
+  }
+  return true;
+}, {
+  message: "Company name, location, and registration number are required for suppliers",
+  path: ["companyName"]
 });
 
 export const loginSchema = z.object({

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import crypto from "crypto";
 import { sendEmail, sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../services/emailService.js";
+import { trackEvent, ANALYTICS_EVENTS } from "../services/analyticsService.js";
 
 /**
  * Sign short-lived Access JWT
@@ -117,6 +118,10 @@ export async function register(req, res) {
     // Send emails in background
     sendVerificationEmail(user.email, verificationToken, appBaseUrl()).catch(() => {});
     sendWelcomeEmail(user.email, user.name).catch(() => {});
+    
+    // Track Events
+    trackEvent(user._id, ANALYTICS_EVENTS.SIGNUP, { role: user.role });
+    if (user.trialActive) trackEvent(user._id, ANALYTICS_EVENTS.TRIAL_STARTED);
 
     // Login automatically
     const accessToken = signAccessToken(user);

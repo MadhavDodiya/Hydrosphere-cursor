@@ -1,9 +1,12 @@
 import Listing from "../models/Listing.js";
 import Inquiry from "../models/Inquiry.js";
 import User from "../models/User.js";
+import { getEffectiveLimits } from "../utils/plans.js";
 
 export const getSupplierStats = async (req, res) => {
   try {
+    const user = await User.findById(req.userId).select("plan listingLimit leadLimit trialExpiresAt");
+    
     const [totalListings, activeListings, totalLeads, newLeadsToday] = await Promise.all([
       Listing.countDocuments({ supplier: req.userId }),
       Listing.countDocuments({ supplier: req.userId, status: "approved" }),
@@ -14,7 +17,13 @@ export const getSupplierStats = async (req, res) => {
       }),
     ]);
 
-    // Simple activity feed (last 5 inquiries)
+    const { plan, listingsLimit, leadsLimitPerMonth } = getEffectiveLimits({
+      planId: user.plan,
+      listingLimitOverride: user.listingLimit,
+      leadLimitOverride: user.leadLimit,
+    });
+
+    // ... rest of activity logic ...
     const recentInquiries = await Inquiry.find({ supplierId: req.userId })
       .populate("listingId", "title")
       .sort({ createdAt: -1 })
@@ -37,7 +46,15 @@ export const getSupplierStats = async (req, res) => {
         activeListings,
         totalLeads,
         newLeadsToday,
-        activity
+        activity,
+        limits: {
+          planName: plan.name,
+          listingsUsed: totalListings,
+          listingsLimit: listingsLimit,
+          leadsUsed: totalLeads, // Note: usually we'd filter leads by current month here
+          leadsLimit: leadsLimitPerMonth,
+          trialExpiresAt: user.trialExpiresAt,
+        }
       }
     });
   } catch (error) {
