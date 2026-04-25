@@ -1,0 +1,67 @@
+/* ══ Free Trial Page Styles ═════════════════════════════════════ */
+
+.feature-list h6 {
+  color: #f8fafc;
+  letter-spacing: 0.01em;
+}
+
+.feature-list p {
+  line-height: 1.4;
+}
+
+.free-plan-card {
+  transition: transform 0.3s ease;
+}
+
+.free-plan-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.free-plan-card ul li {
+  position: relative;
+  padding-left: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Glassmorphic form container */
+.hs-auth-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom transitions for radio buttons */
+.role-card {
+  cursor: pointer;
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.role-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.role-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.role-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+.active .role-icon {
+  background: #2563eb;
+  color: white;
+}

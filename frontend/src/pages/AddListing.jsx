@@ -10,12 +10,12 @@ import {
 import { useToast } from "../context/ToastContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
 
-const TYPES = ["Green", "Blue", "Grey"];
+const TYPES = ["Green Hydrogen", "Blue Hydrogen", "Grey Hydrogen"];
 
 const typeColors = {
-  Green: { bg: "#f0fdf4", border: "#86efac", text: "#16a34a", dot: "#22c55e" },
-  Blue:  { bg: "#eff6ff", border: "#93c5fd", text: "#2563eb", dot: "#3b82f6" },
-  Grey:  { bg: "#f8fafc", border: "#cbd5e1", text: "#64748b", dot: "#94a3b8" },
+  "Green Hydrogen": { bg: "bg-[#34C759]/10", border: "border-[#34C759]", text: "text-[#34C759]" },
+  "Blue Hydrogen":  { bg: "bg-[#0071E3]/10", border: "border-[#0071E3]", text: "text-[#0071E3]" },
+  "Grey Hydrogen":  { bg: "bg-[#8E8E93]/10", border: "border-[#8E8E93]", text: "text-[#8E8E93]" },
 };
 
 export default function AddListing() {
@@ -26,7 +26,7 @@ export default function AddListing() {
   const isEdit = Boolean(id);
 
   const [title, setTitle] = useState("");
-  const [hydrogenType, setHydrogenType] = useState("Green");
+  const [hydrogenType, setHydrogenType] = useState("Green Hydrogen");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [location, setLocation] = useState("");
@@ -45,12 +45,10 @@ export default function AddListing() {
     (async () => {
       try {
         const response = await fetchListingById(id);
-        const found = response; // fetchListingById returns the listing object directly
+        const found = response;
         if (cancelled) return;
         if (!found) { setError("Listing not found."); setLoading(false); return; }
         
-        // Security check: Ensure the listing belongs to the current user
-        // The backend should also enforce this, but good to have here.
         if (found.supplier?._id !== user._id && found.supplier !== user._id) {
           setError("You do not have permission to edit this listing.");
           setLoading(false);
@@ -73,7 +71,7 @@ export default function AddListing() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, isEdit, user?._id, user?.role]); // Bug fix: user object reference changes every render — use primitives
+  }, [id, isEdit, user?._id, user?.role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,7 +89,6 @@ export default function AddListing() {
     const formData = new FormData();
     const trimmedTitle = title.trim();
     formData.append("title", trimmedTitle);
-    // Keep legacy field for older endpoints/admin searches.
     formData.append("companyName", trimmedTitle);
     formData.append("hydrogenType", hydrogenType);
     formData.append("price", p);
@@ -114,226 +111,223 @@ export default function AddListing() {
   };
 
   if (loading) return (
-    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
-      <Loader label="Loading listing…" />
+    <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center p-6">
+      <div className="animate-apple text-center">
+        <div className="w-12 h-12 border-4 border-[#0071E3]/20 border-t-[#0071E3] rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#86868b] font-bold text-sm tracking-widest uppercase">Fetching Data...</p>
+      </div>
     </div>
   );
 
-  // Block unapproved suppliers before they waste time filling the form
   if (user?.role === 'supplier' && !user?.isApproved && !isEdit) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div className="text-center p-5">
-          <i className="bi bi-hourglass-split display-4 text-warning mb-3 d-block"></i>
-          <h4 className="fw-bold">Account Pending Approval</h4>
-          <p className="text-muted">Your supplier account is currently under review by our admin team.<br/>You'll receive an email at <strong>{user?.email}</strong> once approved.</p>
-          <a href="/dashboard" className="btn btn-primary rounded-pill px-5 mt-2">Back to Dashboard</a>
+      <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center p-6">
+        <div className="bg-white rounded-[32px] p-12 max-w-lg text-center shadow-2xl shadow-black/5 animate-apple border border-black/5">
+          <div className="w-20 h-20 bg-[#FF9500]/10 rounded-full flex items-center justify-center mx-auto mb-8 text-[#FF9500] text-4xl">
+            <i className="bi bi-hourglass-split" />
+          </div>
+          <h2 className="text-2xl font-black text-[#1d1d1f] mb-4">Pending Approval</h2>
+          <p className="text-[#86868b] text-base leading-relaxed mb-10 font-medium">
+            Your supplier account is currently under review by our admin team.<br/>You'll receive an email at <span className="text-[#1d1d1f] font-bold underline">{user?.email}</span> once approved.
+          </p>
+          <Link to="/dashboard" className="btn-primary inline-flex px-10">Back to Dashboard</Link>
         </div>
       </div>
     );
   }
 
-  const inputStyle = { borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem", fontSize: "0.9rem", width: "100%", outline: "none", transition: "border-color 0.2s, box-shadow 0.2s", background: "white" };
-  const labelStyle = { fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginBottom: "0.4rem", display: "block" };
-
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8faff 0%, #f0f7ff 100%)" }} className="py-5">
-      <div className="container" style={{ maxWidth: "720px" }}>
-
-        {/* Header breadcrumb */}
-        <div className="mb-4">
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb mb-2" style={{ fontSize: "0.85rem" }}>
-              <li className="breadcrumb-item"><Link to="/dashboard" className="text-decoration-none text-muted">Dashboard</Link></li>
-              <li className="breadcrumb-item active text-dark fw-medium">{isEdit ? "Edit Listing" : "New Listing"}</li>
+    <div className="min-h-screen bg-[#F5F5F7] py-12 px-6 selection:bg-[#0071E3]/20">
+      <div className="max-w-3xl mx-auto animate-apple">
+        
+        {/* Breadcrumb Header */}
+        <div className="mb-10">
+          <nav className="mb-4">
+            <ol className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[#86868b]">
+              <li><Link to="/dashboard" className="hover:text-[#0071E3] transition-colors">Dashboard</Link></li>
+              <li><i className="bi bi-chevron-right text-[8px]" /></li>
+              <li className="text-[#1d1d1f]">{isEdit ? "Edit" : "New"} Listing</li>
             </ol>
           </nav>
-          <h1 className="fw-bold mb-1" style={{ fontSize: "1.8rem", color: "#0f172a" }}>
-            {isEdit ? "✏️ Edit Listing" : "🚀 Add New Listing"}
-          </h1>
-          <p className="text-muted" style={{ fontSize: "0.9rem" }}>Fill in the details to {isEdit ? "update your" : "publish a new"} hydrogen listing</p>
+          <h1 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight">{isEdit ? "✏️ Update Assets" : "🚀 Publish Supply"}</h1>
+          <p className="text-[#86868b] mt-1">Configure your hydrogen asset for the global marketplace.</p>
         </div>
 
-        <div className="card border-0 shadow-sm" style={{ borderRadius: "20px", overflow: "hidden" }}>
-
-          {/* Card Header */}
-          <div className="px-4 px-md-5 py-3 border-bottom" style={{ background: "linear-gradient(135deg, #f8faff, #eff6ff)" }}>
-            <div className="d-flex align-items-center gap-2">
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563eb" }}></div>
-              <span className="fw-semibold text-dark" style={{ fontSize: "0.9rem" }}>Listing Information</span>
-            </div>
-          </div>
-
-          <div className="p-4 p-md-5">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          
+          {/* Main Info Card */}
+          <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-black/[0.03]">
             {error && (
-              <div className="d-flex align-items-start gap-3 p-3 mb-4" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px" }}>
-                <i className="bi bi-exclamation-circle-fill text-danger flex-shrink-0 mt-1"></i>
-                <span style={{ fontSize: "0.875rem", color: "#dc2626" }}>{error}</span>
+              <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-8 flex gap-3 animate-apple">
+                <i className="bi bi-exclamation-circle text-red-500 mt-0.5" />
+                <div className="text-sm text-red-600 font-medium leading-relaxed">{error}</div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="d-flex flex-column gap-4">
-
-              {/* Company Name */}
-              <div>
-                <label htmlFor="title" style={labelStyle}>Title *</label>
-                <div className="position-relative">
-                  <i className="bi bi-tag position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+            <div className="space-y-8">
+              
+              {/* Title Section */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Asset Title / Name</label>
+                <div className="relative group">
+                  <i className="bi bi-tag absolute left-4 top-1/2 -translate-y-1/2 text-[#86868b] group-focus-within:text-[#0071E3] transition-colors" />
                   <input
-                    id="title"
                     required
                     minLength={2}
-                    style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                    placeholder="e.g. Nordic Green Hydrogen Supply"
+                    className="form-control w-full pl-12"
+                    placeholder="e.g. Premium Green H2 Supply Hub"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* Hydrogen Type */}
-              <div>
-                <label style={labelStyle}>Hydrogen Type *</label>
-                <div className="d-flex gap-3 flex-wrap">
+              {/* Hydrogen Type - Segmented Control Aesthetic */}
+              <div className="space-y-4">
+                <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1 block">Production Pathway</label>
+                <div className="grid grid-cols-3 gap-3">
                   {TYPES.map(t => {
-                    const c = typeColors[t];
+                    const active = hydrogenType === t;
                     return (
-                      <button key={t} type="button" onClick={() => setHydrogenType(t)}
-                        style={{
-                          flex: "1 1 100px", padding: "0.8rem 1rem", border: `2px solid ${hydrogenType === t ? c.dot : "#e2e8f0"}`,
-                          borderRadius: "12px", background: hydrogenType === t ? c.bg : "white",
-                          cursor: "pointer", transition: "all 0.2s ease"
-                        }}
+                      <button 
+                        key={t} 
+                        type="button" 
+                        onClick={() => setHydrogenType(t)}
+                        className={`py-3 rounded-[18px] border-2 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                          active 
+                            ? `${typeColors[t].bg} ${typeColors[t].border} ${typeColors[t].text} shadow-lg shadow-black/5 scale-[1.02]` 
+                            : 'bg-[#F5F5F7] border-transparent text-[#86868b] hover:bg-[#e8e8ed]'
+                        }`}
                       >
-                        <div className="d-flex align-items-center gap-2">
-                          <span style={{ width: 10, height: 10, borderRadius: "50%", background: c.dot, display: "inline-block", flexShrink: 0 }}></span>
-                          <span style={{ fontWeight: 600, fontSize: "0.875rem", color: hydrogenType === t ? c.text : "#64748b" }}>{t} Hydrogen</span>
-                        </div>
+                        {t}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Price & Quantity */}
-              <div className="row g-3">
-                <div className="col-12 col-sm-6">
-                  <label htmlFor="price" style={labelStyle}>Price (USD/kg) *</label>
-                  <div className="position-relative">
-                    <span className="position-absolute top-50 translate-middle-y ms-3 fw-semibold" style={{ color: "#94a3b8", fontSize: "0.9rem" }}>$</span>
-                    <input id="price" type="number" min={0} step="0.01" required style={{ ...inputStyle, paddingLeft: "2rem" }}
-                      placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
-                  </div>
-                </div>
-                <div className="col-12 col-sm-6">
-                  <label htmlFor="quantity" style={labelStyle}>Quantity (units) *</label>
-                  <div className="position-relative">
-                    <i className="bi bi-boxes position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                    <input id="quantity" type="number" min={0} step={1} required style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                      placeholder="e.g. 500" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label htmlFor="location" style={labelStyle}>Location *</label>
-                <div className="position-relative">
-                  <i className="bi bi-geo-alt position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                  <input id="location" required minLength={2} style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                    placeholder="e.g. Berlin, Germany" value={location} onChange={(e) => setLocation(e.target.value)} />
-                </div>
-              </div>
-
-              {/* Purity */}
-              <div className="row g-3">
-                <div className="col-12 col-sm-6">
-                  <label htmlFor="purity" style={labelStyle}>Hydrogen Purity (%)</label>
-                  <div className="position-relative">
-                    <i className="bi bi-shield-check position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
+              {/* Pricing & Units */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Rate (USD / kg)</label>
+                  <div className="relative group">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868b] font-bold group-focus-within:text-[#0071E3]">$</span>
                     <input
-                      id="purity"
                       type="number"
-                      min={0}
-                      max={100}
-                      step="0.1"
-                      style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                      placeholder="e.g. 99.9"
+                      step="0.01"
+                      required
+                      className="form-control w-full pl-10"
+                      placeholder="4.50"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Lot Size (kg)</label>
+                  <div className="relative group">
+                    <i className="bi bi-boxes absolute left-4 top-1/2 -translate-y-1/2 text-[#86868b] group-focus-within:text-[#0071E3]" />
+                    <input
+                      type="number"
+                      required
+                      className="form-control w-full pl-12"
+                      placeholder="1000"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Stack */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Location Hub</label>
+                  <div className="relative group">
+                    <i className="bi bi-geo-alt absolute left-4 top-1/2 -translate-y-1/2 text-[#86868b] group-focus-within:text-[#0071E3]" />
+                    <input
+                      required
+                      className="form-control w-full pl-12"
+                      placeholder="City, Country"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Certified Purity (%)</label>
+                  <div className="relative group">
+                    <i className="bi bi-patch-check absolute left-4 top-1/2 -translate-y-1/2 text-[#86868b] group-focus-within:text-[#0071E3]" />
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-control w-full pl-12"
+                      placeholder="99.9"
                       value={purity}
                       onChange={(e) => setPurity(e.target.value)}
                     />
                   </div>
-                  <div className="text-muted mt-1" style={{ fontSize: "0.75rem" }}>
-                    Optional, used for marketplace filtering.
-                  </div>
                 </div>
               </div>
 
-              {/* Industry Specific Fields */}
-              <div className="row g-3">
-                <div className="col-12 col-sm-6">
-                  <label htmlFor="productionCapacity" style={labelStyle}>Production Capacity (Optional)</label>
-                  <div className="position-relative">
-                    <i className="bi bi-gear-wide-connected position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                    <input id="productionCapacity" type="text" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                      placeholder="e.g. 500 kg/day" value={productionCapacity} onChange={(e) => setProductionCapacity(e.target.value)} />
-                  </div>
+              {/* Description Section */}
+              <div className="space-y-2">
+                <div className="flex justify-between ml-1">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest">Supply Terms & Overview</label>
+                  <span className="text-[10px] font-bold text-[#c1c1c6] uppercase tracking-widest">{description.length}/5000</span>
                 </div>
-                <div className="col-12 col-sm-6">
-                  <label htmlFor="deliveryAvailability" style={labelStyle}>Delivery Availability</label>
-                  <div className="position-relative">
-                    <i className="bi bi-truck position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                    <select id="deliveryAvailability" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                      value={deliveryAvailability} onChange={(e) => setDeliveryAvailability(e.target.value)}>
-                      <option value="Available">Ready to Ship</option>
-                      <option value="30 Days Lead Time">30 Days Lead Time</option>
-                      <option value="60 Days Lead Time">60 Days Lead Time</option>
-                      <option value="Pickup Only">Pickup Only</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label htmlFor="description" style={labelStyle}>Description *
-                  <span className="fw-normal text-muted ms-1" style={{ fontSize: "0.8rem" }}>(min 10 chars, max 5000)</span>
-                </label>
-                <textarea id="description" required rows={5} minLength={10} maxLength={5000}
-                  style={{ ...inputStyle, resize: "vertical", minHeight: "130px" }}
-                  placeholder="Describe supply terms, certifications, delivery timelines, compliance details…"
-                  value={description} onChange={(e) => setDescription(e.target.value)}
+                <textarea
+                  required
+                  minLength={10}
+                  className="form-control w-full min-h-[160px] resize-none"
+                  placeholder="Describe certifications, storage conditions, and fulfillment terms..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
-                <div className="text-end mt-1" style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{description.length} / 5000</div>
               </div>
 
-              {/* Images */}
-              <div>
-                <label htmlFor="images" style={labelStyle}>Product Images (Optional)</label>
-                <div className="position-relative">
-                  <i className="bi bi-images position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8", pointerEvents: "none" }}></i>
-                  <input id="images" type="file" multiple accept="image/*" style={{ ...inputStyle, paddingLeft: "2.75rem" }}
-                    onChange={(e) => setImageFiles(e.target.files)} />
+              {/* Media Section */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Media Assets (Images)</label>
+                <div className="relative group">
+                   <input
+                     type="file"
+                     multiple
+                     accept="image/*"
+                     className="block w-full text-xs text-[#86868b] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-[#0071E3] file:text-white hover:file:bg-[#0077ED] cursor-pointer bg-[#F5F5F7] p-2 rounded-[18px]"
+                     onChange={(e) => setImageFiles(e.target.files)}
+                   />
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="d-flex flex-column flex-sm-row gap-3 pt-2">
-                <button type="submit" disabled={submitting}
-                  className="btn fw-semibold flex-fill"
-                  style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "white", borderRadius: "12px", padding: "0.8rem", fontSize: "0.95rem", border: "none", boxShadow: "0 4px 15px rgba(37,99,235,0.3)", opacity: submitting ? 0.8 : 1 }}>
-                  {submitting ? <span><span className="spinner-border spinner-border-sm me-2"></span>Saving…</span>
-                    : <span><i className={`bi ${isEdit ? "bi-pencil-square" : "bi-rocket-takeoff"} me-2`}></i>{isEdit ? "Update Listing" : "Publish Listing"}</span>}
-                </button>
-                <button type="button" onClick={() => navigate("/dashboard")}
-                  className="btn fw-medium"
-                  style={{ borderRadius: "12px", padding: "0.8rem 1.5rem", border: "1.5px solid #e2e8f0", color: "#64748b", background: "white" }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
+
+          {/* Action Row */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full sm:flex-1 py-4 text-base font-black shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <i className={`bi ${isEdit ? 'bi-pencil-square' : 'bi-rocket-takeoff'} text-lg`} />
+                  {isEdit ? "Update Listing" : "Publish Listing"}
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="w-full sm:w-auto px-10 py-4 text-sm font-black text-[#86868b] uppercase tracking-widest hover:text-[#1d1d1f] transition-colors"
+            >
+              Discard
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

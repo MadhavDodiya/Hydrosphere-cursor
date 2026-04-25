@@ -48,7 +48,22 @@ function onRefreshed(token) {
 }
 
 api.interceptors.response.use(
-  (res) => res,
+  (response) => {
+    // 🎯 PRODUCTION RESPONSE HANDLER (Task #11 Audit Fix)
+    // Standardizes how we handle the { success, data, message } format
+    const res = response.data;
+    if (res && typeof res.success === "boolean") {
+      if (!res.success) {
+        return Promise.reject({
+          response,
+          message: res.message || "Request failed",
+          data: res.data
+        });
+      }
+      return res; // Return the whole res object { success, data, message }
+    }
+    return res;
+  },
   async (error) => {
     // BUG 1 FIX: Handle complete network disconnects gracefully
     if (!error.response) {
@@ -84,7 +99,8 @@ api.interceptors.response.use(
         // Attempt to refresh the token using HttpOnly cookie
         const { data } = await axios.post(`${baseURL}/api/auth/refresh`, {}, { withCredentials: true });
         
-        const newToken = data.token;
+        // 🔐 Extract from the new strict format { success: true, data: { token, user } }
+        const newToken = data.data?.token || data.token; 
         setAuthToken(newToken);
         isRefreshing = false;
         onRefreshed(newToken);

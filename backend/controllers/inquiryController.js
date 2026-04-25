@@ -12,30 +12,30 @@ export async function createInquiry(req, res) {
   try {
     const { listingId, name, email, message } = req.body;
     if (!listingId || !mongoose.isValidObjectId(listingId)) {
-      return res.status(400).json({ message: "Valid Listing ID is required" });
+      return res.status(400).json({ success: false, message: "Valid Listing ID is required" });
     }
 
     const listing = await Listing.findById(listingId);
-    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
     // Prevent self-inquiry
     if (String(listing.supplier) === String(req.userId)) {
-      return res.status(400).json({ message: "You cannot inquire on your own listing" });
+      return res.status(400).json({ success: false, message: "You cannot inquire on your own listing" });
     }
 
     const supplier = await User.findById(listing.supplier).select("email subscriptionStatus plan");
     if (!supplier) {
-      return res.status(404).json({ message: "Supplier not found" });
+      return res.status(404).json({ success: false, message: "Supplier not found" });
     }
 
     // Only paid suppliers can receive inquiries
     if (supplier.subscriptionStatus !== "active") {
-      return res.status(403).json({ message: "This supplier is currently not accepting inquiries." });
+      return res.status(403).json({ success: false, message: "This supplier is currently not accepting inquiries." });
     }
 
     // Prevent duplicate inquiries
     const existing = await Inquiry.findOne({ listingId, buyerId: req.userId });
-    if (existing) return res.status(400).json({ message: "You have already sent an inquiry for this listing." });
+    if (existing) return res.status(400).json({ success: false, message: "You have already sent an inquiry for this listing." });
 
     const inquiry = await Inquiry.create({
       buyerId: req.userId,
@@ -62,10 +62,14 @@ export async function createInquiry(req, res) {
       console.error("Realtime notification failed:", e);
     }
 
-    return res.status(201).json(inquiry);
+    return res.status(201).json({ 
+      success: true, 
+      data: inquiry, 
+      message: "Inquiry sent successfully" 
+    });
   } catch (err) {
     console.error("[CREATE INQUIRY Error]:", err);
-    return res.status(500).json({ message: "Failed to send inquiry" });
+    return res.status(500).json({ success: false, message: "Failed to send inquiry" });
   }
 }
 
@@ -91,13 +95,17 @@ export async function getSupplierInquiries(req, res) {
     ]);
 
     return res.json({
-      data: inquiries,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      success: true,
+      message: "Inquiries fetched successfully",
+      data: {
+        inquiries,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      }
     });
   } catch (err) {
-    return res.status(500).json({ message: "Failed to fetch inquiries" });
+    return res.status(500).json({ success: false, message: "Failed to fetch inquiries" });
   }
 }
 
@@ -123,13 +131,17 @@ export async function getBuyerInquiries(req, res) {
     ]);
 
     return res.json({
-      data: inquiries,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      success: true,
+      message: "Inquiries fetched successfully",
+      data: {
+        inquiries,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      }
     });
   } catch (err) {
-    return res.status(500).json({ message: "Failed to fetch inquiries" });
+    return res.status(500).json({ success: false, message: "Failed to fetch inquiries" });
   }
 }
 
@@ -142,14 +154,14 @@ export async function updateInquiryStatus(req, res) {
     const { status } = req.body;
 
     const inquiry = await Inquiry.findById(id);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    if (!inquiry) return res.status(404).json({ success: false, message: "Inquiry not found" });
 
     if (String(inquiry.supplierId) !== String(req.userId)) {
-      return res.status(403).json({ message: "Not authorized" });
+      return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
     if (!["pending", "responded", "closed"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+      return res.status(400).json({ success: false, message: "Invalid status" });
     }
 
     inquiry.status = status;
@@ -163,9 +175,13 @@ export async function updateInquiryStatus(req, res) {
 
     emitInquiryUpdated(populated);
 
-    return res.json(inquiry);
+    return res.json({ 
+      success: true, 
+      data: inquiry, 
+      message: "Inquiry status updated" 
+    });
   } catch (err) {
-    return res.status(500).json({ message: "Failed to update inquiry status" });
+    return res.status(500).json({ success: false, message: "Failed to update inquiry status" });
   }
 }
 
@@ -178,13 +194,13 @@ export async function replyToInquiry(req, res) {
     const { message } = req.body;
 
     const inquiry = await Inquiry.findById(id);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    if (!inquiry) return res.status(404).json({ success: false, message: "Inquiry not found" });
 
     let senderRole = null;
     if (inquiry.buyerId.toString() === req.userId) senderRole = "buyer";
     if (inquiry.supplierId.toString() === req.userId) senderRole = "supplier";
 
-    if (!senderRole) return res.status(403).json({ message: "Not authorized" });
+    if (!senderRole) return res.status(403).json({ success: false, message: "Not authorized" });
 
     inquiry.replies.push({
       senderRole,
@@ -214,8 +230,12 @@ export async function replyToInquiry(req, res) {
         .catch(err => console.error("Failed to send reply notification email:", err));
     }
 
-    return res.status(201).json(inquiry);
+    return res.status(201).json({ 
+      success: true, 
+      data: inquiry, 
+      message: "Reply sent successfully" 
+    });
   } catch (err) {
-    return res.status(500).json({ message: "Failed to send reply" });
+    return res.status(500).json({ success: false, message: "Failed to send reply" });
   }
 }

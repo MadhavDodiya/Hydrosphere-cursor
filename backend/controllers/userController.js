@@ -21,6 +21,8 @@ function publicUser(user) {
     plan: user.plan || "free",
     subscriptionStatus: user.subscriptionStatus || "inactive",
     subscriptionCurrentPeriodEnd: user.subscriptionCurrentPeriodEnd || null,
+    trialActive: Boolean(user.trialActive),
+    trialExpiresAt: user.trialExpiresAt || null,
   };
 }
 
@@ -30,11 +32,15 @@ function publicUser(user) {
 export async function getMe(req, res) {
   try {
     const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    return res.json(publicUser(user));
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    return res.json({ 
+      success: true, 
+      data: publicUser(user), 
+      message: "Profile fetched successfully" 
+    });
   } catch (err) {
     console.error("[GET_ME Error]:", err);
-    return res.status(500).json({ message: "Failed to fetch profile" });
+    return res.status(500).json({ success: false, message: "Failed to fetch profile" });
   }
 }
 
@@ -44,8 +50,6 @@ export async function getMe(req, res) {
 export async function getBuyerStats(req, res) {
   try {
     const userId = req.userId;
-    console.log("[BUYER STATS] User:", userId);
-
     const [totalInquiries, totalSaved, totalListings] = await Promise.all([
       Inquiry.countDocuments({ buyerId: userId }),
       SavedListing.countDocuments({ user: userId }),
@@ -107,12 +111,14 @@ export async function getBuyerStats(req, res) {
     }
 
     const stats = { totalInquiries, totalSaved, marketListings: totalListings, activity, chartData };
-    console.log("[BUYER STATS] Result:", stats);
-
-    return res.json(stats);
+    return res.json({ 
+      success: true, 
+      data: stats, 
+      message: "Buyer stats fetched successfully" 
+    });
   } catch (err) {
     console.error("[GET_BUYER_STATS Error]:", err);
-    return res.status(500).json({ message: "Failed to fetch stats" });
+    return res.status(500).json({ success: false, message: "Failed to fetch stats" });
   }
 }
 
@@ -122,7 +128,7 @@ export async function getBuyerStats(req, res) {
 export async function updateMe(req, res) {
   try {
     const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
     const { name, companyName, phone } = req.body;
     if (name != null && name.trim().length >= 1) user.name = name.trim();
@@ -130,9 +136,13 @@ export async function updateMe(req, res) {
     if (phone != null) user.phone = phone.trim();
 
     await user.save();
-    return res.json(publicUser(user));
+    return res.json({ 
+      success: true, 
+      data: publicUser(user), 
+      message: "Profile updated successfully" 
+    });
   } catch (err) {
     console.error("[UPDATE_ME Error]:", err);
-    return res.status(500).json({ message: "Update failed" });
+    return res.status(500).json({ success: false, message: "Update failed" });
   }
 }

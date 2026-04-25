@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function Signup() {
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("buyer");
+  const [companyName, setCompanyName] = useState("");
+  const [location, setLocation] = useState("");
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -28,11 +31,27 @@ export default function Signup() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    
+    if (role === "supplier" && (!companyName || !location || !businessRegistrationNumber)) {
+      setError("Please fill in all company details.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const data = await register(trimmed, email, password, role, businessRegistrationNumber);
-      setSuccessMsg(data.message || "Registration successful! Please check your email to verify your account.");
-      window.scrollTo(0, 0);
+      const data = await register({ 
+        name: trimmed, 
+        email, 
+        password, 
+        role, 
+        companyName,
+        location,
+        businessRegistrationNumber 
+      });
+      setSuccessMsg(data.message || "Registration successful!");
+      if (data.token) {
+        setTimeout(() => navigate("/dashboard"), 1500);
+      }
     } catch (err) {
       setError(getApiErrorMessage(err, "Registration failed"));
     } finally {
@@ -41,141 +60,182 @@ export default function Signup() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 50%, #f0fdf4 100%)" }} className="d-flex align-items-center justify-content-center p-3">
-      <div className="w-100" style={{ maxWidth: "500px" }}>
-        {/* Logo */}
-        <div className="text-center mb-4">
-          <Link to="/" className="text-decoration-none">
-            <span style={{ fontSize: "1.6rem", fontWeight: 800, background: "linear-gradient(135deg, #2563eb, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              HydroSphere
-            </span>
+    <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center py-12 px-6 selection:bg-[#0071E3]/20">
+      <div className="w-full max-w-[560px] animate-apple">
+        
+        {/* Brand Header */}
+        <div className="text-center mb-10">
+          <Link to="/" className="inline-flex items-center gap-3 transition-transform active:scale-95">
+            <div className="w-12 h-12 bg-[#0071E3] rounded-[14px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20">
+              H
+            </div>
           </Link>
-          <p className="text-muted small mt-1">B2B Hydrogen Marketplace</p>
+          <h1 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight mt-6">Create Account</h1>
+          <p className="text-[#86868b] text-sm font-medium mt-1 uppercase tracking-widest">Join the hydrogen marketplace</p>
         </div>
 
-        {/* Card */}
-        <div className="card border-0 shadow-lg p-4 p-md-5" style={{ borderRadius: "24px", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)" }}>
-          <h1 className="fw-bold mb-1" style={{ fontSize: "1.6rem", color: "#0f172a" }}>Create your account</h1>
-          <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>Join the hydrogen marketplace today</p>
-
+        {/* Signup Card */}
+        <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-2xl shadow-black/[0.03] border border-black/[0.02]">
+          
           {error && (
-            <div className="alert d-flex align-items-center gap-2 mb-4 py-3 px-3" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", color: "#dc2626" }}>
-              <i className="bi bi-exclamation-circle-fill flex-shrink-0"></i>
-              <span style={{ fontSize: "0.875rem" }}>{error}</span>
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-8 flex gap-3 animate-apple">
+              <i className="bi bi-exclamation-circle text-red-500 mt-0.5" />
+              <div className="text-sm text-red-600 font-medium leading-relaxed">{error}</div>
             </div>
           )}
 
           {successMsg && (
-            <div className="alert d-flex flex-column align-items-center gap-3 mb-4 py-4 px-4 text-center" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "16px", color: "#166534" }}>
-              <i className="bi bi-check-circle-fill" style={{ fontSize: "2rem" }}></i>
-              <div className="fw-bold">{successMsg}</div>
-              <Link to="/login" className="btn btn-success rounded-pill px-4">Go to Login</Link>
+            <div className="text-center py-10 animate-apple">
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 text-4xl shadow-sm">
+                <i className="bi bi-check-lg" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#1d1d1f] mb-2">{successMsg}</h2>
+              <p className="text-[#86868b] mb-8">Welcome to the future of energy sourcing.</p>
+              <Link to="/dashboard" className="btn-primary inline-flex px-10">Go to Dashboard</Link>
             </div>
           )}
 
           {!successMsg && (
             <>
-          {/* Role Selector */}
-          <div className="mb-4">
-            <label className="form-label fw-semibold mb-2" style={{ fontSize: "0.875rem", color: "#374151" }}>I want to</label>
-            <div className="d-flex gap-3">
-              {[
-                { value: "buyer", label: "Buyer", icon: "bi-cart3", desc: "Search listings & send inquiries" },
-                { value: "supplier", label: "Supplier", icon: "bi-shop", desc: "Add & manage hydrogen listings" },
-              ].map(r => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  className="flex-fill text-start p-3 border-0"
-                  style={{
-                    borderRadius: "14px",
-                    background: role === r.value ? "linear-gradient(135deg, #eff6ff, #dbeafe)" : "#f8fafc",
-                    border: role === r.value ? "2px solid #3b82f6 !important" : "2px solid #e2e8f0",
-                    outline: role === r.value ? "2px solid #3b82f6" : "2px solid transparent",
-                    transition: "all 0.2s ease",
-                    cursor: "pointer"
-                  }}
-                >
-                  <div className="d-flex align-items-center gap-2 mb-1">
-                    <i className={`bi ${r.icon}`} style={{ color: role === r.value ? "#2563eb" : "#64748b", fontSize: "1.1rem" }}></i>
-                    <span className="fw-semibold" style={{ fontSize: "0.9rem", color: role === r.value ? "#1d4ed8" : "#374151" }}>{r.label}</span>
-                  </div>
-                  <p className="mb-0" style={{ fontSize: "0.75rem", color: "#64748b" }}>{r.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="su-name" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Full name</label>
-              <div className="position-relative">
-                <i className="bi bi-person position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
-                <input id="su-name" type="text" required minLength={2} maxLength={120} autoComplete="name"
-                  className="form-control ps-5"
-                  style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                  placeholder="Jane Doe" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="su-email" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Email address</label>
-              <div className="position-relative">
-                <i className="bi bi-envelope position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
-                <input id="su-email" type="email" required autoComplete="email"
-                  className="form-control ps-5"
-                  style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                  placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-            </div>
-
-            {role === "supplier" && (
-              <div className="mb-3">
-                <label htmlFor="su-biz-reg" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Business Registration Number (Aadhar/GST)</label>
-                <div className="position-relative">
-                  <i className="bi bi-file-earmark-text position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
-                  <input id="su-biz-reg" type="text"
-                    className="form-control ps-5"
-                    style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                    placeholder="Enter GST or Aadhar number" value={businessRegistrationNumber} onChange={(e) => setBusinessRegistrationNumber(e.target.value)} />
+              {/* Role Selector */}
+              <div className="mb-10">
+                <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1 mb-4 block">Select Account Type</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { value: "buyer", label: "Buyer", icon: "bi-cart3", desc: "Purchase energy" },
+                    { value: "supplier", label: "Supplier", icon: "bi-shop", desc: "Sell energy" },
+                  ].map(r => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setRole(r.value)}
+                      className={`text-left p-5 rounded-[22px] border-2 transition-all duration-300 ${
+                        role === r.value 
+                          ? 'bg-[#0071E3]/5 border-[#0071E3] shadow-md shadow-blue-500/10' 
+                          : 'bg-[#F5F5F7] border-transparent hover:border-black/5'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors ${role === r.value ? 'bg-[#0071E3] text-white' : 'bg-white text-[#86868b]'}`}>
+                        <i className={`bi ${r.icon} text-lg`} />
+                      </div>
+                      <div className={`text-sm font-black transition-colors ${role === r.value ? 'text-[#0071E3]' : 'text-[#1d1d1f]'}`}>{r.label}</div>
+                      <div className="text-[10px] text-[#86868b] font-medium mt-0.5">{r.desc}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
 
-            <div className="mb-4">
-              <label htmlFor="su-password" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Password <span className="text-muted fw-normal">(min 6 characters)</span></label>
-              <div className="position-relative">
-                <i className="bi bi-lock position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
-                <input id="su-password" type={showPassword ? "text" : "password"} required minLength={6} autoComplete="new-password"
-                  className="form-control ps-5"
-                  style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 3rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                  placeholder="Create a strong password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                <button type="button" className="btn p-0 border-0 position-absolute top-50 translate-middle-y end-0 me-3" onClick={() => setShowPassword(!showPassword)}>
-                  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ color: "#94a3b8" }}></i>
-                </button>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      className="form-control-apple w-full"
+                      placeholder="Jane Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      className="form-control-apple w-full"
+                      placeholder="you@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {role === "supplier" && (
+                  <div className="space-y-6 pt-2 animate-apple">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Company Legal Name</label>
+                      <input
+                        type="text"
+                        required
+                        className="form-control-apple w-full"
+                        placeholder="e.g. H2 Industries Pvt Ltd"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">HQ Location</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-control-apple w-full"
+                          placeholder="City, Country"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Tax / Reg ID</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-control-apple w-full"
+                          placeholder="GSTIN/VAT Number"
+                          value={businessRegistrationNumber}
+                          onChange={(e) => setBusinessRegistrationNumber(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Create Password</label>
+                  <div className="relative group">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      className="form-control-apple w-full pr-12"
+                      placeholder="Min. 6 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button 
+                      type="button" 
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#86868b] hover:text-[#0071E3] transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-primary w-full py-4 text-base font-bold shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>Create Account <i className="bi bi-chevron-right text-xs" /></>
+                    )}
+                  </button>
+                  <p className="text-[10px] text-center text-[#86868b] font-medium mt-4 px-4 leading-relaxed">
+                    By joining, you agree to HydroSphere's <span className="text-[#1d1d1f] font-bold underline">Terms of Service</span> and <span className="text-[#1d1d1f] font-bold underline">Privacy Policy</span>.
+                  </p>
+                </div>
+              </form>
+
+              <div className="text-center mt-12 pt-6 border-t border-black/5">
+                <span className="text-[#86868b] text-sm">Already have an account? </span>
+                <Link to="/login" className="text-[#0071E3] text-sm font-bold hover:underline">Sign In</Link>
               </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn w-100 fw-semibold"
-              style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "white", borderRadius: "12px", padding: "0.8rem", fontSize: "0.95rem", border: "none", boxShadow: "0 4px 15px rgba(37,99,235,0.3)", opacity: submitting ? 0.7 : 1 }}
-            >
-              {submitting ? (
-                <span><span className="spinner-border spinner-border-sm me-2" role="status"></span>Creating account…</span>
-              ) : (
-                <span><i className="bi bi-person-plus me-2"></i>Create account</span>
-              )}
-            </button>
-          </form>
-
-          <div className="text-center mt-4">
-            <span className="text-muted" style={{ fontSize: "0.875rem" }}>Already have an account? </span>
-            <Link to="/login" className="fw-semibold text-decoration-none" style={{ color: "#2563eb", fontSize: "0.875rem" }}>Sign in</Link>
-          </div>
-          </>
+            </>
           )}
         </div>
       </div>

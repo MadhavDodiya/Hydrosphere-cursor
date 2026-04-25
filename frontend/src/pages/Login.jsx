@@ -27,7 +27,6 @@ export default function Login() {
     } catch (err) {
       const msg = getApiErrorMessage(err, "Login failed. Please check your credentials.");
       setError(msg);
-      // Show resend link if email is not verified
       if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("verification")) {
         setShowResendLink(true);
       }
@@ -37,78 +36,74 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 50%, #f0fdf4 100%)" }} className="d-flex align-items-center justify-content-center p-3">
-      <div className="w-100" style={{ maxWidth: "460px" }}>
-        {/* Logo */}
-        <div className="text-center mb-4">
-          <Link to="/" className="text-decoration-none">
-            <span style={{ fontSize: "1.6rem", fontWeight: 800, background: "linear-gradient(135deg, #2563eb, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              HydroSphere
-            </span>
+    <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center p-6 selection:bg-[#0071E3]/20">
+      <div className="w-full max-w-[440px] animate-apple">
+        
+        {/* Brand Header */}
+        <div className="text-center mb-10">
+          <Link to="/" className="inline-flex items-center gap-3 transition-transform active:scale-95">
+            <div className="w-12 h-12 bg-[#0071E3] rounded-[14px] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20">
+              H
+            </div>
           </Link>
-          <p className="text-muted small mt-1">B2B Hydrogen Marketplace</p>
+          <h1 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight mt-6">HydroSphere</h1>
+          <p className="text-[#86868b] text-sm font-medium mt-1 uppercase tracking-widest">B2B Hydrogen Marketplace</p>
         </div>
 
-        {/* Card */}
-        <div className="card border-0 shadow-lg p-4 p-md-5" style={{ borderRadius: "24px", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)" }}>
-          <h1 className="fw-bold mb-1" style={{ fontSize: "1.6rem", color: "#0f172a" }}>Welcome back</h1>
-          <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>Sign in to your account to continue</p>
+        {/* Auth Card */}
+        <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-2xl shadow-black/[0.03] border border-black/[0.02]">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold text-[#1d1d1f]">Welcome Back</h2>
+            <p className="text-[#86868b] mt-1">Sign in to manage your energy portfolio.</p>
+          </div>
 
           {error && (
-            <div className="alert d-flex align-items-start gap-2 mb-4 py-3 px-3" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", color: "#dc2626" }}>
-              <i className="bi bi-exclamation-circle-fill flex-shrink-0 mt-1"></i>
-              <div>
-                <span style={{ fontSize: "0.875rem" }}>{error}</span>
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6 flex gap-3 animate-apple">
+              <i className="bi bi-exclamation-circle text-red-500 mt-0.5" />
+              <div className="text-sm text-red-600 font-medium leading-relaxed">
+                {error}
                 {showResendLink && (
-                  <div className="mt-1">
-                    <Link
-                      to={`/verify-email${email ? `?resend=1&prefill=${encodeURIComponent(email)}` : ""}`}
-                      style={{ fontSize: "0.82rem", color: "#2563eb", textDecoration: "underline" }}
-                    >
-                      Resend verification email →
-                    </Link>
+                  <div className="mt-2">
+                    <Link to="/verify-email" className="text-[#0071E3] hover:underline font-bold">Resend verification email →</Link>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Email address</label>
-              <div className="position-relative">
-                <i className="bi bi-envelope position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  className="form-control ps-5"
-                  style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 1rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest ml-1">Email Address</label>
+              <input
+                type="email"
+                required
+                className="form-control-apple w-full"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
-            <div className="mb-4">
-              <label htmlFor="password" className="form-label fw-semibold" style={{ fontSize: "0.875rem", color: "#374151" }}>Password</label>
-              <div className="position-relative">
-                <i className="bi bi-lock position-absolute top-50 translate-middle-y ms-3" style={{ color: "#94a3b8" }}></i>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest">Password</label>
+                <Link to="/forgot-password" className="text-[11px] font-bold text-[#0071E3] uppercase tracking-widest hover:underline">Forgot?</Link>
+              </div>
+              <div className="relative group">
                 <input
-                  id="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  autoComplete="current-password"
-                  className="form-control ps-5"
-                  style={{ borderRadius: "12px", border: "1.5px solid #e2e8f0", padding: "0.75rem 3rem 0.75rem 2.75rem", fontSize: "0.9rem" }}
-                  placeholder="Enter your password"
+                  className="form-control-apple w-full pr-12"
+                  placeholder="Required"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <button type="button" className="btn p-0 border-0 position-absolute top-50 translate-middle-y end-0 me-3" onClick={() => setShowPassword(!showPassword)}>
-                  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} style={{ color: "#94a3b8" }}></i>
+                <button 
+                  type="button" 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#86868b] hover:text-[#0071E3] transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} />
                 </button>
               </div>
             </div>
@@ -116,39 +111,30 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn w-100 fw-semibold"
-              style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "white", borderRadius: "12px", padding: "0.8rem", fontSize: "0.95rem", border: "none", boxShadow: "0 4px 15px rgba(37,99,235,0.3)", transition: "all 0.3s ease", opacity: submitting ? 0.7 : 1 }}
+              className="btn-primary w-full py-4 text-base font-bold shadow-xl shadow-blue-500/20 mt-4 flex items-center justify-center gap-2"
             >
               {submitting ? (
-                <span><span className="spinner-border spinner-border-sm me-2" role="status"></span>Signing in…</span>
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <span><i className="bi bi-box-arrow-in-right me-2"></i>Sign in</span>
+                <>Sign In <i className="bi bi-chevron-right text-xs" /></>
               )}
             </button>
           </form>
 
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <Link to="/forgot-password" className="text-decoration-none" style={{ fontSize: "0.85rem", color: "#2563eb" }}>
-              Forgot password?
-            </Link>
-            <Link to="/verify-email" className="text-decoration-none" style={{ fontSize: "0.85rem", color: "#2563eb" }}>
-              Verify email
-            </Link>
-          </div>
-
-          <div className="text-center mt-4">
-            <span className="text-muted" style={{ fontSize: "0.875rem" }}>Don't have an account? </span>
-            <Link to="/signup" className="fw-semibold text-decoration-none" style={{ color: "#2563eb", fontSize: "0.875rem" }}>Create one free</Link>
+          <div className="text-center mt-10 pt-6 border-t border-black/5">
+            <span className="text-[#86868b] text-sm">New to HydroSphere? </span>
+            <Link to="/free-trial" className="text-[#0071E3] text-sm font-bold hover:underline">Start Free Trial</Link>
           </div>
         </div>
 
-        {/* Demo credentials */}
-        <div className="text-center mt-4 p-3" style={{ background: "rgba(255,255,255,0.7)", borderRadius: "16px", backdropFilter: "blur(10px)" }}>
-          <p className="mb-1 fw-semibold" style={{ fontSize: "0.8rem", color: "#64748b" }}>DEMO CREDENTIALS</p>
-          <p className="mb-0" style={{ fontSize: "0.8rem", color: "#475569" }}>
-            <strong>Buyer:</strong> buyer@hydrosphere.demo / <strong>Supplier:</strong> supplier@hydrosphere.demo
-          </p>
-          <p className="mb-0" style={{ fontSize: "0.8rem", color: "#475569" }}>Password: <code>password123</code></p>
+        {/* Demo Footer */}
+        <div className="mt-8 p-6 bg-white/40 backdrop-blur-md rounded-3xl border border-black/[0.03] text-center">
+           <p className="text-[10px] font-black text-[#86868b] uppercase tracking-[0.2em] mb-2">Internal Sandbox Credentials</p>
+           <div className="flex flex-col gap-1 text-[11px] text-[#1d1d1f] font-medium opacity-80">
+              <p>Supplier: <span className="font-bold">supplier@hydrosphere.demo</span></p>
+              <p>Buyer: <span className="font-bold">buyer@hydrosphere.demo</span></p>
+              <p>Password: <code className="bg-white/50 px-1 rounded text-[#0071E3]">password123</code></p>
+           </div>
         </div>
       </div>
     </div>

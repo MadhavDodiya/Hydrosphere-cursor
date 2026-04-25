@@ -1,3 +1,5 @@
+import logger from "../utils/logger.js";
+
 /**
  * Central Express error handler — keeps API errors JSON-shaped.
  */
@@ -17,7 +19,13 @@ export function errorHandler(err, _req, res, _next) {
     return res.status(400).json({ message: first?.message || "Validation failed" });
   }
 
-  console.error(err);
+  logger.error(err);
+
+  // 🛰️ ERROR MONITORING (Task #11 Audit Fix)
+  if (process.env.NODE_ENV === "production") {
+    // Sentry.captureException(err);
+  }
+
   const status = err.statusCode || err.status || 500;
   const message =
     status === 500 ? "Something went wrong. Please try again." : err.message || "Error";

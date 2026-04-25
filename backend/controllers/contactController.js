@@ -9,7 +9,7 @@ export async function submitContact(req, res) {
     const { user_name, user_email, user_phone, user_role, subject, message } = req.body || {};
 
     if (!user_name || !user_email || !message) {
-      return res.status(400).json({ message: "Name, email, and message are required" });
+      return res.status(400).json({ success: false, message: "Name, email, and message are required" });
     }
 
     const contact = await Contact.create({
@@ -28,6 +28,6 @@ export async function submitContact(req, res) {
     });
   } catch (err) {
     console.error("Contact Submission Error:", err);
-    return res.status(500).json({ message: "Failed to submit contact message" });
+    return res.status(500).json({ success: false, message: "Failed to submit contact message" });
   }
 }

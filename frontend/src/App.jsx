@@ -16,6 +16,7 @@ import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import Pricing from "./pages/Pricing.jsx";
+import FreeTrial from "./pages/FreeTrial.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
 const AdminRoute = ({ children }) => {
@@ -31,14 +32,15 @@ export default function App() {
   const hideNav = location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/admin");
 
   return (
-    <div className="min-vh-100 d-flex flex-column">
+    <div className="min-h-screen flex flex-col">
       {!hideNav && <Navbar />}
-      <main className="flex-grow-1">
+      <main className="flex-grow">
         <Routes>
           <Route path="/"              element={<Home />} />
           <Route path="/marketplace"   element={<Listing />} />
           <Route path="/about"         element={<About />} />
           <Route path="/pricing"       element={<Pricing />} />
+          <Route path="/free-trial"    element={<FreeTrial />} />
           <Route path="/contact"       element={<Contact />} />
           <Route path="/listings/:id"  element={<Detail />} />
           <Route path="/login"         element={<Login />} />

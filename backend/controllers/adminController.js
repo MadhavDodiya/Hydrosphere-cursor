@@ -27,7 +27,9 @@ export const getStats = async (req, res) => {
       featuredListings,
       newUsersToday,
       newListingsThisWeek,
-      paidUsers
+      paidUsersCount, // Rename to avoid conflict with paidUsers var name if any
+      totalRevenueResult,
+      activeUsersCount
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: "buyer" }),
@@ -40,8 +42,17 @@ export const getStats = async (req, res) => {
       Listing.countDocuments({ isFeatured: true }),
       User.countDocuments({ createdAt: { $gte: today } }),
       Listing.countDocuments({ createdAt: { $gte: lastWeek } }),
-      User.countDocuments({ plan: { $nin: ["none", "free"] } }),
+      User.countDocuments({ plan: { $nin: ["none", "free", "Starter"] } }),
+      Subscription.aggregate([
+        { $match: { status: "active" } },
+        { $group: { _id: null, total: { $sum: "$total" } } }
+      ]),
+      User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
     ]);
+
+    const totalRevenue = totalRevenueResult[0]?.total || 0;
+    const conversionRate = totalSuppliers > 0 ? (paidUsersCount / totalSuppliers) * 100 : 0;
+    const paidUsers = paidUsersCount; // For backward compatibility in response
 
     // Hydrogen Type Distribution
     const rawBreakdown = await Listing.aggregate([
@@ -82,23 +93,30 @@ export const getStats = async (req, res) => {
     }
 
     res.json({
-      totalUsers,
-      totalBuyers,
-      totalSuppliers,
-      totalListings,
-      pendingListings,
-      totalInquiries,
-      pendingApprovals,
-      unverifiedSuppliers,
-      featuredListings,
-      newUsersToday,
-      newListingsThisWeek,
-      paidUsers,
-      hydrogenBreakdown,
-      chartData
+      success: true,
+      message: "Admin stats fetched successfully",
+      data: {
+        totalUsers,
+        totalBuyers,
+        totalSuppliers,
+        totalListings,
+        pendingListings,
+        totalInquiries,
+        pendingApprovals,
+        unverifiedSuppliers,
+        featuredListings,
+        newUsersToday,
+        newListingsThisWeek,
+        paidUsers,
+        hydrogenBreakdown,
+        chartData,
+        totalRevenue,
+        activeUsersCount,
+        conversionRate
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching admin stats", error: error.message });
+    res.status(500).json({ success: false, message: "Error fetching admin stats", error: error.message });
   }
 };
 
@@ -123,9 +141,13 @@ export const getUsers = async (req, res) => {
       .limit(Number(limit));
 
     const total = await User.countDocuments(query);
-    res.json({ users, total, pages: Math.ceil(total / limit) });
+    res.json({ 
+      success: true, 
+      message: "Users fetched successfully",
+      data: { users, total, pages: Math.ceil(total / limit) } 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching users" });
+    res.status(500).json({ success: false, message: "Error fetching users" });
   }
 };
 
@@ -136,17 +158,23 @@ export const approveSupplier = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user || user.role !== "supplier") {
-      return res.status(404).json({ message: "Supplier not found" });
+      return res.status(404).json({ success: false, message: "Supplier not found" });
     }
 
-    user.isApproved = true;
+    user.isApproved = !user.isApproved;
     await user.save();
 
-    sendApprovalEmail(user.email, user.name).catch(err => console.error("Email failed:", err));
+    if (user.isApproved) {
+      sendApprovalEmail(user.email, user.name).catch(err => console.error("Email failed:", err));
+    }
 
-    res.json({ message: "Supplier approved", user });
+    res.json({ 
+      success: true,
+      message: user.isApproved ? "Supplier approved" : "Supplier approval revoked", 
+      data: user 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error approving supplier" });
+    res.status(500).json({ success: false, message: "Error toggling supplier approval" });
   }
 };
 
@@ -169,9 +197,13 @@ export const getListings = async (req, res) => {
       .limit(Number(limit));
 
     const total = await Listing.countDocuments(query);
-    res.json({ listings, total, pages: Math.ceil(total / limit) });
+    res.json({ 
+      success: true, 
+      message: "Listings fetched successfully",
+      data: { listings, total, pages: Math.ceil(total / limit) } 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching listings" });
+    res.status(500).json({ success: false, message: "Error fetching listings" });
   }
 };
 
@@ -182,16 +214,16 @@ export const verifySupplier = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user || user.role !== "supplier") {
-      return res.status(404).json({ message: "Supplier not found" });
+      return res.status(404).json({ success: false, message: "Supplier not found" });
     }
 
     user.isApproved = true;
     user.isVerified = true;
     await user.save();
 
-    res.json({ message: "Supplier verified", user });
+    res.json({ success: true, message: "Supplier verified", data: user });
   } catch (error) {
-    res.status(500).json({ message: "Error verifying supplier" });
+    res.status(500).json({ success: false, message: "Error verifying supplier" });
   }
 };
 
@@ -201,16 +233,16 @@ export const verifySupplier = async (req, res) => {
 export const approveListing = async (req, res) => {
   try {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true }).populate("supplier", "email name");
-    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
     if (listing.supplier?.email) {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "approved")
         .catch(err => console.error("Email failed:", err));
     }
 
-    res.json(listing);
+    res.json({ success: true, message: "Listing approved", data: listing });
   } catch (error) {
-    res.status(500).json({ message: "Error approving listing" });
+    res.status(500).json({ success: false, message: "Error approving listing" });
   }
 };
 
@@ -220,15 +252,59 @@ export const approveListing = async (req, res) => {
 export const rejectListing = async (req, res) => {
   try {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true }).populate("supplier", "email name");
-    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
     if (listing.supplier?.email) {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "rejected")
         .catch(err => console.error("Email failed:", err));
     }
 
-    res.json(listing);
+    res.json({ success: true, message: "Listing rejected", data: listing });
   } catch (error) {
-    res.status(500).json({ message: "Error rejecting listing" });
+    res.status(500).json({ success: false, message: "Error rejecting listing" });
+  }
+};
+
+/**
+ * GET /api/admin/inquiries
+ */
+export const getInquiries = async (req, res) => {
+  try {
+    const inquiries = await Inquiry.find()
+      .populate("buyerId", "name email")
+      .populate("supplierId", "name email")
+      .populate("listingId", "title companyName")
+      .sort({ createdAt: -1 })
+      .limit(100);
+    res.json({ success: true, message: "Inquiries fetched successfully", data: inquiries });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching inquiries" });
+  }
+};
+
+/**
+ * PUT /api/admin/inquiries/:id/flag
+ */
+export const flagInquiry = async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findById(req.params.id);
+    if (!inquiry) return res.status(404).json({ success: false, message: "Inquiry not found" });
+    inquiry.isFlagged = !inquiry.isFlagged;
+    await inquiry.save();
+    res.json({ success: true, message: "Inquiry flag toggled", data: inquiry });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error toggling flag" });
+  }
+};
+
+/**
+ * DELETE /api/admin/inquiries/:id
+ */
+export const deleteInquiry = async (req, res) => {
+  try {
+    await Inquiry.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Inquiry deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error deleting inquiry" });
   }
 };

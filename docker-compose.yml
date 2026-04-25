@@ -8,23 +8,33 @@ services:
     container_name: hydrosphere-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${PORT:-5000}:5000"
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
-      # The following must be passed in via an external .env file or environment variables
+      - FRONTEND_URL=${FRONTEND_URL}
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
-      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE:-gmail}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   frontend:
     build:
@@ -34,5 +44,25 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-/api}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+
+  db:
+    image: mongo:6.0
+    container_name: hydrosphere-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:

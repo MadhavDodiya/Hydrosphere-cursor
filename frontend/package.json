@@ -15,6 +15,7 @@
     "bootstrap-icons": "^1.11.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^3.0.0",
     "react-router-dom": "^6.26.2",
     "socket.io-client": "^4.8.3"
   },

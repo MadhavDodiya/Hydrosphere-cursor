@@ -10,6 +10,7 @@ import {
   refreshToken,
   logout,
 } from "../controllers/authController.js";
+import { authenticate } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import {
   registerSchema,
@@ -32,6 +33,14 @@ router.get("/verify-email", verifyEmail);
 router.post("/resend-verification", authLimiter, validate({ body: emailOnlySchema }), resendVerification);
 router.post("/forgot-password", authLimiter, validate({ body: emailOnlySchema }), forgotPassword);
 router.post("/reset-password", authLimiter, validate({ body: resetPasswordSchema }), resetPassword);
+router.get("/me", authenticate, (req, res) => {
+  res.json({ 
+    success: true, 
+    data: { user: req.user }, 
+    message: "User session active" 
+  });
+});
+
 router.post("/refresh", refreshToken);
 router.post("/logout", logout);
 

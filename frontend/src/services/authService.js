@@ -35,12 +35,12 @@ export function clearSession() {
 
 export async function register(payload) {
   const { data } = await api.post("/api/auth/register", payload);
-  return data;
+  return data.data; // Return the nested data object
 }
 
 export async function login(payload) {
   const { data } = await api.post("/api/auth/login", payload);
-  return data;
+  return data.data; // Return the nested data object
 }
 
 export async function logoutAPI() {

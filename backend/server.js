@@ -23,9 +23,17 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import jwt from "jsonwebtoken";
 import User from "./models/User.js";
 import { setIO } from "./utils/realtime.js";
+import morgan from "morgan";
+import logger from "./utils/logger.js";
+import { initCronJobs } from "./services/cronService.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// HTTP Request Logging
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev", {
+  stream: { write: (message) => logger.info(message.trim()) }
+}));
 
 // Security: Set security HTTP headers
 app.use(helmet());
@@ -49,7 +57,15 @@ const apiLimiter = rateLimit({
   message: { message: "Too many requests from this IP. Please try again after 15 minutes." },
 });
 
-// Apply limiters
+// Global Rate Limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 1000,
+  message: { message: "Too many requests. Please try again later." },
+});
+app.use(globalLimiter);
+
+// Apply strict limiters for sensitive routes
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api", apiLimiter);
@@ -139,7 +155,10 @@ async function start() {
   }
 
   await connectDatabase(process.env.MONGODB_URI);
-  console.log("MongoDB connected");
+  logger.info("MongoDB connected");
+
+  // Initialize Background Workers (Task #11 Audit Fix)
+  initCronJobs();
 
   const server = createServer(app);
 
@@ -193,7 +212,7 @@ async function start() {
   });
 
   const shutdown = async () => {
-    console.log("\nClosing server…");
+    logger.info("Closing server…");
     server.close(() => {
       mongoose.connection.close().finally(() => process.exit(0));
     });
@@ -201,24 +220,34 @@ async function start() {
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
+  process.on("unhandledRejection", (reason, promise) => {
+    logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+  });
+
+  process.on("uncaughtException", (error) => {
+    logger.error("Uncaught Exception:", error);
+    // Optional: Graceful shutdown
+    // shutdown();
+  });
+
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
-      console.error(
-        `\nPort ${PORT} is already in use (another app or an old HydroSphere server).\n` +
-          `Fix: stop the other process, or set PORT=5001 in backend/.env (the Vite dev server reads PORT from there for /api proxy).\n`
+      logger.error(
+        `Port ${PORT} is already in use (another app or an old HydroSphere server). ` +
+          `Fix: stop the other process, or set PORT=5001 in backend/.env.`
       );
     } else {
-      console.error(err);
+      logger.error(err);
     }
     process.exit(1);
   });
 }
 
 start().catch((err) => {
-  console.error(err.message || err);
+  logger.error(err.message || err);
   if (String(err.message || "").includes("ECONNREFUSED")) {
-    console.error(
-      "\nMongoDB refused the connection. Start MongoDB locally or fix MONGODB_URI in backend/.env (e.g. Atlas connection string).\n"
+    logger.error(
+      "MongoDB refused the connection. Start MongoDB locally or fix MONGODB_URI in backend/.env."
     );
   }
   process.exit(1);

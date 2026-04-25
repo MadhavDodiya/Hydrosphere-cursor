@@ -10,25 +10,36 @@ export async function checkSubscriptionExpiry(req, res, next) {
     }
 
     const user = await User.findById(req.userId).select(
-      "plan subscriptionStatus subscriptionCurrentPeriodEnd"
+      "plan subscriptionStatus subscriptionCurrentPeriodEnd trialExpiresAt trialActive"
     );
 
     if (!user) return next();
 
     const now = new Date();
     const periodEnd = user.subscriptionCurrentPeriodEnd;
+    const trialEnd = user.trialExpiresAt;
 
-    if (
-      periodEnd &&
-      now > periodEnd &&
-      user.subscriptionStatus === "active"
-    ) {
+    let isExpired = false;
+
+    // Check paid subscription expiry
+    if (periodEnd && now > periodEnd && user.subscriptionStatus === "active" && user.plan !== "Starter" && user.plan !== "free") {
+      isExpired = true;
+    }
+
+    // Check free trial expiry
+    if ((user.plan === "Starter" || user.plan === "free") && trialEnd && now > trialEnd && user.subscriptionStatus === "active") {
+      isExpired = true;
+    }
+
+    if (isExpired) {
       user.plan = "none";
       user.subscriptionStatus = "inactive";
+      user.trialActive = false;
       await user.save();
 
       req.plan = "none";
       req.subscriptionStatus = "inactive";
+      req.trialActive = false;
 
       console.log(
         `[SUBSCRIPTION] Plan expired for user ${req.userId}. Downgraded to none.`

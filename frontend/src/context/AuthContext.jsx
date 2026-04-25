@@ -9,7 +9,7 @@ import {
   register as registerRequest,
   logoutAPI,
 } from "../services/authService.js";
-import { setAuthToken, setUnauthorizedHandler } from "../api/axiosInstance.js";
+import api, { setAuthToken, setUnauthorizedHandler } from "../api/axiosInstance.js";
 import { useToast } from "./ToastContext.jsx";
 import { connectSocket, disconnectSocket } from "../api/socket.js";
 
@@ -23,9 +23,28 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     setAuthToken(token);
-    if (token) connectSocket(token);
-    else disconnectSocket();
-    setLoading(false);
+    if (token) {
+      connectSocket(token);
+      // 🔥 REFRESH USER STATE (Task #11 Audit Fix)
+      // This ensures if an admin approved the supplier, the local state updates without logout
+      const fetchMe = async () => {
+        try {
+          const { data } = await api.get("/api/auth/me");
+          if (data.success && data.data?.user) {
+            setUser(data.data.user);
+            persistUser(data.data.user);
+          }
+        } catch (err) {
+          console.error("Failed to refresh user profile", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchMe();
+    } else {
+      disconnectSocket();
+      setLoading(false);
+    }
   }, [token]);
 
   useEffect(() => {
@@ -47,10 +66,14 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const register = async (name, email, password, role, businessRegistrationNumber) => {
-    const data = await registerRequest({ name, email, password, role, businessRegistrationNumber });
-    // User is NOT logged in yet; they must verify email first.
-    return data; 
+  const register = async (userData) => {
+    const data = await registerRequest(userData);
+    if (data.token && data.user) {
+      persistSession(data.token, data.user);
+      setToken(data.token);
+      setUser(data.user);
+    }
+    return data;
   };
 
   const logout = async () => {

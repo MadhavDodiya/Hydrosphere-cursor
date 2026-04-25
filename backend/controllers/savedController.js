@@ -28,14 +28,18 @@ export async function getSavedListings(req, res) {
 
     const listings = rows.map((r) => r.listing).filter(Boolean);
     return res.json({
-      data: listings,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      success: true,
+      message: "Saved listings fetched successfully",
+      data: {
+        listings,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      }
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Failed to load saved listings" });
+    return res.status(500).json({ success: false, message: "Failed to load saved listings" });
   }
 }
 
@@ -46,30 +50,34 @@ export async function saveListing(req, res) {
   try {
     const listingId = req.body?.listingId;
     if (!listingId || !mongoose.isValidObjectId(String(listingId))) {
-      return res.status(400).json({ message: "listingId is required and must be valid" });
+      return res.status(400).json({ success: false, message: "listingId is required and must be valid" });
     }
 
     const listing = await Listing.findById(listingId);
     if (!listing) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({ success: false, message: "Listing not found" });
     }
 
     try {
-      await SavedListing.create({
+      const saved = await SavedListing.create({
         user: req.userId,
         listing: listingId,
       });
-      return res.status(201).json({ message: "Saved to your list" });
+      return res.status(201).json({ 
+        success: true, 
+        message: "Saved to your list", 
+        data: saved 
+      });
     } catch (err) {
       // Duplicate bookmark — treat as success for idempotent UX
       if (err.code === 11000) {
-        return res.status(200).json({ message: "Already saved" });
+        return res.status(200).json({ success: true, message: "Already saved" });
       }
       throw err;
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Could not save listing" });
+    return res.status(500).json({ success: false, message: "Could not save listing" });
   }
 }
 
@@ -80,13 +88,13 @@ export async function unsaveListing(req, res) {
   try {
     const { listingId } = req.params;
     if (!mongoose.isValidObjectId(listingId)) {
-      return res.status(400).json({ message: "Invalid listing id" });
+      return res.status(400).json({ success: false, message: "Invalid listing id" });
     }
 
     await SavedListing.deleteOne({ user: req.userId, listing: listingId });
-    return res.json({ message: "Removed from saved" });
+    return res.json({ success: true, message: "Removed from saved" });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Could not remove saved listing" });
+    return res.status(500).json({ success: false, message: "Could not remove saved listing" });
   }
 }

@@ -30,13 +30,17 @@ export const getSupplierStats = async (req, res) => {
     }));
 
     res.json({
-      totalListings,
-      activeListings,
-      totalLeads,
-      newLeadsToday,
-      activity
+      success: true,
+      message: "Supplier stats fetched successfully",
+      data: {
+        totalListings,
+        activeListings,
+        totalLeads,
+        newLeadsToday,
+        activity
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching supplier stats" });
+    res.status(500).json({ success: false, message: "Error fetching supplier stats" });
   }
 };

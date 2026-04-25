@@ -10,6 +10,9 @@ export const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(320),
   password: z.string().min(6).max(200),
   role: z.enum(["buyer", "supplier"]),
+  companyName: z.string().trim().optional(),
+  location: z.string().trim().optional(),
+  businessRegistrationNumber: z.string().trim().optional(),
 });
 
 export const loginSchema = z.object({

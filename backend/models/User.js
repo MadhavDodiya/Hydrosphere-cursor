@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema(
       maxlength: 40,
       default: "",
     },
+    location: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: "",
+    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -86,9 +92,17 @@ const userSchema = new mongoose.Schema(
     // SaaS subscription (supplier-focused; buyers can remain "free")
     plan: {
       type: String,
-      enum: ["none", "Basic", "Pro", "Enterprise"],
+      enum: ["none", "free", "Basic", "Pro", "Enterprise"],
       default: "none",
       index: true,
+    },
+    trialActive: {
+      type: Boolean,
+      default: false,
+    },
+    trialExpiresAt: {
+      type: Date,
+      default: null,
     },
     subscriptionStatus: {
       type: String,

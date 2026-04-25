@@ -6,7 +6,6 @@ import SpecificationTable from "../components/SpecificationTable.jsx";
 import RelatedSuppliers from "../components/RelatedSuppliers.jsx";
 import Footer from "../components/Footer.jsx";
 import { fetchListingById } from "../services/listingService.js";
-import "./Detail.css";
 
 export default function Detail() {
   const { id } = useParams();
@@ -30,31 +29,17 @@ export default function Detail() {
     loadListing();
   }, [id]);
 
-  // Loading skeleton
   if (loading) {
     return (
-      <div className="detail-page-bg pb-0">
-        <div className="container py-4">
-          <div className="placeholder-glow">
-            <span className="placeholder col-3 mb-4" style={{ height: 18, borderRadius: 6 }}></span>
-            <div className="row g-4">
-              <div className="col-12 col-lg-8">
-                <div className="bg-white rounded shadow-sm p-4 mb-4">
-                  <span className="placeholder col-8 mb-3" style={{ height: 28 }}></span>
-                  <span className="placeholder col-4 mb-4" style={{ height: 16 }}></span>
-                  <span className="placeholder col-12 mb-2" style={{ height: 200, borderRadius: 12 }}></span>
-                  <span className="placeholder col-12 mt-3" style={{ height: 14 }}></span>
-                  <span className="placeholder col-10" style={{ height: 14 }}></span>
-                </div>
-              </div>
-              <div className="col-12 col-lg-4">
-                <div className="bg-white rounded shadow-sm p-4">
-                  <span className="placeholder col-8 mb-3" style={{ height: 20 }}></span>
-                  <span className="placeholder col-12 mb-2" style={{ height: 14 }}></span>
-                  <span className="placeholder col-12" style={{ height: 44, borderRadius: 22 }}></span>
-                </div>
-              </div>
+      <div className="min-h-screen bg-[#F5F5F7] animate-pulse selection:bg-[#0071E3]/20">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="h-4 w-48 bg-black/5 rounded-full mb-10" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-white rounded-[32px] p-8 h-96 shadow-sm border border-black/5" />
+              <div className="bg-white rounded-[32px] p-8 h-64 shadow-sm border border-black/5" />
             </div>
+            <div className="bg-white rounded-[32px] p-8 h-[500px] shadow-sm border border-black/5" />
           </div>
         </div>
       </div>
@@ -62,56 +47,55 @@ export default function Detail() {
   }
 
   return (
-    <div className="detail-page-bg pb-0">
-      <div className="container py-4">
+    <div className="min-h-screen bg-[#F5F5F7] selection:bg-[#0071E3]/20">
+      <div className="max-w-7xl mx-auto px-6 py-12">
         
         {/* Breadcrumb Info */}
-        <nav aria-label="breadcrumb" className="mb-4">
-          <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link to="/">Home</Link></li>
-            <li className="breadcrumb-item"><Link to="/marketplace">Suppliers</Link></li>
-            <li className="breadcrumb-item active text-dark fw-medium" aria-current="page">{listing?.hydrogenType || "High Purity"} H2</li>
+        <nav className="mb-10 animate-apple">
+          <ol className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[#86868b]">
+            <li><Link to="/" className="hover:text-[#0071E3] transition-colors">Home</Link></li>
+            <li><i className="bi bi-chevron-right text-[8px]" /></li>
+            <li><Link to="/marketplace" className="hover:text-[#0071E3] transition-colors">Marketplace</Link></li>
+            <li><i className="bi bi-chevron-right text-[8px]" /></li>
+            <li className="text-[#1d1d1f] truncate max-w-[150px]">{listing?.hydrogenType || "Product"}</li>
           </ol>
         </nav>
 
-        <div className="row g-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           
-          {/* Left section: Main Content */}
-          <div className="col-12 col-lg-8">
+          {/* Main Content Column */}
+          <div className="lg:col-span-2 space-y-10 animate-apple">
             <ProductInfo 
-              title={listing ? `${listing.hydrogenType} Hydrogen Gas` : "High Purity Hydrogen Gas"}
+              title={listing ? `${listing.hydrogenType} Hydrogen` : "High Purity Hydrogen"}
               rating={4.8}
-              location={listing?.location || "Houston, USA"}
-              description={listing?.description || "Premium grade gaseous product suitable for industrial scaling and commercial mobility fuel cells."}
+              location={listing?.location || "Industrial Hub"}
+              description={listing?.description || "High-grade industrial hydrogen tailored for sustainable enterprise mobility and fuel cell infrastructure."}
               imageUrl={listing?.images?.length ? listing.images[0] : null}
             />
             
             <SpecificationTable listing={listing} />
-
-            {/* Reviews section hidden — no real reviews data yet */}
-            
           </div>
           
-          {/* Right section: Sticky Action Panel */}
-          <div className="col-12 col-lg-4">
+          {/* Action Panel Column */}
+          <div className="animate-apple delay-100">
             <SupplierInfoCard 
               key={listing?._id || "detail-listing"}
               listing={listing}
-              supplierName={listing?.title || listing?.companyName || "HydroGen Pro"}
-              location={listing?.location || "Houston, USA"}
+              supplierName={listing?.title || listing?.companyName || "Verified Partner"}
+              location={listing?.location || "Global Distribution"}
               rating={4.8}
               price={listing ? `$${listing.price}` : "$4.50"}
             />
           </div>
         </div>
 
-        {/* Bottom Section: Related Suppliers */}
-        <RelatedSuppliers type={listing?.hydrogenType} excludeId={listing?._id} />
+        {/* Discovery Section */}
+        <div className="mt-20 animate-apple delay-200">
+          <RelatedSuppliers type={listing?.hydrogenType} excludeId={listing?._id} />
+        </div>
       </div>
       
-      <div className="mt-5">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

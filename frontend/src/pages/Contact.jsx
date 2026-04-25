@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "../context/ToastContext.jsx";
+import Footer from "../components/Footer.jsx";
+import api from "../api/axiosInstance";
 
 export default function Contact() {
   const { showToast } = useToast();
@@ -33,17 +35,7 @@ export default function Contact() {
     setStatus({ type: "", message: "" });
 
     try {
-      const response = await fetch("/api/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
+      await api.post("/contacts", formData);
       
       setStatus({ 
         type: "success", 
@@ -60,257 +52,237 @@ export default function Contact() {
       });
     } catch (error) {
       console.error("Submission Error:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Something went wrong";
       setStatus({ 
         type: "danger", 
-        message: error.message || "Oops! Something went wrong. Please try again later." 
+        message: errorMsg
       });
-      showToast(error.message || "Failed to send message.", "error");
+      showToast(errorMsg, "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="contact-page">
-      {/* ── 1. Hero Header ───────────────────────────────────── */}
-      <section className="py-5 text-center text-white" style={{ backgroundColor: "#0A2342" }}>
-        <div className="container py-4">
-          <h1 className="display-4 fw-bold mb-3">Get in Touch</h1>
-          <p className="lead opacity-75 mx-auto" style={{ maxWidth: "600px" }}>
-            Have a question? Want to list your products? We'd love to hear from you.
+    <div className="bg-[#F5F5F7] min-h-screen font-inter selection:bg-[#0071E3]/10 selection:text-[#0071E3]">
+      {/* 1. Refined Hero Header */}
+      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] pointer-events-none overflow-hidden">
+           <div className="absolute -top-24 -left-24 w-[400px] h-[400px] bg-[#0071E3]/5 rounded-full blur-[100px]"></div>
+           <div className="absolute top-0 -right-24 w-[350px] h-[350px] bg-[#00D1B2]/5 rounded-full blur-[80px]"></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <span className="inline-block px-4 py-1.5 mb-8 text-[11px] font-black tracking-[0.2em] text-[#0071E3] uppercase bg-[#0071E3]/5 rounded-full border border-[#0071E3]/10">
+            Connect with Experts
+          </span>
+          <h1 className="text-5xl md:text-6xl font-black text-[#1d1d1f] mb-8 tracking-tight">
+            How can we <span className="text-[#0071E3]">help you?</span>
+          </h1>
+          <p className="text-xl text-[#86868b] font-medium max-w-2xl mx-auto leading-relaxed">
+            Whether you're scaling a hydrogen plant or sourcing for manufacturing, 
+            our specialized team is ready to assist.
           </p>
         </div>
       </section>
 
-      {/* ── 2. Contact Content (Two Column) ──────────────────── */}
-      <section className="py-5 bg-white">
-        <div className="container py-4">
-          <div className="row g-5">
+      {/* 2. Main Content Grid */}
+      <section className="max-w-7xl mx-auto px-6 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Left: Premium Contact Form */}
+          <div className="lg:col-span-7 bg-white rounded-[42px] p-10 md:p-14 shadow-2xl shadow-black/[0.03] border border-black/[0.02] animate-apple">
+            <h3 className="text-2xl font-black text-[#1d1d1f] mb-10">Send a Message</h3>
             
-            {/* Left: Contact Form */}
-            <div className="col-lg-7">
-              <div className="pe-lg-4">
-                <h3 className="fw-bold mb-4" style={{ color: "#0A2342" }}>Send us a Message</h3>
-                
-                {status.message && (
-                  <div className={`alert alert-${status.type} border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center`}>
-                    <i className={`bi bi-${status.type === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-3 fs-4`}></i>
-                    <div>{status.message}</div>
-                  </div>
-                )}
-
-                <form ref={formRef} onSubmit={handleSubmit} className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label small fw-bold text-muted">Full Name *</label>
-                    <input 
-                      type="text" 
-                      name="user_name"
-                      className="form-control rounded-3 border-light-subtle py-2 shadow-none" 
-                      placeholder="Enter your name"
-                      required
-                      value={formData.user_name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label small fw-bold text-muted">Email Address *</label>
-                    <input 
-                      type="email" 
-                      name="user_email"
-                      className="form-control rounded-3 border-light-subtle py-2 shadow-none" 
-                      placeholder="your@email.com"
-                      required
-                      value={formData.user_email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label small fw-bold text-muted">Phone Number (Optional)</label>
-                    <input 
-                      type="tel" 
-                      name="user_phone"
-                      className="form-control rounded-3 border-light-subtle py-2 shadow-none" 
-                      placeholder="+91 XXXXX XXXXX"
-                      value={formData.user_phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="col-md-12">
-                    <label className="form-label small fw-bold text-muted d-block mb-3">I am a:</label>
-                    <div className="btn-group w-100 shadow-sm" role="group">
-                      <input 
-                        type="radio" 
-                        className="btn-check" 
-                        name="user_role" 
-                        id="role-buyer" 
-                        value="Buyer"
-                        checked={formData.user_role === "Buyer"}
-                        onChange={handleChange}
-                        autoComplete="off" 
-                      />
-                      <label className="btn btn-outline-teal rounded-start-3 py-2 fw-medium" htmlFor="role-buyer">Buyer</label>
-
-                      <input 
-                        type="radio" 
-                        className="btn-check" 
-                        name="user_role" 
-                        id="role-supplier" 
-                        value="Supplier"
-                        checked={formData.user_role === "Supplier"}
-                        onChange={handleChange}
-                        autoComplete="off" 
-                      />
-                      <label className="btn btn-outline-teal rounded-end-3 py-2 fw-medium" htmlFor="role-supplier">Supplier</label>
-                    </div>
-                  </div>
-
-                  <div className="col-md-12 mt-4">
-                    <label className="form-label small fw-bold text-muted">Subject</label>
-                    <select 
-                      name="subject"
-                      className="form-select rounded-3 border-light-subtle py-2 shadow-none"
-                      value={formData.subject}
-                      onChange={handleChange}
-                    >
-                      <option>General Inquiry</option>
-                      <option>Want to List Products</option>
-                      <option>Report an Issue</option>
-                      <option>Partnership</option>
-                    </select>
-                  </div>
-
-                  <div className="col-md-12">
-                    <label className="form-label small fw-bold text-muted">Your Message *</label>
-                    <textarea 
-                      name="message"
-                      className="form-control rounded-3 border-light-subtle shadow-none" 
-                      rows="4" 
-                      placeholder="How can we help you?"
-                      required
-                      value={formData.message}
-                      onChange={handleChange}
-                    ></textarea>
-                  </div>
-
-                  <div className="col-12 mt-4">
-                    <button 
-                      type="submit" 
-                      className="btn btn-teal text-white w-100 py-3 fw-bold rounded-3 shadow-sm border-0 transition-all hover-up"
-                      disabled={loading}
-                      style={{ backgroundColor: "#1C7293", transition: "all 0.3s ease" }}
-                    >
-                      {loading ? (
-                        <><span className="spinner-border spinner-border-sm me-2"></span>Sending...</>
-                      ) : (
-                        "Send Message"
-                      )}
-                    </button>
-                  </div>
-                </form>
+            {status.message && (
+              <div className={`p-5 rounded-2xl mb-10 flex gap-4 animate-apple ${status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                <i className={`bi bi-${status.type === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill text-xl`} />
+                <div className="text-sm font-bold">{status.message}</div>
               </div>
-            </div>
+            )}
 
-            {/* Right: Contact info */}
-            <div className="col-lg-5">
-              <div className="ps-lg-4 h-100 d-flex flex-column">
-                <h3 className="fw-bold mb-4" style={{ color: "#0A2342" }}>Contact Information</h3>
-                
-                <div className="d-flex flex-column gap-3 mb-5">
-                  <div className="card border-0 bg-light rounded-4 overflow-hidden mb-3">
-                    <div className="card-body p-4 d-flex align-items-center gap-4">
-                      <div className="contact-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ backgroundColor: "#E6F0F4", color: "#1C7293", width: "56px", height: "56px" }}>
-                        <i className="bi bi-envelope-fill fs-4"></i>
-                      </div>
-                      <div>
-                        <div className="small text-muted fw-bold text-uppercase tracking-wider mb-1">Email us</div>
-                        <a href="mailto:madhavdodiya2017@gmail.com" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>madhavdodiya2017@gmail.com</a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card border-0 bg-light rounded-4 overflow-hidden mb-3">
-                    <div className="card-body p-4 d-flex align-items-center gap-4">
-                      <div className="contact-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ backgroundColor: "#E8F8F5", color: "#21B5A0", width: "56px", height: "56px" }}>
-                        <i className="bi bi-whatsapp fs-4"></i>
-                      </div>
-                      <div>
-                        <div className="small text-muted fw-bold text-uppercase tracking-wider mb-1">WhatsApp support</div>
-                        <a href="https://wa.me/918140674266" target="_blank" rel="noreferrer" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>+91 8140674266</a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card border-0 bg-light rounded-4 overflow-hidden mb-3">
-                    <div className="card-body p-4 d-flex align-items-center gap-4">
-                      <div className="contact-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ backgroundColor: "#FDF5E6", color: "#B58921", width: "56px", height: "56px" }}>
-                        <i className="bi bi-geo-alt-fill fs-4"></i>
-                      </div>
-                      <div>
-                        <div className="small text-muted fw-bold text-uppercase tracking-wider mb-1">Location</div>
-                        <div className="fw-bold fs-5" style={{ color: "#0A2342" }}>Ahmedabad, Gujarat, India</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="alert border-0 bg-blue-light rounded-4 p-4 mt-auto" style={{ backgroundColor: "#F0F7FA" }}>
-                    <div className="d-flex align-items-center gap-3">
-                      <i className="bi bi-clock-history fs-4 text-primary"></i>
-                      <div className="small fw-medium text-dark">
-                        We typically respond within 24 hours. Our support team is available Mon-Sat, 9 AM - 6 PM.
-                      </div>
-                    </div>
-                  </div>
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Full Name</label>
+                  <input 
+                    type="text" 
+                    name="user_name"
+                    className="form-control-apple w-full" 
+                    placeholder="Jane Doe"
+                    required
+                    value={formData.user_name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Email Address</label>
+                  <input 
+                    type="email" 
+                    name="user_email"
+                    className="form-control-apple w-full" 
+                    placeholder="jane@company.com"
+                    required
+                    value={formData.user_email}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
-            </div>
+
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Phone Number</label>
+                <input 
+                  type="tel" 
+                  name="user_phone"
+                  className="form-control-apple w-full" 
+                  placeholder="+91 XXXXX XXXXX"
+                  value={formData.user_phone}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Your Role</label>
+                <div className="flex p-1 bg-black/[0.03] rounded-[20px] border border-black/[0.02]">
+                  {['Buyer', 'Supplier'].map(role => (
+                    <label key={role} className="flex-1 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="user_role" 
+                        value={role}
+                        className="sr-only"
+                        checked={formData.user_role === role}
+                        onChange={handleChange}
+                      />
+                      <div className={`text-center py-3 rounded-[16px] text-sm font-bold transition-all ${formData.user_role === role ? 'bg-white text-[#1d1d1f] shadow-md' : 'text-[#86868b] hover:text-[#1d1d1f]'}`}>
+                        {role}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Subject</label>
+                <select 
+                  name="subject"
+                  className="form-control-apple w-full appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTIgMSIgc3Ryb2tlPSIjODY4NjhCIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-no-repeat bg-[right_1.5rem_center]"
+                  value={formData.subject}
+                  onChange={handleChange}
+                >
+                  <option>General Inquiry</option>
+                  <option>Want to List Products</option>
+                  <option>Report an Issue</option>
+                  <option>Partnership</option>
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-[#86868b] uppercase tracking-widest ml-1">Message</label>
+                <textarea 
+                  name="message"
+                  className="form-control-apple w-full min-h-[160px] resize-none" 
+                  placeholder="Tell us how we can help you..."
+                  required
+                  value={formData.message}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="pt-6">
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full bg-[#0071E3] text-white py-5 rounded-[22px] font-black text-base shadow-2xl shadow-blue-500/30 hover:bg-[#0077ED] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                >
+                  {loading ? (
+                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>Send Message <i className="bi bi-send-fill text-sm" /></>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right: Contact Information Cards */}
+          <div className="lg:col-span-5 space-y-8">
+            <h3 className="text-2xl font-black text-[#1d1d1f] mb-10 pl-2">Information</h3>
             
-          </div>
-        </div>
-      </section>
+            <div className="space-y-6">
+              {[
+                { 
+                  icon: "bi-envelope-fill", 
+                  label: "Email Support", 
+                  value: "madhavdodiya2017@gmail.com", 
+                  link: "mailto:madhavdodiya2017@gmail.com",
+                  color: "bg-blue-50 text-blue-600"
+                },
+                { 
+                  icon: "bi-whatsapp", 
+                  label: "WhatsApp Business", 
+                  value: "+91 8140674266", 
+                  link: "https://wa.me/918140674266",
+                  color: "bg-green-50 text-green-600"
+                },
+                { 
+                  icon: "bi-geo-alt-fill", 
+                  label: "Headquarters", 
+                  value: "Ahmedabad, Gujarat, India", 
+                  color: "bg-orange-50 text-orange-600"
+                }
+              ].map((item, i) => (
+                <div key={i} className="bg-white rounded-[32px] p-8 flex items-center gap-6 shadow-2xl shadow-black/[0.02] border border-black/[0.02] transition-transform hover:scale-[1.02]">
+                  <div className={`w-16 h-16 rounded-[20px] flex items-center justify-center text-2xl flex-shrink-0 ${item.color}`}>
+                    <i className={`bi ${item.icon}`} />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] font-black text-[#86868b] uppercase tracking-widest mb-1">{item.label}</p>
+                    {item.link ? (
+                      <a href={item.link} target={item.link.startsWith('http') ? '_blank' : '_self'} rel="noreferrer" className="text-lg font-bold text-[#1d1d1f] hover:text-[#0071E3] transition-colors truncate block">
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="text-lg font-bold text-[#1d1d1f] truncate block">{item.value}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-      {/* ── 3. Bottom Banner ─────────────────────────────────── */}
-      <section className="py-5" style={{ backgroundColor: "#D6EAF4" }}>
-        <div className="container py-4 text-center">
-          <div className="row justify-content-center">
-            <div className="col-md-8">
-              <h2 className="fw-bold mb-4" style={{ color: "#0A2342" }}>Are you a water product supplier?</h2>
-              <Link 
-                to="/signup" 
-                className="btn btn-teal text-white btn-lg px-5 py-3 fw-bold rounded-pill shadow-sm border-0 transition-all hover-up"
-                style={{ backgroundColor: "#1C7293", transition: "all 0.3s ease" }}
-              >
-                List Your Products Free →
-              </Link>
+            <div className="bg-[#0071E3]/5 rounded-[32px] p-8 border border-[#0071E3]/10">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#0071E3] flex items-center justify-center text-white">
+                  <i className="bi bi-clock-history" />
+                </div>
+                <p className="text-sm font-bold text-[#1d1d1f] leading-relaxed">
+                  Typical response time: <span className="text-[#0071E3]">24 hours</span>. <br/>
+                  <span className="text-[#86868b] font-medium">Available Mon-Sat, 9 AM - 6 PM IST.</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <style jsx="true">{`
-        .contact-page { font-family: 'Inter', sans-serif; }
-        .btn-outline-teal { 
-          color: #1C7293; 
-          border-color: #1C7293; 
-          transition: all 0.2s ease;
-        }
-        .btn-check:checked + .btn-outline-teal {
-          background-color: #1C7293;
-          border-color: #1C7293;
-          color: white;
-        }
-        .btn-outline-teal:hover {
-          background-color: rgba(28, 114, 147, 0.05);
-          color: #1C7293;
-          border-color: #1C7293;
-        }
-        .hover-up:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-        }
-        .contact-icon { transition: transform 0.3s ease; }
-        .card:hover .contact-icon { transform: scale(1.1); }
-      `}</style>
+      {/* 3. CTA Banner */}
+      <section className="bg-white py-24 px-6">
+        <div className="max-w-5xl mx-auto rounded-[48px] bg-[#1d1d1f] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-full bg-[#0071E3]/10 pointer-events-none" />
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-8 tracking-tight">Are you a hydrogen supplier?</h2>
+            <p className="text-lg text-[#86868b] font-medium mb-12 max-w-xl mx-auto">Join the world's most advanced hydrogen marketplace and reach industrial buyers globally.</p>
+            <Link 
+              to="/signup" 
+              className="inline-flex items-center gap-3 bg-[#0071E3] text-white px-10 py-5 rounded-full font-black text-lg hover:bg-[#0077ED] transition-all shadow-2xl shadow-blue-500/40 active:scale-95"
+            >
+              List Your Products Free <i className="bi bi-arrow-right" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }

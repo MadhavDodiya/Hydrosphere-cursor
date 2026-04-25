@@ -10,7 +10,6 @@ export default function RelatedSuppliers({ type, excludeId }) {
     const loadRelated = async () => {
       try {
         setLoading(true);
-        // Fetch listings of the same type
         const res = await fetchListings({ 
           hydrogenType: type, 
           limit: 4 
@@ -40,22 +39,27 @@ export default function RelatedSuppliers({ type, excludeId }) {
     if (type) loadRelated();
   }, [type, excludeId]);
 
-  if (loading && !type) return null;
   if (!loading && suppliers.length === 0) return null;
 
   return (
-    <div className="related-suppliers mt-5 pt-4 border-top">
-      <h3 className="fw-bold mb-4"><i className="bi bi-grid-3x3-gap me-2 text-primary"></i>Similar Suppliers</h3>
-      <div className="row g-4">
+    <div className="pt-20 animate-apple">
+      <div className="flex items-center gap-4 mb-10">
+         <div className="w-10 h-10 rounded-xl bg-[#0071E3]/10 flex items-center justify-center text-[#0071E3]">
+            <i className="bi bi-grid-3x3-gap text-xl" />
+         </div>
+         <h3 className="text-[11px] font-black text-[#86868b] uppercase tracking-[0.2em]">Similar Suppliers</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {loading ? (
            Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="col-12 col-md-4">
+            <div key={i}>
               <SupplierCard supplier={null} />
             </div>
           ))
         ) : (
           suppliers.map((sup) => (
-            <div key={sup.id} className="col-12 col-md-4">
+            <div key={sup.id}>
               <SupplierCard supplier={sup} />
             </div>
           ))

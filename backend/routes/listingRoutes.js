@@ -13,6 +13,7 @@ import { upload } from "../middleware/upload.js";
 import { validate } from "../middleware/validate.js";
 import { listingCreateSchema, listingUpdateSchema } from "../utils/validationSchemas.js";
 import { requireApprovedSupplier } from "../middleware/requireApprovedSupplier.js";
+import { requireSubscription } from "../middleware/requireSubscription.js";
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.post(
   authenticate,
   requireSupplier,
   requireApprovedSupplier,
+  requireSubscription,
   upload.array("images", 5),
   validate({ body: listingCreateSchema }),
   createListing
@@ -39,6 +41,7 @@ router.put(
   authenticate,
   requireSupplier,
   requireApprovedSupplier,
+  requireSubscription,
   upload.array("images", 5),
   validate({ body: listingUpdateSchema }),
   updateListing

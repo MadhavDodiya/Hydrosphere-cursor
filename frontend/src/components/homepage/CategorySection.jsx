@@ -3,50 +3,45 @@ const categories = [
     icon: "bi bi-droplet",
     title: "Hydrogen Gas",
     desc: "Compressed hydrogen for industrial and mobility use.",
-    bgClass: "bg-primary-subtle text-primary",
   },
   {
     icon: "bi bi-snow",
     title: "Liquid Hydrogen",
     desc: "Cryogenic hydrogen for large-scale transport.",
-    bgClass: "bg-success-subtle text-success",
   },
   {
     icon: "bi bi-gear",
     title: "Equipment",
     desc: "Electrolyzers, compressors, and dispensers.",
-    bgClass: "bg-warning-subtle text-warning-emphasis",
   },
   {
     icon: "bi bi-box-seam",
     title: "Storage",
     desc: "On-site tanks and container solutions.",
-    bgClass: "bg-info-subtle text-info-emphasis",
   },
 ];
 
 export default function CategorySection() {
   return (
-    <section className="hs-section pt-0">
-      <div className="container">
-        <div className="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-4">
-          <div>
-            <h2 className="h4 mb-1 fw-bold">Browse by Category</h2>
-            <div className="hs-muted small">Explore products and services across the hydrogen value chain.</div>
-          </div>
+    <section className="py-20 bg-[#F5F5F7]">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-12">
+          <h2 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight mb-2">Browse by Category</h2>
+          <p className="text-[#86868b] text-lg">Explore products and services across the value chain.</p>
         </div>
 
-        <div className="row g-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((c) => (
-            <div className="col-12 col-sm-6 col-lg-3" key={c.title}>
-              <div className="card hs-category-card h-100">
-                <div className="card-body">
-                  <div className={`hs-category-icon ${c.bgClass}`}>
-                    <span className={c.icon} aria-hidden="true" />
-                  </div>
-                  <h3 className="h6 fw-bold mt-3 mb-1">{c.title}</h3>
-                  <p className="mb-0 small hs-muted">{c.desc}</p>
+            <div 
+              key={c.title} 
+              className="card group cursor-pointer"
+            >
+              <div className="flex flex-col h-full">
+                <div className="w-14 h-14 rounded-2xl bg-[#0071E3]/5 text-[#0071E3] flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 group-hover:bg-[#0071E3] group-hover:text-white shadow-sm">
+                  <i className={c.icon} />
                 </div>
+                <h3 className="text-lg font-bold text-[#1d1d1f] mt-6 mb-2">{c.title}</h3>
+                <p className="text-sm text-[#86868b] leading-relaxed">{c.desc}</p>
               </div>
             </div>
           ))}

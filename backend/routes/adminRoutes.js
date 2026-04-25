@@ -20,4 +20,9 @@ router.get("/listings", adminCtrl.getListings);
 router.put("/listings/:id/approve", adminCtrl.approveListing);
 router.put("/listings/:id/reject", adminCtrl.rejectListing);
 
+// Inquiry Monitor (Task #11 Audit)
+router.get("/inquiries", adminCtrl.getInquiries);
+router.put("/inquiries/:id/flag", adminCtrl.flagInquiry);
+router.delete("/inquiries/:id", adminCtrl.deleteInquiry);
+
 export default router;

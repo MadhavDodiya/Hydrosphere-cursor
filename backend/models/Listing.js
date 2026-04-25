@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const HYDROGEN_TYPES = ["Green", "Blue", "Grey"];
+const HYDROGEN_TYPES = ["Green Hydrogen", "Blue Hydrogen", "Grey Hydrogen"];
 
 /**
  * Hydrogen listing — owned by a supplier.
@@ -81,6 +81,12 @@ listingSchema.index({ status: 1, createdAt: -1 });
 listingSchema.index({ supplier: 1, createdAt: -1 });
 listingSchema.index({ location: 1 });
 listingSchema.index({ hydrogenType: 1 }); // Required for hydrogen type filtering
+
+// 🔍 FULL-TEXT SEARCH INDEX (Task #11 Audit Fix)
+listingSchema.index(
+  { title: "text", description: "text" },
+  { weights: { title: 10, description: 2 }, name: "ListingTextSearch" }
+);
 
 export { HYDROGEN_TYPES };
 export default mongoose.model("Listing", listingSchema);

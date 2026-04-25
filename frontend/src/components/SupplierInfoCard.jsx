@@ -5,9 +5,11 @@ import { useToast } from "../context/ToastContext.jsx";
 import { saveListing, unsaveListing } from "../services/savedService.js";
 
 export default function SupplierInfoCard({ listing, supplierName, location, rating, price }) {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
+  
+  const canSendInquiry = user?.role === "buyer" || !isAuthenticated;
   const [isSaved, setIsSaved] = useState(listing?.saved || false);
   const [saving, setSaving] = useState(false);
 
@@ -23,7 +25,7 @@ export default function SupplierInfoCard({ listing, supplierName, location, rati
     try {
       if (nextState) {
         await saveListing(listing._id);
-        showToast("Listing saved to your collection.", "success");
+        showToast("Listing saved.", "success");
       } else {
         await unsaveListing(listing._id);
         showToast("Removed from saved.");
@@ -37,70 +39,81 @@ export default function SupplierInfoCard({ listing, supplierName, location, rati
   };
 
   return (
-    <div className="supplier-sticky-card">
-      <div className="card border-0 shadow-sm rounded-3">
-        <div className="card-body p-4">
-          <div className="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h4 className="card-title fw-bold mb-1">{supplierName}</h4>
-              <p className="text-muted small mb-0"><i className="bi bi-geo-alt pe-1"></i>{location}</p>
+    <div className="lg:sticky lg:top-32 space-y-6">
+      <div className="bg-white rounded-[32px] p-8 shadow-2xl shadow-black/5 border border-black/[0.03] animate-apple">
+        
+        {/* Header Info */}
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1 min-w-0 pr-4">
+            <h3 className="text-xl font-extrabold text-[#1d1d1f] truncate leading-tight">{supplierName}</h3>
+            <div className="flex items-center gap-1.5 mt-1 text-[#86868b] text-xs font-bold">
+              <i className="bi bi-geo-alt-fill text-[10px]" />
+              {location}
             </div>
-            <div className="trust-badge rounded-pill px-3 py-1 small d-flex align-items-center gap-1">
-              <i className="bi bi-shield-check text-success"></i> Verified
-            </div>
           </div>
-          
-          <div className="d-flex align-items-center justify-content-between mb-4">
-            <div className="d-flex align-items-center gap-2">
-              <span className="text-warning fs-5"><i className="bi bi-star-fill"></i></span>
-              <span className="fw-bold fs-5">{rating}</span>
-            </div>
-            <button 
-              className={`btn btn-sm rounded-pill px-3 ${isSaved ? 'btn-danger' : 'btn-outline-danger'}`}
-              onClick={toggleSave}
-              disabled={saving}
-            >
-              <i className={`bi bi-heart${isSaved ? '-fill' : ''} me-1`}></i>
-              {isSaved ? 'Saved' : 'Save'}
-            </button>
+          <div className="flex flex-col items-end gap-3">
+             <div className="flex items-center gap-1 bg-[#34C759]/10 text-[#34C759] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-[#34C759]/20">
+                <i className="bi bi-shield-check" /> Verified
+             </div>
+             <button 
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-[#FF3B30] text-white' : 'bg-[#F5F5F7] text-[#86868b] hover:text-[#FF3B30]'}`}
+                onClick={toggleSave}
+                disabled={saving}
+              >
+                <i className={`bi bi-heart${isSaved ? '-fill' : ''}`} />
+              </button>
           </div>
-
-          <div className="price-section mb-4 p-3 bg-light rounded text-center">
-            <span className="text-muted d-block small mb-1">Starting from</span>
-            <h2 className="text-primary fw-bold mb-0">
-              {price} <span className="fs-6 text-muted fw-normal">/kg</span>
-            </h2>
-          </div>
-
-          <div className="d-flex flex-column gap-3 d-none d-lg-flex">
-            <button 
-              className="btn btn-primary btn-lg fw-medium shadow-sm w-100"
-              onClick={() => setShowModal(true)}
-            >
-              Request Quote
-            </button>
-            <button 
-              className="btn btn-outline-secondary btn-lg fw-medium w-100"
-              onClick={() => setShowModal(true)}
-            >
-              Contact Supplier
-            </button>
-          </div>
-
-          <hr className="my-4 text-muted" />
-
-          <ul className="list-unstyled mb-0 small text-secondary d-flex flex-column gap-2">
-            <li><i className="bi bi-clock-history text-primary pe-2"></i> Response time: &lt; 24h</li>
-            <li><i className="bi bi-truck text-primary pe-2"></i> Standard &amp; Express Delivery</li>
-            <li><i className="bi bi-patch-check text-primary pe-2"></i> ISO 9001 Certified</li>
-          </ul>
         </div>
-      </div>
-      
-      {/* Mobile Sticky Action Bar */}
-      <div className="mobile-sticky-action d-lg-none">
-        <button className="btn btn-outline-secondary fw-medium w-50" onClick={() => setShowModal(true)}>Contact</button>
-        <button className="btn btn-primary fw-medium shadow-sm w-50" onClick={() => setShowModal(true)}>Request Quote</button>
+
+        {/* Pricing Widget */}
+        <div className="bg-[#F5F5F7] rounded-[24px] p-6 text-center mb-8 border border-black/[0.02]">
+           <span className="text-[10px] font-black text-[#86868b] uppercase tracking-[0.2em] mb-2 block">Enterprise Rate</span>
+           <div className="flex items-baseline justify-center gap-1">
+              <span className="text-4xl font-black text-[#1d1d1f] tracking-tight">{price}</span>
+              <span className="text-sm font-bold text-[#86868b]">/kg</span>
+           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <button 
+            className="btn-primary w-full py-4 text-base font-black shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            onClick={() => setShowModal(true)}
+            disabled={!canSendInquiry}
+          >
+            {user?.role === "supplier" ? "Supplier View" : "Request Quote"}
+            <i className="bi bi-chevron-right text-xs" />
+          </button>
+          <button 
+            className="w-full py-4 text-sm font-black text-[#1d1d1f] bg-[#F5F5F7] rounded-full hover:bg-[#e8e8ed] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            onClick={() => setShowModal(true)}
+            disabled={!canSendInquiry}
+          >
+            <i className="bi bi-chat-text" />
+            Message Supplier
+          </button>
+        </div>
+
+        {/* Trust Indicators */}
+        <div className="mt-8 pt-8 border-t border-black/5">
+           <ul className="space-y-4">
+              {[
+                { icon: "bi-clock-history", label: "Response Rate", value: "< 24h" },
+                { icon: "bi-truck", label: "Global Logistics", value: "Standard & Express" },
+                { icon: "bi-patch-check", label: "Certification", value: "ISO 9001 Certified" }
+              ].map((item, idx) => (
+                <li key={idx} className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-lg bg-[#0071E3]/5 flex items-center justify-center text-[#0071E3] transition-colors group-hover:bg-[#0071E3] group-hover:text-white">
+                      <i className={`bi ${item.icon}`} />
+                   </div>
+                   <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black text-[#86868b] uppercase tracking-widest">{item.label}</p>
+                      <p className="text-xs font-bold text-[#1d1d1f]">{item.value}</p>
+                   </div>
+                </li>
+              ))}
+           </ul>
+        </div>
       </div>
 
       {listing && (

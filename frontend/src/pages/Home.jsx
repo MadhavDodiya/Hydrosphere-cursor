@@ -6,6 +6,7 @@ import FeaturedSuppliers from "../components/homepage/FeaturedSuppliers.jsx";
 import StepsSection from "../components/homepage/StepsSection.jsx";
 import CTASection from "../components/homepage/CTASection.jsx";
 import Footer from "../components/Footer.jsx";
+import { Helmet } from "react-helmet-async";
 import "./Home.css";
 
 export default function Home() {
@@ -21,6 +22,11 @@ export default function Home() {
 
   return (
     <div className="hs-home">
+      <Helmet>
+        <title>HydroSphere | The B2B Hydrogen Marketplace</title>
+        <meta name="description" content="Find verified green, blue, and grey hydrogen suppliers globally. HydroSphere is the leading SaaS platform for hydrogen procurement and lead generation." />
+        <meta name="keywords" content="hydrogen, green hydrogen, b2b marketplace, hydrogen suppliers, clean energy, renewable energy" />
+      </Helmet>
       <Hero />
       <div id="categories">
         <CategorySection />

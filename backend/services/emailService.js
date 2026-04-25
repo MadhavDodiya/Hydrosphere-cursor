@@ -37,26 +37,34 @@ export const verifyEmailConnection = async () => {
  * Send an email notification
  */
 export const sendEmail = async ({ to, subject, html, text }) => {
-  try {
-    if (!SMTP_USER || !SMTP_PASS) {
-      console.warn("⚠️ SMTP credentials not found. Skipping email send to:", to);
-      return false;
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      if (!SMTP_USER || !SMTP_PASS) {
+        console.warn("⚠️ SMTP credentials not found. Skipping email send to:", to);
+        return false;
+      }
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || `"HydroSphere Notifications" <${SMTP_USER}>`,
+        to,
+        subject,
+        html,
+        text: text || "",
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ Email sent successfully (Attempt ${attempts}):`, info.messageId);
+      return true;
+    } catch (error) {
+      console.error(`❌ Email send attempt ${attempts} failed:`, error.message);
+      if (attempts >= maxAttempts) return false;
+      // Exponential backoff: 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
     }
-
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || `"HydroSphere Notifications" <${SMTP_USER}>`,
-      to,
-      subject,
-      html,
-      text
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully:", info.messageId);
-    return true;
-  } catch (error) {
-    console.error("❌ Failed to send email:", error.message);
-    return false;
   }
 };
 
@@ -200,6 +208,29 @@ export const sendPasswordResetEmail = async (userEmail, token, appBaseUrl) => {
         <a href="${resetLink}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(37,99,235,0.2);">Reset Password</a>
       </div>
       <p style="font-size: 13px; color: #64748b;">This link will expire in 30 minutes for security reasons.</p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; text-align: center;">© ${new Date().getFullYear()} HydroSphere India. All rights reserved.</p>
+    </div>
+  `;
+  return sendEmail({ to: userEmail, subject, html });
+};
+
+/**
+ * Send a payment confirmation email
+ */
+export const sendPaymentConfirmationEmail = async (userEmail, userName, planName, amount, expiryDate) => {
+  const subject = `✅ Payment Successful — HydroSphere ${planName} Plan`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+      <h2 style="color: #10b981;">Payment Successful!</h2>
+      <p>Hello ${userName},</p>
+      <p>Thank you for subscribing to the <strong>${planName}</strong> plan. Your payment of <strong>₹${amount}</strong> (including GST) has been processed successfully.</p>
+      <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0;"><strong>Plan:</strong> ${planName}</p>
+        <p style="margin: 5px 0 0 0;"><strong>Active Until:</strong> ${new Date(expiryDate).toLocaleDateString()}</p>
+      </div>
+      <p>You now have full access to premium features including listing publication and lead management.</p>
+      <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/dashboard" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8; text-align: center;">© ${new Date().getFullYear()} HydroSphere India. All rights reserved.</p>
     </div>

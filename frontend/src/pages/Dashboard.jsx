@@ -12,7 +12,6 @@ import BuyerInquiries from "../components/dashboard/BuyerInquiries.jsx";
 import SavedListings from "../components/dashboard/SavedListings.jsx";
 import Billing from "../components/dashboard/Billing.jsx";
 
-import "./Dashboard.css";
 import { useAuth } from "../context/AuthContext.jsx";
 import api from "../services/api.js";
 import { useToast } from "../context/ToastContext.jsx";
@@ -45,98 +44,92 @@ export default function Dashboard({ section = "overview" }) {
     fetchStats();
     window.scrollTo(0, 0);
     return () => { cancelled = true; };
-  }, [user?.role, user?._id, section]); // Added user._id so stats reload after logout/login
+  }, [user?.role, user?._id, section]);
 
   const toggleSidebar = () => setMobileOpen(!mobileOpen);
   const closeSidebar = () => setMobileOpen(false);
 
   const renderOverview = () => (
-    <>
+    <div className="space-y-10">
       {/* Unapproved Supplier Banner */}
       {user?.role === 'supplier' && !user?.isApproved && (
-        <div className="alert alert-warning d-flex align-items-center gap-3 rounded-4 mb-4 border-0 shadow-sm">
-          <i className="bi bi-hourglass-split fs-4 flex-shrink-0"></i>
+        <div className="bg-[#FF9500]/10 border border-[#FF9500]/20 rounded-[22px] p-6 flex items-start gap-4 animate-apple shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-[#FF9500] flex items-center justify-center text-white text-xl flex-shrink-0">
+            <i className="bi bi-hourglass-split" />
+          </div>
           <div>
-            <strong>Account Pending Approval</strong>
-            <p className="mb-0 small">Your supplier account is awaiting admin approval. You can set up your profile, but listing creation will be enabled once approved.</p>
+            <h3 className="text-sm font-black text-[#1d1d1f] uppercase tracking-widest mb-1">Account Pending Approval</h3>
+            <p className="text-[#86868b] text-sm leading-relaxed font-medium">Your supplier account is awaiting admin verification. You can set up your profile, but listing creation will be enabled once approved.</p>
           </div>
         </div>
       )}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h3 className="fw-bold text-dark mb-1">Welcome back, {user?.name || 'User'}!</h3>
-          <p className="text-secondary mb-0">Here's what is happening with your {user?.role === 'supplier' ? 'store' : 'account'} today.</p>
+          <h1 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight mb-2">Welcome back, {user?.name?.split(' ')[0] || 'User'}</h1>
+          <p className="text-[#86868b] text-lg">Here's what is happening with your {user?.role === 'supplier' ? 'marketplace' : 'account'} today.</p>
         </div>
-        <button className="btn btn-primary shadow-sm d-none d-md-block px-4 fw-medium">
-          <i className="bi bi-cloud-download pe-2"></i>Export Report
+        <button className="btn-primary flex items-center gap-2 shadow-lg shadow-blue-500/20">
+          <i className="bi bi-cloud-download" />
+          Export Report
         </button>
       </div>
 
-      {/* Stats Row */}
-      <div className="row g-4 mb-4">
-        <div className="col-12 col-sm-6 col-xl-3">
-          <StatsCard 
-            loading={loading} 
-            title={user?.role === 'supplier' ? "Total Leads" : "Sent Inquiries"} 
-            value={user?.role === 'supplier' ? stats?.totalLeads : stats?.totalInquiries || "0"} 
-            trend="+10%" 
-            icon="bi-people" 
-            colorClass="primary" 
-          />
-        </div>
-        <div className="col-12 col-sm-6 col-xl-3">
-          <StatsCard 
-            loading={loading} 
-            title={user?.role === 'supplier' ? "Active Listings" : "Saved Listings"} 
-            value={user?.role === 'supplier' ? stats?.activeListings : stats?.totalSaved || "0"} 
-            trend="+5%" 
-            icon="bi-card-list" 
-            colorClass="success" 
-          />
-        </div>
-        <div className="col-12 col-sm-6 col-xl-3">
-          <StatsCard 
-            loading={loading} 
-            title={user?.role === 'supplier' ? "New Today" : "Market Listings"} 
-            value={user?.role === 'supplier' ? stats?.newLeadsToday : stats?.marketListings || "0"} 
-            trend="+2%" 
-            icon="bi-chat-dots" 
-            colorClass="warning" 
-          />
-        </div>
-        <div className="col-12 col-sm-6 col-xl-3">
-          <StatsCard 
-            loading={loading} 
-            title={user?.role === 'supplier' ? "Total Listings" : "Account Status"} 
-            value={user?.role === 'supplier' ? (stats?.totalListings || "0") : "Active"} 
-            trend={user?.role === 'supplier' ? "+0%" : "Verified"} 
-            icon="bi-box" 
-            colorClass="info" 
-          />
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <StatsCard 
+          loading={loading} 
+          title={user?.role === 'supplier' ? "Total Leads" : "Sent Inquiries"} 
+          value={user?.role === 'supplier' ? stats?.totalLeads : stats?.totalInquiries || "0"} 
+          trend="+10%" 
+          icon="bi-people" 
+          colorClass="primary" 
+        />
+        <StatsCard 
+          loading={loading} 
+          title={user?.role === 'supplier' ? "Active Listings" : "Saved Listings"} 
+          value={user?.role === 'supplier' ? stats?.activeListings : stats?.totalSaved || "0"} 
+          trend="+5%" 
+          icon="bi-card-list" 
+          colorClass="success" 
+        />
+        <StatsCard 
+          loading={loading} 
+          title={user?.role === 'supplier' ? "New Today" : "Market Listings"} 
+          value={user?.role === 'supplier' ? stats?.newLeadsToday : stats?.marketListings || "0"} 
+          trend="+2%" 
+          icon="bi-chat-dots" 
+          colorClass="warning" 
+        />
+        <StatsCard 
+          loading={loading} 
+          title={user?.role === 'supplier' ? "Total Listings" : "Account Status"} 
+          value={user?.role === 'supplier' ? (stats?.totalListings || "0") : "Active"} 
+          trend={user?.role === 'supplier' ? "+0%" : "Verified"} 
+          icon="bi-box" 
+          colorClass="info" 
+        />
       </div>
 
-      {/* Chart & Activity Row */}
-      <div className="row g-4 mb-4">
-        <div className="col-12 col-lg-8">
+      {/* Charts & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
           <DashboardChart loading={loading} data={stats?.chartData} planUsage={stats?.planUsage} />
         </div>
-        <div className="col-12 col-lg-4">
+        <div>
           <ActivityFeed loading={loading} activities={stats?.activity} />
         </div>
       </div>
 
-      {/* Conditional bottom content */}
-      <div className="row">
-        <div className="col-12">
-          {user?.role === 'supplier' ? (
-            <LeadsTable loading={loading} />
-          ) : (
-            <BuyerInquiries />
-          )}
-        </div>
+      {/* Data Table */}
+      <div className="bg-white rounded-[32px] p-8 shadow-sm border border-black/[0.03]">
+        {user?.role === 'supplier' ? (
+          <LeadsTable loading={loading} />
+        ) : (
+          <BuyerInquiries />
+        )}
       </div>
-    </>
+    </div>
   );
 
   const renderSection = () => {
@@ -152,20 +145,21 @@ export default function Dashboard({ section = "overview" }) {
   };
 
   return (
-    <div className="dashboard-bg">
+    <div className="min-h-screen bg-[#F5F5F7] flex">
       <Sidebar 
         mobileOpen={mobileOpen} 
         closeMobileSidebar={closeSidebar} 
         stats={stats} 
       />
       
-      <div className="dashboard-main">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-0">
         <Topbar toggleSidebar={toggleSidebar} />
         
-        {/* Main Workspace Content */}
-        <div className="container-fluid p-4 p-md-5">
-           {renderSection()}
-        </div>
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+           <div className="max-w-7xl mx-auto">
+             {renderSection()}
+           </div>
+        </main>
       </div>
     </div>
   );

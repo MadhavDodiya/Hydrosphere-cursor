@@ -5,8 +5,8 @@ import api from "./api.js";
  */
 export const fetchListings = async (params = {}) => {
   try {
-    const { data } = await api.get("/api/listings", { params });
-    return data;
+    const data = await api.get("/api/listings", { params });
+    return data.data; // data.data contains { data: listings, total, etc }
   } catch (error) {
     console.error("Listing Fetch Error:", error.response?.data?.message || error.message);
     throw error;
@@ -18,8 +18,8 @@ export const fetchListings = async (params = {}) => {
  */
 export const fetchMyListings = async () => {
   try {
-    const { data } = await api.get("/api/listings/my-listings");
-    return data;
+    const data = await api.get("/api/listings/my-listings");
+    return data.data;
   } catch (error) {
     console.error("My Listings Error:", error.response?.data?.message || error.message);
     throw error;
@@ -31,8 +31,8 @@ export const fetchMyListings = async () => {
  */
 export const fetchListingById = async (id) => {
   try {
-    const { data } = await api.get(`/api/listings/${id}`);
-    return data;
+    const data = await api.get(`/api/listings/${id}`);
+    return data.data;
   } catch (error) {
     console.error("Listing Detail Error:", error.response?.data?.message || error.message);
     throw error;
@@ -44,10 +44,10 @@ export const fetchListingById = async (id) => {
  */
 export const createListing = async (formData) => {
   try {
-    const { data } = await api.post("/api/listings", formData, {
+    const data = await api.post("/api/listings", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return data;
+    return data.data;
   } catch (error) {
     console.error("Create Listing Error:", error.response?.data?.message || error.message);
     throw error;
@@ -59,10 +59,10 @@ export const createListing = async (formData) => {
  */
 export const updateListing = async (id, formData) => {
   try {
-    const { data } = await api.put(`/api/listings/${id}`, formData, {
+    const data = await api.put(`/api/listings/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return data;
+    return data.data;
   } catch (error) {
     console.error("Update Listing Error:", error.response?.data?.message || error.message);
     throw error;
@@ -74,8 +74,8 @@ export const updateListing = async (id, formData) => {
  */
 export const deleteListing = async (id) => {
   try {
-    const { data } = await api.delete(`/api/listings/${id}`);
-    return data;
+    const data = await api.delete(`/api/listings/${id}`);
+    return data.data;
   } catch (error) {
     console.error("Delete Listing Error:", error.response?.data?.message || error.message);
     throw error;
