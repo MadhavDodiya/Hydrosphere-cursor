@@ -224,7 +224,7 @@ export default function Contact() {
                       </div>
                       <div>
                         <div className="small text-muted fw-bold text-uppercase tracking-wider mb-1">Email us</div>
-                        <a href="mailto:hello@hydrosphere.in" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>hello@hydrosphere.in</a>
+                        <a href="mailto:madhavdodiya2017@gmail.com" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>madhavdodiya2017@gmail.com</a>
                       </div>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export default function Contact() {
                       </div>
                       <div>
                         <div className="small text-muted fw-bold text-uppercase tracking-wider mb-1">WhatsApp support</div>
-                        <a href="https://wa.me/910000000000" target="_blank" rel="noreferrer" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>+91 XXXXXXXXXX</a>
+                        <a href="https://wa.me/918140674266" target="_blank" rel="noreferrer" className="text-decoration-none fw-bold fs-5" style={{ color: "#0A2342" }}>+91 8140674266</a>
                       </div>
                     </div>
                   </div>

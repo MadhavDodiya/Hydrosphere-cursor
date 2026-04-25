@@ -8,9 +8,10 @@ export default function VerifyEmail() {
   const [params] = useSearchParams();
   const token = params.get("token");
   const email = params.get("email");
-  const [status, setStatus] = useState("loading"); // loading | ok | error
+  const prefill = params.get("prefill"); // from login page resend link
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
-  const [resendEmail, setResendEmail] = useState(email || "");
+  const [resendEmail, setResendEmail] = useState(email || prefill || "");
   const [resending, setResending] = useState(false);
 
   useEffect(() => {

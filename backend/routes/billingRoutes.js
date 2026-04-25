@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
 import { authorizeRoles } from "../middleware/role.js";
+import { checkSubscriptionExpiry } from "../middleware/checkSubscription.js";
 import {
   getPlans,
   createOrder,
@@ -15,6 +16,9 @@ router.get("/plans", getPlans);
 
 // Protected
 router.use(authenticate);
+
+// Check & auto-downgrade expired subscriptions on billing routes
+router.use(checkSubscriptionExpiry);
 
 router.get("/me", getMySubscription);
 

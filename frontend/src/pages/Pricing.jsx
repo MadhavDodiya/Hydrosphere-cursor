@@ -45,8 +45,8 @@ export default function Pricing() {
       description: "For growing hydrogen businesses",
       isPopular: true,
       price: {
-        monthly: 4999,
-        yearly: 3999, // price per month when billed annually
+        monthly: 499,
+        yearly: 5499, // price per month when billed annually
       },
       features: [
         "Up to 50 active listings",
@@ -65,8 +65,8 @@ export default function Pricing() {
       name: "Enterprise",
       description: "Maximum visibility and volume",
       price: {
-        monthly: 19999,
-        yearly: 14999,
+        monthly: 999,
+        yearly: 11999,
       },
       features: [
         "Unlimited active listings",

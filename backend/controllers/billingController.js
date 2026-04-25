@@ -14,10 +14,16 @@ function getRazorpay() {
   });
 }
 
-function getPriceForPlan(planId) {
-  if (planId === "pro_supplier") return 4999; // ₹4999
-  if (planId === "enterprise") return 19999; // ₹19999
-  return 0;
+// Prices in paise (INR). cycle: "monthly" | "yearly"
+const PLAN_PRICES = {
+  pro_supplier: { monthly: 4999, yearly: 3999 * 12 },  // ₹4999/mo or ₹3999/mo billed yearly
+  enterprise:   { monthly: 19999, yearly: 14999 * 12 }, // ₹19999/mo or ₹14999/mo billed yearly
+};
+
+function getPriceForPlan(planId, cycle = "monthly") {
+  const prices = PLAN_PRICES[planId];
+  if (!prices) return 0;
+  return prices[cycle] || prices.monthly;
 }
 
 export async function getPlans(_req, res) {
@@ -36,13 +42,16 @@ export async function getPlans(_req, res) {
 export async function createOrder(req, res) {
   try {
     const razorpay = getRazorpay();
-    const { planId } = req.body || {};
+    const { planId, billingCycle = "monthly" } = req.body || {};
 
     if (!["pro_supplier", "enterprise"].includes(planId)) {
       return res.status(400).json({ message: "Invalid planId" });
     }
+    if (!["monthly", "yearly"].includes(billingCycle)) {
+      return res.status(400).json({ message: "Invalid billingCycle. Must be monthly or yearly." });
+    }
 
-    const price = getPriceForPlan(planId);
+    const price = getPriceForPlan(planId, billingCycle);
     if (!price) {
       return res.status(400).json({ message: "Invalid plan price" });
     }
@@ -54,6 +63,7 @@ export async function createOrder(req, res) {
       amount: price * 100, // amount in the smallest currency unit (paise)
       currency: "INR",
       receipt: `receipt_${user._id}_${Date.now()}`,
+      notes: { planId, billingCycle },
     };
 
     const order = await razorpay.orders.create(options);
@@ -76,7 +86,7 @@ export async function createOrder(req, res) {
  */
 export async function verifyPayment(req, res) {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId, billingCycle = "monthly" } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !planId) {
       return res.status(400).json({ message: "Missing payment details" });
@@ -100,10 +110,15 @@ export async function verifyPayment(req, res) {
     user.plan = planId;
     user.subscriptionStatus = "active";
     user.razorpayOrderId = razorpay_order_id;
-    // Set current period end to 1 year from now for one-time payments acting as yearly subscriptions
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    user.subscriptionCurrentPeriodEnd = nextYear;
+    // Set period end based on billing cycle
+    const periodEnd = new Date();
+    if (billingCycle === "yearly") {
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    } else {
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+    }
+    const nextYear = periodEnd; // keep variable name for email template below
+    user.subscriptionCurrentPeriodEnd = periodEnd;
 
     await user.save();
 

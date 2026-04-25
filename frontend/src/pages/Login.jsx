@@ -14,16 +14,23 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showResendLink, setShowResendLink] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setShowResendLink(false);
     setSubmitting(true);
     try {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Login failed. Please check your credentials."));
+      const msg = getApiErrorMessage(err, "Login failed. Please check your credentials.");
+      setError(msg);
+      // Show resend link if email is not verified
+      if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("verification")) {
+        setShowResendLink(true);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -48,9 +55,21 @@ export default function Login() {
           <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>Sign in to your account to continue</p>
 
           {error && (
-            <div className="alert d-flex align-items-center gap-2 mb-4 py-3 px-3" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", color: "#dc2626" }}>
-              <i className="bi bi-exclamation-circle-fill flex-shrink-0"></i>
-              <span style={{ fontSize: "0.875rem" }}>{error}</span>
+            <div className="alert d-flex align-items-start gap-2 mb-4 py-3 px-3" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", color: "#dc2626" }}>
+              <i className="bi bi-exclamation-circle-fill flex-shrink-0 mt-1"></i>
+              <div>
+                <span style={{ fontSize: "0.875rem" }}>{error}</span>
+                {showResendLink && (
+                  <div className="mt-1">
+                    <Link
+                      to={`/verify-email${email ? `?resend=1&prefill=${encodeURIComponent(email)}` : ""}`}
+                      style={{ fontSize: "0.82rem", color: "#2563eb", textDecoration: "underline" }}
+                    >
+                      Resend verification email →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
