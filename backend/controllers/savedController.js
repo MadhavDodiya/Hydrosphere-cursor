@@ -53,7 +53,7 @@ export async function saveListing(req, res) {
       return res.status(400).json({ success: false, message: "listingId is required and must be valid" });
     }
 
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId).lean();
     if (!listing) {
       return res.status(404).json({ success: false, message: "Listing not found" });
     }

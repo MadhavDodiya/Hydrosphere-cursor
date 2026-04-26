@@ -1,0 +1,3 @@
+## 2024-04-26 - [Use .lean() on Mongoose read-only queries]
+**Learning:** Returning full Mongoose objects consumes a significant amount of memory and CPU compared to plain JS objects. Using `.lean()` on Mongoose queries that are only intended for reading (e.g. GET requests sending data to the client, fetching user profile, listing details) skips instantiating Mongoose Documents. This translates to an immediate performance boost for heavily-read backend controllers.
+**Action:** Applied `.lean()` systematically to `User.findOne`, `User.findById`, `Listing.findById`, `Inquiry.findOne`, `StripeEvent.findOne`, and `Subscription.findOne` where the query results are not saved back.

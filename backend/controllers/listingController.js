@@ -176,7 +176,7 @@ export async function getListingById(req, res) {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const listing = await Listing.findById(id).populate("supplier", supplierSelect).lean();
+    const listing = await Listing.findById(id).populate("supplier", supplierSelect);
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
     const isOwner = req.userId && String(listing.supplier?._id || listing.supplier) === String(req.userId);
@@ -195,7 +195,7 @@ export async function getListingById(req, res) {
       success: true,
       message: "Listing fetched successfully",
       data: {
-        ...listing,
+        ...listing.toObject({ virtuals: true }),
         saved,
       }
     });

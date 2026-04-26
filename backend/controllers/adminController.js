@@ -136,7 +136,7 @@ export const getUsers = async (req, res) => {
       ];
     }
 
-    const users = await User.find(query)
+    const users = await User.find(query).lean()
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -191,7 +191,7 @@ export const getListings = async (req, res) => {
       query.title = { $regex: q, $options: "i" };
     }
 
-    const listings = await Listing.find(query)
+    const listings = await Listing.find(query).lean()
       .populate("supplier", "name email")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -275,7 +275,7 @@ export const rejectListing = async (req, res) => {
  */
 export const getInquiries = async (req, res) => {
   try {
-    const inquiries = await Inquiry.find()
+    const inquiries = await Inquiry.find().lean()
       .populate("buyerId", "name email")
       .populate("supplierId", "name email")
       .populate("listingId", "title companyName")
