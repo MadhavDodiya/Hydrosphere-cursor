@@ -16,7 +16,6 @@ export default function BuyerInquiries() {
         setLoading(true);
         // Correct endpoint should be /api/inquiries/buyer (Task #2)
         const { data } = await api.get("/api/inquiries/buyer");
-        console.log("BUYER_INQUIRIES_DATA:", data);
         setInquiries(data?.data || data || []);
       } catch (err) {
         console.error("Failed to fetch inquiries:", err);
