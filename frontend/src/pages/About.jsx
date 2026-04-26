@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Button, Card, Badge } from '../components/ui';
 import Footer from '../components/Footer';
 import { Helmet } from 'react-helmet-async';

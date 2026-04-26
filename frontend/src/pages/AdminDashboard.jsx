@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../components/admin/AdminSidebar.jsx';
 import AdminTopbar from '../components/admin/AdminTopbar.jsx';
 import api from '../api/axiosInstance';
-import { Card, Badge } from '../components/ui';
 
 // Sections
 import AdminOverview from '../components/admin/sections/AdminOverview.jsx';
