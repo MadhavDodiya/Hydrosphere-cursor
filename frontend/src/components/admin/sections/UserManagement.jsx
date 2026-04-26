@@ -127,11 +127,11 @@ export default function UserManagement() {
                       <div className="d-flex align-items-center gap-3">
                         <div style={{ width: 36, height: 36, borderRadius: "10px", background: "#f8fafc", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.8rem" }}>
                           {/* Bug fix: guard against null/empty name before calling [0] */}
-                          {(u.name?.[0] || "?").toUpperCase()}
+                          {(u?.name?.[0] || "?").toUpperCase()}
                         </div>
                         <div>
-                          <div className="fw-bold text-dark mb-0" style={{ fontSize: "0.9rem" }}>{u.name}</div>
-                          <div className="text-muted small">{u.email}</div>
+                          <div className="fw-bold text-dark mb-0" style={{ fontSize: "0.9rem" }}>{u?.name || "Unknown User"}</div>
+                          <div className="text-muted small">{u?.email || "No Email"}</div>
                         </div>
                       </div>
                     </td>
