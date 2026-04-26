@@ -246,7 +246,6 @@ export async function createListing(req, res) {
     const listing = await Listing.create({
       supplier: req.userId,
       title,
-      companyName: title, // maintain compatibility
       hydrogenType,
       price: Number(price),
       quantity: Number(quantity),
@@ -289,7 +288,6 @@ export async function updateListing(req, res) {
     if (newImages.length > 0) listing.images = [...listing.images, ...newImages];
     if (title) {
       listing.title = title;
-      listing.companyName = title;
     }
     if (hydrogenType) listing.hydrogenType = hydrogenType;
     if (price != null) listing.price = Number(price);

@@ -72,6 +72,20 @@ const listingSchema = new mongoose.Schema(
   }
 );
 
+// Ensure legacy `companyName` and canonical `title` are synchronized before validation
+listingSchema.pre('validate', function(next) {
+  if (this.title && !this.companyName) {
+    this.companyName = this.title;
+  } else if (this.companyName && !this.title) {
+    this.title = this.companyName;
+  } else if (this.isModified('title') && this.title) {
+    this.companyName = this.title;
+  } else if (this.isModified('companyName') && this.companyName) {
+    this.title = this.companyName;
+  }
+  next();
+});
+
 // Canonical display name (Bug fix: resolves title vs companyName inconsistency)
 listingSchema.virtual("displayName").get(function () {
   return this.title || this.companyName;
