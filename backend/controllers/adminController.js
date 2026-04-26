@@ -4,12 +4,22 @@ import Inquiry from "../models/Inquiry.js";
 import Contact from "../models/Contact.js";
 import Subscription from "../models/Subscription.js";
 import { sendApprovalEmail, sendListingStatusEmail } from "../services/emailService.js";
+import { getCache, setCache, clearCache } from "../utils/cache.js";
 
 /**
  * GET /api/admin/stats
  */
 export const getStats = async (req, res) => {
   try {
+    const cachedStats = getCache("admin_stats");
+    if (cachedStats) {
+      return res.json({
+        success: true,
+        message: "Admin stats fetched successfully (cached)",
+        data: cachedStats,
+      });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const lastWeek = new Date(today);
@@ -92,28 +102,32 @@ export const getStats = async (req, res) => {
       });
     }
 
+    const data = {
+      totalUsers,
+      totalBuyers,
+      totalSuppliers,
+      totalListings,
+      pendingListings,
+      totalInquiries,
+      pendingApprovals,
+      unverifiedSuppliers,
+      featuredListings,
+      newUsersToday,
+      newListingsThisWeek,
+      paidUsers,
+      hydrogenBreakdown,
+      chartData,
+      totalRevenue,
+      activeUsersCount,
+      conversionRate
+    };
+
+    setCache("admin_stats", data);
+
     res.json({
       success: true,
       message: "Admin stats fetched successfully",
-      data: {
-        totalUsers,
-        totalBuyers,
-        totalSuppliers,
-        totalListings,
-        pendingListings,
-        totalInquiries,
-        pendingApprovals,
-        unverifiedSuppliers,
-        featuredListings,
-        newUsersToday,
-        newListingsThisWeek,
-        paidUsers,
-        hydrogenBreakdown,
-        chartData,
-        totalRevenue,
-        activeUsersCount,
-        conversionRate
-      }
+      data
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching admin stats", error: error.message });
@@ -167,6 +181,7 @@ export const approveSupplier = async (req, res) => {
     if (user.isApproved) {
       sendApprovalEmail(user.email, user.name).catch(err => console.error("Email failed:", err));
     }
+    clearCache("admin_stats");
 
     res.json({ 
       success: true,
@@ -220,6 +235,7 @@ export const verifySupplier = async (req, res) => {
     user.isApproved = true;
     user.isVerified = true;
     await user.save();
+    clearCache("admin_stats");
 
     res.json({ success: true, message: "Supplier verified", data: user });
   } catch (error) {
@@ -239,6 +255,7 @@ export const approveListing = async (req, res) => {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "approved")
         .catch(err => console.error("Email failed:", err));
     }
+    clearCache("admin_stats");
 
     res.json({ success: true, message: "Listing approved", data: listing });
   } catch (error) {
@@ -258,6 +275,7 @@ export const rejectListing = async (req, res) => {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "rejected")
         .catch(err => console.error("Email failed:", err));
     }
+    clearCache("admin_stats");
 
     res.json({ success: true, message: "Listing rejected", data: listing });
   } catch (error) {
@@ -303,6 +321,7 @@ export const flagInquiry = async (req, res) => {
 export const deleteInquiry = async (req, res) => {
   try {
     await Inquiry.findByIdAndDelete(req.params.id);
+    clearCache("admin_stats");
     res.json({ success: true, message: "Inquiry deleted" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error deleting inquiry" });
