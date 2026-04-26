@@ -9,12 +9,6 @@ export const trackEvent = (eventName, properties = {}) => {
   
   // 1. Structured log for local debugging
   console.log(`[ANALYTICS] ${timestamp} - ${eventName}`, properties);
-
-  // 2. Placeholder for production provider
-  if (import.meta.env.PROD) {
-     // window.gtag('event', eventName, properties);
-     // posthog.capture(eventName, properties);
-  }
 };
 
 export const ANALYTICS_EVENTS = {
