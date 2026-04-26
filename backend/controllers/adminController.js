@@ -4,6 +4,7 @@ import Inquiry from "../models/Inquiry.js";
 import Contact from "../models/Contact.js";
 import Subscription from "../models/Subscription.js";
 import { sendApprovalEmail, sendListingStatusEmail } from "../services/emailService.js";
+import { clearCache } from "../utils/cache.js";
 
 /**
  * GET /api/admin/stats
@@ -235,6 +236,8 @@ export const approveListing = async (req, res) => {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true }).populate("supplier", "email name");
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
+    clearCache(); // Invalidate listing counts and marketplace search
+
     if (listing.supplier?.email) {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "approved")
         .catch(err => console.error("Email failed:", err));
@@ -253,6 +256,8 @@ export const rejectListing = async (req, res) => {
   try {
     const listing = await Listing.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true }).populate("supplier", "email name");
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+
+    clearCache(); // Invalidate listing counts and marketplace search
 
     if (listing.supplier?.email) {
       sendListingStatusEmail(listing.supplier.email, listing.supplier.name, listing.title, "rejected")

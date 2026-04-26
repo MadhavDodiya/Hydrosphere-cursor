@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Inquiry from "../models/Inquiry.js";
 import SavedListing from "../models/SavedListing.js";
 import Listing from "../models/Listing.js";
+import { getCache, setCache } from "../utils/cache.js";
 
 /**
  * Common public user object mapping (Task #5)
@@ -50,11 +51,20 @@ export async function getMe(req, res) {
 export async function getBuyerStats(req, res) {
   try {
     const userId = req.userId;
-    const [totalInquiries, totalSaved, totalListings] = await Promise.all([
+
+    const cachedTotalListings = getCache("total_approved_listings");
+
+    const [totalInquiries, totalSaved, dbTotalListings] = await Promise.all([
       Inquiry.countDocuments({ buyerId: userId }),
       SavedListing.countDocuments({ user: userId }),
-      Listing.countDocuments({ status: "approved" }), 
+      cachedTotalListings === undefined ? Listing.countDocuments({ status: "approved" }) : Promise.resolve(null),
     ]);
+
+    let totalListings = cachedTotalListings;
+    if (totalListings === undefined) {
+      totalListings = dbTotalListings;
+      setCache("total_approved_listings", totalListings, 600); // Cache for 10 minutes
+    }
 
     // Fetch Activity feed
     const [recentInquiries, recentSaved] = await Promise.all([
