@@ -146,7 +146,8 @@ export const getUsers = async (req, res) => {
     const users = await User.find(query)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
     const total = await User.countDocuments(query);
     res.json({ 
@@ -203,7 +204,8 @@ export const getListings = async (req, res) => {
       .populate("supplier", "name email")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
     const total = await Listing.countDocuments(query);
     res.json({ 
@@ -288,7 +290,8 @@ export const getInquiries = async (req, res) => {
       .populate("supplierId", "name email")
       .populate("listingId", "title companyName")
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
     res.json({ success: true, message: "Inquiries fetched successfully", data: inquiries });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching inquiries" });
