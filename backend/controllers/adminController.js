@@ -4,6 +4,7 @@ import Inquiry from "../models/Inquiry.js";
 import Contact from "../models/Contact.js";
 import Subscription from "../models/Subscription.js";
 import { sendApprovalEmail, sendListingStatusEmail } from "../services/emailService.js";
+import { escapeRegex } from "../utils/regex.js";
 
 /**
  * GET /api/admin/stats
@@ -129,9 +130,10 @@ export const getUsers = async (req, res) => {
     const query = {};
     if (role && role !== "all") query.role = role.toLowerCase();
     if (q) {
+      const safeQ = escapeRegex(q);
       query.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
+        { name: { $regex: safeQ, $options: "i" } },
+        { email: { $regex: safeQ, $options: "i" } },
       ];
     }
 
@@ -187,7 +189,7 @@ export const getListings = async (req, res) => {
     const query = {};
     if (status && status !== "all") query.status = status.toLowerCase();
     if (q) {
-      query.title = { $regex: q, $options: "i" };
+      query.title = { $regex: escapeRegex(q), $options: "i" };
     }
 
     const listings = await Listing.find(query)
