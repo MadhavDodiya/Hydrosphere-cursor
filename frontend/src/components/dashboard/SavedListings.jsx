@@ -13,7 +13,6 @@ export default function SavedListings() {
       setLoading(true);
       // Fetch saved listings context (Task #2/5)
       const { data } = await api.get("/api/saved");
-      console.log("SAVED_LISTINGS_DATA:", data);
 
       const payload = data?.data ?? data;
       const arr = Array.isArray(payload) ? payload : [];
