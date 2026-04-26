@@ -45,5 +45,9 @@ export default defineConfig(({ mode }) => {
     preview: {
       proxy: apiProxy(target),
     },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+    }
   };
 });
