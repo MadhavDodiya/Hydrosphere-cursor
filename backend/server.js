@@ -142,16 +142,13 @@ app.use(errorHandler);
 
 async function start() {
   if (!process.env.MONGODB_URI) {
-    console.error("Missing MONGODB_URI in environment");
-    process.exit(1);
+    throw new Error("Missing MONGODB_URI in environment");
   }
   if (!process.env.JWT_SECRET) {
-    console.error("Missing JWT_SECRET in environment");
-    process.exit(1);
+    throw new Error("Missing JWT_SECRET in environment");
   }
   if (!process.env.JWT_REFRESH_SECRET) {
-    console.error("Missing JWT_REFRESH_SECRET in environment");
-    process.exit(1);
+    throw new Error("Missing JWT_REFRESH_SECRET in environment");
   }
 
   await connectDatabase(process.env.MONGODB_URI);
