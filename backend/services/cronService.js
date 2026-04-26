@@ -45,7 +45,7 @@ export async function auditExpiredSubscriptions() {
       plan: { $nin: ["none", "free", "Starter"] },
       subscriptionStatus: "active",
       subscriptionCurrentPeriodEnd: { $lt: now }
-    }).select("_id");
+    }).select("_id").lean();
 
     if (expiredUsers.length === 0) return 0;
 
