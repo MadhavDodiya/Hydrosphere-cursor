@@ -6,11 +6,7 @@ import User from "../models/User.js";
 import { getEffectiveLimits } from "../utils/plans.js";
 import { getCache, setCache, clearCache } from "../utils/cache.js";
 import { trackEvent, ANALYTICS_EVENTS } from "../services/analyticsService.js";
-
-/** Escape user input for safe use inside a Mongo regex. */
-function escapeRegex(str) {
-  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+import { escapeRegex } from "../utils/regex.js";
 
 /**
  * Build MongoDB filter from query string.
