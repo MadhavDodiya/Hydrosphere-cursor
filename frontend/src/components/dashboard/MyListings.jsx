@@ -33,13 +33,20 @@ export default function MyListings() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;
+
+    // Store previous listings for rollback
+    const previousListings = [...listings];
+
+    // Optimistically update local state
+    setListings(prev => prev.filter(l => l._id !== id));
+    setDeletingId(id);
+
     try {
-      setDeletingId(id);
       await deleteListing(id);
       showToast("Listing deleted successfully", "success");
-      // Bug fix: optimistic local removal instead of re-fetching entire list
-      setListings(prev => prev.filter(l => l._id !== id));
     } catch (err) {
+      // Rollback on failure
+      setListings(previousListings);
       showToast("Failed to delete listing", "error");
     } finally {
       setDeletingId(null);
