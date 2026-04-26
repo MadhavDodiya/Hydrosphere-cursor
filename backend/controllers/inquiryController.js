@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import { sendInquiryEmail, sendReplyNotificationEmail } from "../services/emailService.js";
 import { emitInquiryCreated, emitInquiryUpdated } from "../utils/realtime.js";
 import { trackEvent, ANALYTICS_EVENTS } from "../services/analyticsService.js";
+import { getEffectiveLimits } from "../utils/plans.js";
 
 /**
  * POST /api/inquiries
