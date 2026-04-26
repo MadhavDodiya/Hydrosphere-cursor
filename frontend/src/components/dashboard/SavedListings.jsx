@@ -103,9 +103,11 @@ export default function SavedListings() {
                   <div className="card-body p-4 d-flex flex-column">
                     <div className="mb-2">
                         {/* Bug fix: guard undefined hydrogenType — String(undefined) = "undefined" which renders visibly */}
-                        <span className="badge bg-primary-subtle text-primary border-primary-subtle rounded-pill px-3 py-2" style={{ fontSize: '0.65rem', fontWeight: 600 }}>
-                          {l.hydrogenType ? l.hydrogenType.toUpperCase() : 'N/A'} H2
-                        </span>
+                        {l.hydrogenType && (
+                          <span className="badge bg-primary-subtle text-primary border-primary-subtle rounded-pill px-3 py-2" style={{ fontSize: '0.65rem', fontWeight: 600 }}>
+                            {String(l.hydrogenType).toUpperCase()} H2
+                          </span>
+                        )}
                     </div>
                     <h6 className="fw-bold text-dark text-truncate mb-1">{l.title || l.companyName}</h6>
                     <p className="text-muted small mb-4">
