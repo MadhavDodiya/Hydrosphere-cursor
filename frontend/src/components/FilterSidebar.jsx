@@ -4,7 +4,9 @@ export default function FilterSidebar({ filters = {}, onFilterChange = () => {} 
   // 5. Logic Bug: Safe normalization
   const normalizedFilters = {
     ...filters,
-    types: Array.isArray(filters.types) ? filters.types : []
+    types: Array.isArray(filters.types)
+      ? filters.types
+      : (typeof filters.types === 'string' ? [filters.types] : [])
   };
 
   // 9. Debounce Logic for Location
@@ -26,7 +28,9 @@ export default function FilterSidebar({ filters = {}, onFilterChange = () => {} 
 
   const handleTypeChange = (type) => {
     onFilterChange(prev => {
-      const currentTypes = Array.isArray(prev.types) ? prev.types : [];
+      const currentTypes = Array.isArray(prev.types)
+        ? prev.types
+        : (typeof prev.types === 'string' ? [prev.types] : []);
       const newTypes = currentTypes.includes(type)
         ? currentTypes.filter(t => t !== type)
         : [...currentTypes, type];
