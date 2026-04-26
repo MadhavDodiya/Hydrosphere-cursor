@@ -13,8 +13,9 @@ export default function Topbar({ toggleSidebar }) {
           <button 
             className="lg:hidden w-10 h-10 rounded-xl bg-white border border-black/5 flex items-center justify-center text-[#1d1d1f] active:scale-95 transition-transform shadow-sm"
             onClick={toggleSidebar}
+            aria-label="Toggle sidebar"
           >
-            <i className="bi bi-list text-xl" />
+            <i className="bi bi-list text-xl" aria-hidden="true" />
           </button>
           
           <div className="hidden md:flex items-center gap-2">
