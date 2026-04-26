@@ -67,10 +67,9 @@ api.interceptors.response.use(
   async (error) => {
     // BUG 1 FIX: Handle complete network disconnects gracefully
     if (!error.response) {
-      return Promise.reject({
-        message: "Network error. Please check your connection.",
-        isNetworkError: true,
-      });
+      const netError = new Error("Network Error");
+      netError.isNetworkError = true;
+      return Promise.reject(netError);
     }
 
     const originalRequest = error.config;
