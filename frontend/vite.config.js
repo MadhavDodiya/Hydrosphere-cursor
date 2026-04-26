@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    test: {
+      environment: 'jsdom',
+      globals: true,
+    },
     // Dev: npm run dev — browser calls /api → proxied to Express
     server: {
       proxy: apiProxy(target),
