@@ -19,7 +19,6 @@ export default function LeadsTable({ loading: parentLoading }) {
         setBlockedMessage("");
         // Fetched via dedicated supplier inquiries endpoint (Task #2)
         const { data } = await api.get("/api/inquiries/supplier");
-        console.log("LEADS_RECEIVED_DATA:", data);
         setInquiries(data?.data || data || []);
       } catch (err) {
         console.error("Failed to fetch inquiries:", err);
