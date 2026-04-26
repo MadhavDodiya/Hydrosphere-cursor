@@ -8,7 +8,15 @@ export const trackEvent = (eventName, properties = {}) => {
   const timestamp = new Date().toISOString();
   
   // 1. Structured log for local debugging
-  console.log(`[ANALYTICS] ${timestamp} - ${eventName}`, properties);
+  console.log(
+    JSON.stringify({
+      level: "info",
+      type: "analytics_event",
+      timestamp,
+      event: eventName,
+      properties,
+    })
+  );
 };
 
 export const ANALYTICS_EVENTS = {
