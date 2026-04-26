@@ -98,12 +98,17 @@ export async function getBuyerStats(req, res) {
       { $sort: { "_id": 1 } }
     ]);
 
+    const statsMap = {};
+    for (let i = 0; i < dailyStats.length; i++) {
+      statsMap[dailyStats[i]._id] = dailyStats[i];
+    }
+
     const chartData = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const ds = d.toISOString().split('T')[0];
-      const found = dailyStats.find(s => s._id === ds);
+      const found = statsMap[ds];
       chartData.push({
         label: d.toLocaleDateString('en-US', { weekday: 'short' }),
         leads: found ? found.count : 0
