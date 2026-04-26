@@ -71,39 +71,14 @@ app.use("/api/auth/register", authLimiter);
 app.use("/api", apiLimiter);
 
 /**
- * CORS: production uses FRONTEND_URL (comma-separated). Dev allows localhost,
- * 127.0.0.1, and LAN IPs (Vite --host) so phones/other PCs can hit the API.
+ * CORS: Use FRONTEND_URL if available, otherwise fallback to strict default dev origins.
  */
-function isPrivateLanHost(hostname) {
-  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-  return /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(hostname);
-}
-
-const corsOptions =
-  process.env.NODE_ENV === "production" && process.env.FRONTEND_URL
-    ? {
-        origin: process.env.FRONTEND_URL.split(",").map((s) => s.trim()).filter(Boolean),
-        credentials: true,
-      }
-    : {
-        origin(origin, callback) {
-          if (!origin) return callback(null, true);
-          try {
-            const u = new URL(origin);
-            if (u.protocol !== "http:" && u.protocol !== "https:") {
-              return callback(null, false);
-            }
-            const h = u.hostname;
-            if (h === "localhost" || h === "127.0.0.1") return callback(null, true);
-            if (isPrivateLanHost(h)) return callback(null, true);
-            return callback(null, false);
-          } catch {
-            return callback(null, false);
-          }
-        },
-        credentials: true,
-      };
+const corsOptions = {
+  origin: process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((s) => s.trim()).filter(Boolean)
+    : ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true,
+};
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
