@@ -81,14 +81,19 @@ export const getStats = async (req, res) => {
 
     // Ensure all 7 days are present
     const chartData = [];
+    const chartDataDict = {};
+    for (const item of chartDataRaw) {
+      chartDataDict[item._id] = item.count;
+    }
+
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
-      const match = chartDataRaw.find(item => item._id === dateStr);
+      const count = chartDataDict[dateStr];
       chartData.push({
         date: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        value: match ? match.count : 0
+        value: count !== undefined ? count : 0
       });
     }
 
