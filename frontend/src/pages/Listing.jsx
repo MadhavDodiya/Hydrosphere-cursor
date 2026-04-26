@@ -34,7 +34,7 @@ export default function Listing() {
         if (filters.deliveryAvailability) params.append('deliveryAvailability', filters.deliveryAvailability);
 
         const response = await api.get(`/listings?${params.toString()}`);
-        const result = response.data || response; // Handle both direct data and wrapped response
+        const result = response.data || response;
         
         const listingData = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
         const totalCount = typeof result.total === 'number' ? result.total : listingData.length;
