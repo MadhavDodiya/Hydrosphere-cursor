@@ -84,8 +84,8 @@ listingSchema.index({ hydrogenType: 1 }); // Required for hydrogen type filterin
 
 // 🔍 FULL-TEXT SEARCH INDEX (Task #11 Audit Fix)
 listingSchema.index(
-  { title: "text", description: "text" },
-  { weights: { title: 10, description: 2 }, name: "ListingTextSearch" }
+  { title: "text", companyName: "text", description: "text" },
+  { weights: { title: 10, companyName: 10, description: 2 }, name: "ListingTextSearch" }
 );
 
 export { HYDROGEN_TYPES };
