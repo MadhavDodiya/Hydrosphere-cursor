@@ -29,7 +29,7 @@ export default function MyListings() {
     if (user?._id) {
       loadListings();
     }
-  }, [user?._id]); // Bug fix: showToast is stable but shouldn't be in dep array — caused re-render loops
+  }, [user?._id]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this listing?")) return;
