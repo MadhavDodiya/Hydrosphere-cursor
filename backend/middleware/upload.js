@@ -1,6 +1,6 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary-v2";
 
 // Ensure cloudinary is configured (depends on dotenv in server.js loading first)
 // Will warn/fail gracefully if env vars are extremely broken, but ideally it expects CLOUDINARY_CLOUD_NAME etc.

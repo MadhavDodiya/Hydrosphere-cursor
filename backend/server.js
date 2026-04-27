@@ -72,7 +72,11 @@ const globalLimiter = rateLimit({
   limit: 1000,
   message: { message: "Too many requests. Please try again later." },
 });
-app.use(globalLimiter);
+
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  globalLimiter(req, res, next);
+});
 
 // Apply strict limiters for sensitive routes
 app.use("/api/auth/login", authLimiter);
