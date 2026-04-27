@@ -1,92 +1,108 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Card, Badge, Button } from "./ui";
 
 export default function SupplierCard({ supplier }) {
   if (!supplier) {
-    // Skeleton Loader state
     return (
-      <div className="card hs-supplier-card h-100 border-0">
-        <div className="skeleton-img bg-secondary opacity-25" style={{ height: "220px", borderRadius: "24px 24px 0 0" }}></div>
-        <div className="card-body d-flex flex-column gap-2 p-4">
-          <div className="skeleton-text bg-secondary opacity-25 w-75 rounded" style={{ height: "24px" }}></div>
-          <div className="skeleton-text bg-secondary opacity-25 w-50 rounded" style={{ height: "16px" }}></div>
-          <div className="skeleton-text bg-secondary opacity-25 w-100 rounded mt-3" style={{ height: "40px" }}></div>
-        </div>
-      </div>
+      <Card className="h-[420px] animate-pulse bg-white/50 border-none" hover={false} />
     );
   }
 
-  const { id, name, location, rating, description, price, imageUrl, type, deliveryAvailability, productionCapacity, isVerified, purity } = supplier;
+  const { 
+    id, _id, name, location, rating, description, 
+    price, pricePerKg, imageUrl, images,
+    hydrogenType, type, 
+    deliveryAvailability, productionCapacity, 
+    isVerified, purity 
+  } = supplier;
 
-  const typeColors = {
-    Green: { bg: "#ecfdf5", text: "#059669", dot: "#10b981" }, // Emerald
-    Blue:  { bg: "#eff6ff", text: "#2563eb", dot: "#3b82f6" }, // Blue
-    Grey:  { bg: "#f8fafc", text: "#475569", dot: "#64748b" }, // Slate
-  };
-  const typeColor = typeColors[type] || typeColors.Grey;
+  const displayId = _id || id;
+  const displayPrice = price || pricePerKg;
+  const displayType = hydrogenType || type;
+  const displayImage = (images && images[0]) || imageUrl || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop";
 
   return (
-    <div className="card hs-supplier-card h-100 border-0">
-      <div className="hs-supplier-image">
-        <img 
-          src={imageUrl} 
-          className="w-100 h-100 object-fit-cover" 
-          alt={name} 
-        />
-        <div className="hs-rating-pill">
-          <span className="bi bi-star-fill text-warning me-1" aria-hidden="true" />
-          {rating || "4.5"}
+    <Link to={`/listings/${displayId}`}>
+      <Card className="p-0 overflow-hidden h-full flex flex-col group transition-all duration-500 hover:translate-y-[-8px]">
+        {/* Image Section */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img 
+            src={displayImage} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+            alt={name} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {isVerified && (
+              <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-black/5">
+                <i className="bi bi-patch-check-fill text-[#0071E3] text-xs" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#1d1d1f]">Verified</span>
+              </div>
+            )}
+            <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-black/5">
+               <i className="bi bi-star-fill text-[#FF9500] text-xs" />
+               <span className="text-[10px] font-black text-[#1d1d1f]">{rating || "4.9"}</span>
+            </div>
+          </div>
+
+          {purity && (
+            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">{purity}% Purity</span>
+            </div>
+          )}
         </div>
-        {isVerified && (
-          <div className="position-absolute top-0 start-0 m-3 badge rounded-pill bg-white text-primary border-0 shadow-sm px-3 py-2 fw-bold" style={{ backdropFilter: "blur(8px)", backgroundColor: "rgba(255,255,255,0.9)" }}>
-            <i className="bi bi-patch-check-fill me-1 text-primary" aria-hidden="true" />
-            ✓ Approved
+
+        {/* Content Section */}
+        <div className="p-8 flex-grow flex flex-col">
+          <div className="flex justify-between items-start mb-4">
+            <Badge variant={displayType === 'Green Hydrogen' ? 'success' : 'primary'}>
+              {displayType}
+            </Badge>
           </div>
-        )}
-        {purity && (
-          <div className="position-absolute bottom-0 end-0 m-3 badge rounded-pill bg-dark text-white border-0 shadow-sm px-3 py-2 fw-bold" style={{ backgroundColor: "rgba(15,23,42,0.8)" }}>
-            {purity}% Purity
-          </div>
-        )}
-      </div>
-      <div className="card-body d-flex flex-column p-4">
-        <h5 className="card-title fw-bold mb-1 text-truncate" title={name}>{name}</h5>
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <p className="card-text small text-muted mb-0">
-            <i className="bi bi-geo-alt pe-1"></i>{location}
+          
+          <h3 className="text-xl font-black text-[#1d1d1f] mb-2 tracking-tight group-hover:text-[#0071E3] transition-colors line-clamp-1">
+            {name}
+          </h3>
+          
+          <p className="text-xs font-bold text-[#86868b] mb-6 flex items-center gap-1.5">
+            <i className="bi bi-geo-alt-fill text-[#0071E3]" />
+            {location}
           </p>
-          {type && (
-            <span style={{ background: typeColor.bg, color: typeColor.text, fontSize: "0.7rem", fontWeight: 800, borderRadius: "99px", padding: "2px 10px", border: `1px solid ${typeColor.dot}30`, whiteSpace: "nowrap" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: typeColor.dot, display: "inline-block", marginRight: 4, verticalAlign: "middle" }}></span>
-              {type} H₂
-            </span>
-          )}
-        </div>
-        <p className="card-text small text-secondary flex-grow-1" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.6" }}>
-          {description}
-        </p>
-        <div className="d-flex flex-wrap gap-2 mt-2">
-          {deliveryAvailability && (
-            <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: "0.72rem", fontWeight: 600, borderRadius: "8px", padding: "4px 10px", border: "1px solid #dcfce7" }}>
-              <i className="bi bi-truck me-1"></i>{deliveryAvailability}
-            </span>
-          )}
-          {productionCapacity && (
-            <span style={{ background: "#eff6ff", color: "#2563eb", fontSize: "0.72rem", fontWeight: 600, borderRadius: "8px", padding: "4px 10px", border: "1px solid #dbeafe" }}>
-              <i className="bi bi-gear me-1"></i>{productionCapacity}
-            </span>
-          )}
-        </div>
-        <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-light">
-          <div>
-            <span className="fs-5 fw-bold hs-accent">{price}</span>
-            <span className="small text-muted">/kg</span>
+          
+          <p className="text-sm font-medium text-[#86868b] line-clamp-2 mb-6 leading-relaxed flex-grow">
+            {description}
+          </p>
+
+          <div className="flex items-center gap-3 mb-6">
+            {deliveryAvailability && (
+              <div className="bg-black/[0.03] px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#86868b] flex items-center gap-1">
+                <i className="bi bi-truck" /> {deliveryAvailability}
+              </div>
+            )}
+            {productionCapacity && (
+              <div className="bg-black/[0.03] px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#86868b] flex items-center gap-1">
+                <i className="bi bi-gear" /> {productionCapacity}
+              </div>
+            )}
           </div>
-          <Link to={`/listings/${id || 'demo'}`} className="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold hs-shadow-hover">
-            View Details
-          </Link>
         </div>
-      </div>
-    </div>
+
+        {/* Footer Section */}
+        <div className="px-8 py-6 bg-[#F5F5F7]/50 border-t border-black/[0.03] flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black text-[#86868b] uppercase tracking-widest mb-0.5">Price Start</p>
+            <p className="text-xl font-black text-[#1d1d1f]">
+              ₹{displayPrice}<span className="text-xs font-bold text-[#86868b]">/kg</span>
+            </p>
+          </div>
+          <Button size="sm" className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+            View Details
+          </Button>
+        </div>
+      </Card>
+    </Link>
   );
 }
+

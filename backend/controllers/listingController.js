@@ -205,10 +205,12 @@ export async function getListingById(req, res) {
  */
 export async function createListing(req, res) {
   try {
-    const { title, hydrogenType, price, quantity, location, description } = req.body;
+    const priceVal = req.body.price ?? req.body.pricePerKg;
+    const quantityVal = req.body.quantity ?? req.body.minOrderQuantity;
+    const { title, hydrogenType, location, description } = req.body;
     const images = req.files ? req.files.map((file) => file.path) : [];
 
-    if (!title || !hydrogenType || price == null || quantity == null || !location || !description) {
+    if (!title || !hydrogenType || priceVal == null || quantityVal == null || !location || !description) {
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
 
@@ -243,8 +245,8 @@ export async function createListing(req, res) {
       supplier: req.userId,
       title,
       hydrogenType,
-      price: Number(price),
-      quantity: Number(quantity),
+      price: Number(priceVal),
+      quantity: Number(quantityVal),
       location,
       description,
       images,
@@ -278,16 +280,16 @@ export async function updateListing(req, res) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    const { title, hydrogenType, price, quantity, location, description } = req.body;
+    const priceVal = req.body.price ?? req.body.pricePerKg;
+    const quantityVal = req.body.quantity ?? req.body.minOrderQuantity;
+    const { title, hydrogenType, location, description } = req.body;
     const newImages = req.files ? req.files.map((file) => file.path) : [];
 
     if (newImages.length > 0) listing.images = [...listing.images, ...newImages];
-    if (title) {
-      listing.title = title;
-    }
+    if (title) listing.title = title;
     if (hydrogenType) listing.hydrogenType = hydrogenType;
-    if (price != null) listing.price = Number(price);
-    if (quantity != null) listing.quantity = Number(quantity);
+    if (priceVal != null) listing.price = Number(priceVal);
+    if (quantityVal != null) listing.quantity = Number(quantityVal);
     if (location) listing.location = location;
     if (description) listing.description = description;
 

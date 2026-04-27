@@ -91,6 +91,10 @@ listingSchema.virtual("displayName").get(function () {
   return this.title || this.companyName;
 });
 
+// Backward compatibility virtuals
+listingSchema.virtual("pricePerKg").get(function() { return this.price; });
+listingSchema.virtual("minOrderQuantity").get(function() { return this.quantity; });
+
 listingSchema.index({ status: 1, createdAt: -1 });
 listingSchema.index({ supplier: 1, createdAt: -1 });
 listingSchema.index({ location: 1 });

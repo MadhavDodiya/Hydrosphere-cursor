@@ -19,7 +19,7 @@ export default function Detail() {
     const fetchListing = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/listings/${id}`);
+        const response = await api.get(`/api/listings/${id}`);
         setListing(response.data);
       } catch (err) {
         console.error('Fetch error:', err);

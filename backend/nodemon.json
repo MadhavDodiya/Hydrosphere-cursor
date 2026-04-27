@@ -1,0 +1,12 @@
+{
+  "ignore": [
+    "logs/*",
+    "node_modules",
+    "scripts/*",
+    "scratch/*",
+    "frontend-npm-cache/*",
+    "**/*.test.js"
+  ],
+  "ext": "js,mjs,json",
+  "delay": "500"
+}

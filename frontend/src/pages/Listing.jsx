@@ -33,7 +33,7 @@ export default function Listing() {
         if (filters.minRating) params.append('minRating', filters.minRating);
         if (filters.deliveryAvailability) params.append('deliveryAvailability', filters.deliveryAvailability);
 
-        const response = await api.get(`/listings?${params.toString()}`);
+        const response = await api.get(`/api/listings?${params.toString()}`);
         const result = response.data || response;
         
         const listingData = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);

@@ -4,6 +4,7 @@ import InquiryThreadModal from "../InquiryThreadModal.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { socket } from "../../api/socket.js";
 import { Link } from "react-router-dom";
+import { Card, Badge, Button } from "../ui";
 
 export default function LeadsTable({ loading: parentLoading }) {
   const { showToast } = useToast();
@@ -17,7 +18,6 @@ export default function LeadsTable({ loading: parentLoading }) {
       try {
         setLoading(true);
         setBlockedMessage("");
-        // Fetched via dedicated supplier inquiries endpoint (Task #2)
         const { data } = await api.get("/api/inquiries/supplier");
         setInquiries(data?.data || data || []);
       } catch (err) {
@@ -60,91 +60,100 @@ export default function LeadsTable({ loading: parentLoading }) {
 
   if (parentLoading || loading) {
     return (
-      <div className="p-4 bg-white rounded-4 border shadow-sm">
-        <div style={{ height: 24, background: "#f1f5f9", borderRadius: 8, width: "35%", marginBottom: 30, animation: "dashPulse 1.5s infinite" }}></div>
+      <Card className="p-8 space-y-6 animate-pulse">
+        <div className="h-6 bg-black/[0.03] rounded-full w-1/3" />
         {[1,2,3].map(i => (
-          <div key={i} className="d-flex gap-3 mb-4">
-             <div style={{ width: 44, height: 44, background: "#f1f5f9", borderRadius: 12, animation: "dashPulse 1.5s infinite" }}></div>
-             <div className="flex-fill">
-                <div style={{ height: 16, background: "#f1f5f9", borderRadius: 6, width: "80%", marginBottom: 8, animation: "dashPulse 1.5s infinite" }}></div>
-                <div style={{ height: 12, background: "#f1f5f9", borderRadius: 6, width: "40%", animation: "dashPulse 1.5s infinite" }}></div>
+          <div key={i} className="flex gap-4 items-center">
+             <div className="w-12 h-12 bg-black/[0.03] rounded-2xl" />
+             <div className="flex-grow space-y-2">
+                <div className="h-3 bg-black/[0.03] rounded-full w-3/4" />
+                <div className="h-2 bg-black/[0.03] rounded-full w-1/4" />
              </div>
           </div>
         ))}
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-4 shadow-sm border overflow-hidden">
+    <Card className="p-0 overflow-hidden border-none shadow-sm bg-white">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-light-subtle">
+      <div className="p-8 border-b border-black/[0.03] flex justify-between items-center bg-white">
         <div>
-          <h6 className="fw-bold mb-0 text-dark">Business Inquiries</h6>
-          <p className="text-secondary mb-0" style={{ fontSize: "0.75rem" }}>Review and manage your incoming leads.</p>
+          <h3 className="text-sm font-black text-[#1d1d1f] uppercase tracking-widest">Business Inquiries</h3>
+          <p className="text-xs text-[#86868b] font-medium mt-1">Review and manage your incoming trade leads.</p>
         </div>
-        <div className="badge bg-primary rounded-pill px-3 py-2 fw-semibold" style={{ fontSize: '0.7rem' }}>
+        <Badge variant="primary">
           {inquiries.length} Active Leads
-        </div>
+        </Badge>
       </div>
 
-      {/* Table Area */}
-      <div style={{ overflowX: "auto" }}>
+      {/* Content Area */}
+      <div className="overflow-x-auto">
         {blockedMessage ? (
-          <div className="text-center py-5 px-4">
-            <i className="bi bi-lock display-3 text-light-emphasis mb-3 d-block"></i>
-            <h6 className="fw-bold text-dark">Upgrade required</h6>
-            <p className="text-muted small mb-3">{blockedMessage}</p>
-            <Link to="/dashboard/billing" className="btn btn-primary btn-sm rounded-pill px-4 shadow-sm fw-medium">
-              View Plans
-            </Link>
+          <div className="py-24 px-8 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-[#0071E3]/5 rounded-[32px] flex items-center justify-center text-[#0071E3] text-3xl mb-8">
+              <i className="bi bi-lock-fill" />
+            </div>
+            <h3 className="text-xl font-black text-[#1d1d1f] mb-2 tracking-tight">Access Locked</h3>
+            <p className="text-[#86868b] font-medium max-w-sm text-sm leading-relaxed mb-10">{blockedMessage}</p>
+            <Button variant="primary" onClick={() => window.location.href='/dashboard/billing'}>
+              Unlock Trade Dashboard
+            </Button>
           </div>
         ) : inquiries.length === 0 ? (
-           <div className="text-center py-5">
-              <i className="bi bi-inbox display-3 text-light-emphasis mb-3 d-block"></i>
-              <h6 className="fw-bold text-dark">No Leads Yet</h6>
-              <p className="text-muted small">Prospective buyers will appear here once they inquire about your listings.</p>
+           <div className="py-24 px-8 text-center flex flex-col items-center">
+              <div className="w-20 h-20 bg-black/[0.03] rounded-[32px] flex items-center justify-center text-[#c1c1c6] text-3xl mb-8">
+                <i className="bi bi-chat-left-dots" />
+              </div>
+              <h3 className="text-xl font-black text-[#1d1d1f] mb-2 tracking-tight">No Leads Yet</h3>
+              <p className="text-[#86868b] font-medium max-w-sm text-sm leading-relaxed">Incoming inquiries from prospective buyers will appear here.</p>
            </div>
         ) : (
-          <table className="table table-hover mb-0 align-middle">
-            <thead className="bg-light">
-              <tr>
-                <th className="fw-bold border-0 py-3 ps-4 text-muted small text-uppercase" style={{ letterSpacing: '0.05em' }}>Buyer Instance</th>
-                <th className="fw-bold border-0 py-3 text-muted small text-uppercase" style={{ letterSpacing: '0.05em' }}>Product Interest</th>
-                <th className="fw-bold border-0 py-3 text-muted small text-uppercase" style={{ letterSpacing: '0.05em' }}>Inquiry Date</th>
-                <th className="fw-bold border-0 py-3 pe-4 text-end text-muted small text-uppercase" style={{ letterSpacing: '0.05em' }}>Actions</th>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-black/[0.03]">
+                <th className="px-8 py-5 text-[10px] font-black text-[#86868b] uppercase tracking-widest">Buyer Instance</th>
+                <th className="px-8 py-5 text-[10px] font-black text-[#86868b] uppercase tracking-widest">Asset Interest</th>
+                <th className="px-8 py-5 text-[10px] font-black text-[#86868b] uppercase tracking-widest">Received On</th>
+                <th className="px-8 py-5 text-right text-[10px] font-black text-[#86868b] uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-black/[0.03]">
               {inquiries.map((l) => (
-                <tr key={l._id}>
-                  <td className="ps-4 py-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="d-flex align-items-center justify-content-center fw-bold text-white shadow-sm flex-shrink-0"
-                        style={{ width: 40, height: 40, borderRadius: "12px", background: "linear-gradient(135deg, #6366f1, #4f46e5)", fontSize: "0.9rem" }}>
+                <tr key={l._id} className="group hover:bg-[#F5F5F7]/50 transition-colors">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#0071E3] to-[#00D1B2] flex items-center justify-center text-white font-black text-sm shadow-lg shadow-blue-500/20">
                         {(l.buyerId?.name || l.name || "B")[0].toUpperCase()}
                       </div>
                       <div>
-                        <div className="fw-bold text-dark mb-0">{l.buyerId?.name || l.name}</div>
-                        <div className="text-muted" style={{ fontSize: "0.75rem" }}>{l.buyerId?.email || l.email}</div>
+                        <p className="text-sm font-black text-[#1d1d1f] mb-0.5">{l.buyerId?.name || l.name}</p>
+                        <p className="text-[10px] font-bold text-[#86868b] truncate max-w-[180px]">{l.buyerId?.email || l.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3">
-                    <div className="fw-medium text-dark" style={{ fontSize: "0.875rem" }}>{l.listingId?.title || l.listingId?.companyName || "Listing Removed"}</div>
-                    <div className="text-secondary small">{l.listingId?.hydrogenType || "N/A"} Hydrogen Gas</div>
+                  <td className="px-8 py-6">
+                    <p className="text-sm font-black text-[#1d1d1f] mb-0.5">{l.listingId?.title || l.listingId?.companyName || "Listing Removed"}</p>
+                    <Badge variant="primary" className="!py-0 !px-1.5 !text-[8px]">{l.listingId?.hydrogenType || "N/A"}</Badge>
                   </td>
-                  <td className="py-3">
-                    <div className="text-dark fw-medium" style={{ fontSize: "0.85rem" }}>{new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                    <div className="text-muted" style={{ fontSize: "0.7rem" }}>{new Date(l.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <td className="px-8 py-6">
+                    <p className="text-sm font-black text-[#1d1d1f] mb-0.5">
+                      {new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </p>
+                    <p className="text-[10px] font-bold text-[#c1c1c6] uppercase">
+                      {new Date(l.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </td>
-                  <td className="pe-4 py-3 text-end">
-                    <button 
-                      className="btn btn-primary btn-sm rounded-pill px-4 shadow-sm fw-medium"
+                  <td className="px-8 py-6 text-right">
+                    <Button 
+                      size="sm"
+                      variant="secondary"
+                      className="group-hover:bg-[#0071E3] group-hover:text-white transition-all"
                       onClick={() => setSelectedInquiry(l)}
-                      style={{ fontSize: "0.78rem" }}>
+                    >
                       Manage Thread
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -164,6 +173,6 @@ export default function LeadsTable({ loading: parentLoading }) {
           }}
         />
       )}
-    </div>
+    </Card>
   );
 }
