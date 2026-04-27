@@ -1,4 +1,5 @@
 import logger from "../utils/logger.js";
+import * as Sentry from "@sentry/node";
 
 /**
  * Central Express error handler — keeps API errors JSON-shaped.
@@ -23,7 +24,7 @@ export function errorHandler(err, _req, res, _next) {
 
   // 🛰️ ERROR MONITORING (Task #11 Audit Fix)
   if (process.env.NODE_ENV === "production") {
-    // Sentry.captureException(err);
+    Sentry.captureException(err);
   }
 
   const status = err.statusCode || err.status || 500;
