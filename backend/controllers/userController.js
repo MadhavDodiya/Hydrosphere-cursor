@@ -32,7 +32,7 @@ function publicUser(user) {
  */
 export async function getMe(req, res) {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId).lean();
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     return res.json({ 
       success: true, 

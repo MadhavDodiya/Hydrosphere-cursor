@@ -16,7 +16,7 @@ export async function createInquiry(req, res) {
       return res.status(400).json({ success: false, message: "Valid Listing ID is required" });
     }
 
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId).lean();
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
     // Prevent self-inquiry
@@ -24,7 +24,7 @@ export async function createInquiry(req, res) {
       return res.status(400).json({ success: false, message: "You cannot inquire on your own listing" });
     }
 
-    const supplier = await User.findById(listing.supplier).select("email subscriptionStatus plan");
+    const supplier = await User.findById(listing.supplier).select("email subscriptionStatus plan").lean();
     if (!supplier) {
       return res.status(404).json({ success: false, message: "Supplier not found" });
     }
@@ -58,7 +58,7 @@ export async function createInquiry(req, res) {
     }
 
     // Prevent duplicate inquiries
-    const existing = await Inquiry.findOne({ listingId, buyerId: req.userId });
+    const existing = await Inquiry.findOne({ listingId, buyerId: req.userId }).lean();
     if (existing) return res.status(400).json({ success: false, message: "You have already sent an inquiry for this listing." });
 
     const inquiry = await Inquiry.create({

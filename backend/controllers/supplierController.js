@@ -5,7 +5,7 @@ import { getEffectiveLimits } from "../utils/plans.js";
 
 export const getSupplierStats = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("plan listingLimit leadLimit trialExpiresAt");
+    const user = await User.findById(req.userId).select("plan listingLimit leadLimit trialExpiresAt").lean();
     
     const [totalListings, activeListings, totalLeads, newLeadsToday] = await Promise.all([
       Listing.countDocuments({ supplier: req.userId }),
@@ -24,7 +24,7 @@ export const getSupplierStats = async (req, res) => {
     });
 
     // ... rest of activity logic ...
-    const recentInquiries = await Inquiry.find({ supplierId: req.userId })
+    const recentInquiries = await Inquiry.find({ supplierId: req.userId }).lean()
       .populate("listingId", "title")
       .sort({ createdAt: -1 })
       .limit(5)
